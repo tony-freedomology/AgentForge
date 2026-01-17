@@ -14,32 +14,47 @@ import { useState, useEffect } from 'react';
 // Help overlay component
 function HelpOverlay({ onClose }: { onClose: () => void }) {
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-50 backdrop-blur-md" onClick={onClose}>
       <div
-        className="fantasy-panel rounded-lg p-6 max-w-lg relative overflow-hidden"
+        className="fantasy-panel rounded-2xl px-10 py-10 max-w-2xl w-full mx-4 relative overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Corner accents */}
         <div className="corner-accent top-left" />
         <div className="corner-accent top-right" />
         <div className="corner-accent bottom-left" />
         <div className="corner-accent bottom-right" />
 
-        <h2 className="text-2xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
-          <span className="text-3xl">⌘</span> Neural Uplink Controls
-        </h2>
-        <div className="grid grid-cols-2 gap-3 text-sm relative z-10">
+        {/* Header */}
+        <div className="mb-8 pb-6 border-b border-cyan-800/30">
+          <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400 flex items-center gap-4 tracking-wide uppercase">
+            <span className="text-4xl drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]">⌘</span>
+            <span>Neural Uplink Controls</span>
+          </h2>
+          <p className="text-cyan-600/60 text-sm mt-2 tracking-wide">
+            Master your digital legion with these commands
+          </p>
+        </div>
+
+        {/* Keyboard shortcuts grid */}
+        <div className="grid grid-cols-2 gap-4 text-sm relative z-10">
           {KEYBOARD_SHORTCUTS.map(({ key, description }) => (
-            <div key={key} className="flex items-center gap-3 p-2 rounded bg-cyan-950/20 border border-cyan-900/30">
-              <kbd className="px-2 py-1 bg-cyan-900/40 rounded border border-cyan-500/30 text-cyan-300 font-mono text-xs shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+            <div
+              key={key}
+              className="flex items-center gap-4 px-5 py-4 rounded-xl bg-cyan-950/30 border border-cyan-800/40 hover:border-cyan-600/50 hover:bg-cyan-900/20 transition-all group"
+            >
+              <kbd className="px-4 py-2 bg-black/40 rounded-lg border border-cyan-500/40 text-cyan-300 font-mono text-sm font-bold shadow-[0_0_15px_rgba(6,182,212,0.15)] group-hover:shadow-[0_0_20px_rgba(6,182,212,0.25)] group-hover:border-cyan-400/60 transition-all min-w-[50px] text-center">
                 {key}
               </kbd>
-              <span className="text-gray-300">{description}</span>
+              <span className="text-gray-300 group-hover:text-white transition-colors">{description}</span>
             </div>
           ))}
         </div>
+
+        {/* Close button */}
         <button
           onClick={onClose}
-          className="mt-6 w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded text-white font-bold tracking-wider uppercase transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]"
+          className="mt-10 w-full py-5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl text-white font-black text-lg tracking-widest uppercase transition-all shadow-[0_0_25px_rgba(6,182,212,0.35)] hover:shadow-[0_0_40px_rgba(6,182,212,0.5)] hover:scale-[1.02] active:scale-[0.98] border border-cyan-400/30"
         >
           Initialize Uplink
         </button>
