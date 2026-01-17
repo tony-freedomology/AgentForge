@@ -27,7 +27,7 @@ except ImportError:
     sys.exit(1)
 
 # Configuration
-API_KEY = "AIzaSyDgEIsteIti3pjySiAxbZUz4ePJgKiEYAY"
+API_KEY = "AIzaSyBEeloT86rl--OBrBmViefZuOw_APWe8nk"
 OUTPUT_DIR = Path(__file__).parent.parent / "public" / "assets"
 SPRITES_DIR = OUTPUT_DIR / "sprites"
 TEXTURES_DIR = OUTPUT_DIR / "textures"
