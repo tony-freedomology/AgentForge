@@ -1,73 +1,80 @@
-# React + TypeScript + Vite
+# 🏰 AgentForge
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**A spatial, visual interface for managing multiple AI coding assistants.**
 
-Currently, two official plugins are available:
+![AgentForge](https://img.shields.io/badge/status-alpha-orange) ![License](https://img.shields.io/badge/license-MIT-blue)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## What Is This?
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+AgentForge is a **visual skin for the terminal experience**. When you're running multiple AI agents (Claude, Codex, Gemini) across different projects, terminal tabs become chaos. AgentForge gives you a spatial way to organize them—like an RTS game, but for your AI workforce.
 
-## Expanding the ESLint configuration
+**Each agent is a real terminal session.** Not a simulation. When you type to an agent, you're typing to a real CLI. When you see output, it's streaming from a real process.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+Before: 6 terminal tabs, no idea which is which
+After:  A map where you can see all your agents at once
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Quick Start
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Install dependencies
+npm install
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start backend server
+npm run server
+
+# Start frontend (separate terminal)
+npm run dev
+
+# Or run both at once
+npm start
 ```
+
+Open http://localhost:3000, click "Enter The Forge", press `N` to summon an agent.
+
+## Agent Classes
+
+| Class | CLI | Model | Role |
+|-------|-----|-------|------|
+| 🏗️ **Architect** | claude | Opus 4.5 | Strategic planning |
+| 🧙 **Mage** | claude | Sonnet | Implementation |
+| 🛡️ **Guardian** | codex | Codex | Code review |
+| 🎨 **Artisan** | gemini | Gemini Pro | Design |
+| 🔍 **Scout** | claude | Haiku | Research |
+| ⚙️ **Engineer** | claude | Sonnet | Focused builds |
+
+## Controls
+
+| Key | Action |
+|-----|--------|
+| `N` | Summon new agent |
+| Click | Select agent |
+| Drag | Selection box |
+| `Option/Alt` + Drag | Rotate camera |
+| Scroll | Zoom |
+
+## Documentation
+
+- **[VISION.md](./docs/VISION.md)** — What we're building and why
+- **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** — How the systems work
+- **[TERMINAL.md](./docs/TERMINAL.md)** — The terminal experience
+- **[CONTRIBUTING.md](./docs/CONTRIBUTING.md)** — For developers/agents
+
+## Tech Stack
+
+- **Frontend**: React, React Three Fiber, Zustand, Tailwind
+- **Backend**: Node.js, WebSocket, node-pty
+- **Build**: Vite, TypeScript
+
+## The Vision
+
+> Imagine playing an RTS game, but instead of soldiers, you're commanding AI coding assistants. Position them spatially. See what they're doing. Talk to them like characters in a game—but get real terminal output.
+
+This is a personal productivity tool for power users who run multiple concurrent AI sessions.
+
+---
+
+*Built with Claude Opus 4.5*

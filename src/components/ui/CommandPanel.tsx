@@ -442,7 +442,7 @@ export function CommandPanel() {
             <div className="relative">
               <button
                 onClick={() => setShowSpawnMenu(!showSpawnMenu)}
-                className="w-12 h-12 bg-gradient-to-b from-cyan-900/40 to-blue-900/40 hover:from-cyan-800/50 hover:to-blue-800/50 border border-cyan-500/40 rounded-lg flex flex-col items-center justify-center text-cyan-400 transition-all hover:shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+                className="w-14 h-14 bg-gradient-to-b from-cyan-900/40 to-blue-900/40 hover:from-cyan-800/50 hover:to-blue-800/50 border border-cyan-500/40 rounded-lg flex flex-col items-center justify-center text-cyan-400 transition-all hover:shadow-[0_0_12px_rgba(6,182,212,0.25)]"
                 title="Summon Agent (N)"
               >
                 <Zap className="w-5 h-5 drop-shadow-[0_0_4px_rgba(6,182,212,0.5)]" />
@@ -462,7 +462,7 @@ export function CommandPanel() {
                 key={cmd.id}
                 onClick={() => handleCommand(cmd)}
                 disabled={cmd.requiresSelection && !hasSelection}
-                className={`w-12 h-12 border rounded-lg flex flex-col items-center justify-center transition-all ${cmd.requiresSelection && !hasSelection
+                className={`w-14 h-14 border rounded-lg flex flex-col items-center justify-center transition-all ${cmd.requiresSelection && !hasSelection
                   ? 'bg-gray-950/40 border-gray-800/30 text-gray-700 cursor-not-allowed'
                   : 'bg-gray-900/40 hover:bg-cyan-900/30 border-gray-700/40 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 hover:shadow-[0_0_8px_rgba(6,182,212,0.15)]'
                   }`}

@@ -14,6 +14,7 @@ import type {
 } from '../types/agent';
 import { v4 as uuidv4 } from 'uuid';
 import { generateHexGrid } from '../utils/hexUtils';
+import { agentBridge } from '../services/agentBridge';
 
 interface GameState {
   // Agents
@@ -134,6 +135,12 @@ export const useGameStore = create<GameState>()(
       const id = uuidv4();
       const finalName = name || getRandomName(agentClass);
 
+      // Trigger backend process via Bridge
+      // We map the agent class to a specific working directory logic if needed,
+      // but for now we'll use a default or based on class.
+      const workingDir = `/tmp/agentforge/${id}`;
+      agentBridge.spawnAgent(id, finalName, agentClass, workingDir);
+
       const newAgent: Agent = {
         id,
         name: finalName,
@@ -179,6 +186,9 @@ export const useGameStore = create<GameState>()(
     },
 
     removeAgent: (agentId) => {
+      // Kill backend process
+      agentBridge.killAgent(agentId);
+
       set((state) => {
         const agent = state.agents.get(agentId);
         if (!agent) return state;

@@ -23,7 +23,7 @@ function ResourceDisplay({ icon, current, max, color }: ResourceDisplayProps) {
   const isLow = percentage < 20;
 
   return (
-    <div className="flex items-center gap-2.5 px-3.5 py-2 bg-gradient-to-b from-gray-800/90 to-gray-900/90 rounded-lg border border-gray-700/60 shadow-lg relative overflow-hidden group">
+    <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-b from-gray-800/90 to-gray-900/90 rounded-lg border border-gray-700/60 shadow-lg relative overflow-hidden group">
       {/* Subtle inner glow */}
       <div
         className="absolute inset-0 opacity-10 transition-opacity group-hover:opacity-20"
@@ -88,7 +88,7 @@ export function ResourceBar() {
         </div>
 
         {/* Resources */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-5">
           <ResourceDisplay
             icon={resources.tokens.icon}
             name={resources.tokens.name}
@@ -147,9 +147,9 @@ export function ResourceBar() {
           <button
             onClick={togglePause}
             className={`arcane-button rounded-md transition-all ${isPaused
-                ? 'bg-red-900/30 border-red-500 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
-                : 'hover:bg-cyan-900/30'
-              }`}
+              ? 'bg-red-900/30 border-red-500 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.3)]'
+              : 'hover:bg-cyan-900/30'
+              } px-6 py-2.5 font-bold tracking-widest text-xs flex items-center justify-center min-w-[120px]`}
           >
             {isPaused ? '▶ RESUME' : '⏸ PAUSE'}
           </button>

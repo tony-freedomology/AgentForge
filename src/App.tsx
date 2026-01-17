@@ -58,7 +58,7 @@ function WelcomeOverlay({ onStart }: { onStart: () => void }) {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-radial from-cyan-500/10 to-transparent blur-[120px] -z-10 rounded-full animate-pulse-slow" />
 
         {/* --- HEADER SECTION --- */}
-        <div className="mb-12 relative">
+        <div className="mb-20 relative">
           <h1 className="text-7xl md:text-8xl font-black font-display tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-900 drop-shadow-[0_0_50px_rgba(6,182,212,0.4)]">
             AGENT FORGE
           </h1>
@@ -71,7 +71,7 @@ function WelcomeOverlay({ onStart }: { onStart: () => void }) {
         </div>
 
         {/* --- DESCRIPTION --- */}
-        <div className="max-w-2xl mx-auto mb-16 space-y-4">
+        <div className="max-w-3xl mx-auto mb-20 space-y-6">
           <p className="text-2xl text-white font-light leading-relaxed">
             Orchestrate your <span className="font-bold text-cyan-300">Digital Legion</span> in real-time.
           </p>
@@ -81,7 +81,7 @@ function WelcomeOverlay({ onStart }: { onStart: () => void }) {
         </div>
 
         {/* --- FEATURE GRID --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mb-32">
           {[
             {
               icon: <Zap size={32} />,
@@ -111,9 +111,9 @@ function WelcomeOverlay({ onStart }: { onStart: () => void }) {
             <div
               key={idx}
               className={`
-                relative group p-6 rounded-xl border ${feature.border} ${feature.bg}
+                relative group py-10 px-8 rounded-xl border ${feature.border} ${feature.bg}
                 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-opacity-20
-                flex flex-col items-center gap-3
+                flex flex-col items-center gap-4
               `}
             >
               <div className={`${feature.color} drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]`}>
@@ -132,14 +132,14 @@ function WelcomeOverlay({ onStart }: { onStart: () => void }) {
         {/* --- ENTER BUTTON --- */}
         <button
           onClick={onStart}
-          className="group relative px-16 py-6 bg-transparent overflow-hidden clip-tech-button transition-all duration-300 hover:scale-[1.02]"
+          className="group relative px-20 py-8 bg-transparent overflow-hidden clip-tech-button transition-all duration-300 hover:scale-[1.02] mt-8"
         >
           {/* Button Background & Glow */}
           <div className="absolute inset-0 bg-cyan-600/20 group-hover:bg-cyan-500/30 transition-colors" />
           <div className="absolute inset-0 border border-cyan-500/50 group-hover:border-cyan-400 clip-tech-button" />
 
           <div className="relative z-10 flex items-center gap-4">
-            <span className="text-xl md:text-2xl font-display font-black text-white uppercase tracking-[0.15em] group-hover:text-cyan-100 transition-colors drop-shadow-lg">
+            <span className="text-xl md:text-2xl font-display font-black text-white uppercase tracking-[0.2em] group-hover:text-cyan-100 transition-colors drop-shadow-lg">
               Enter The Forge
             </span>
             <ChevronRight className="w-6 h-6 text-cyan-400 animate-pulse group-hover:translate-x-1 transition-transform" />

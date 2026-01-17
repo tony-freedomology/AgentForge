@@ -63,7 +63,7 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
       {/* Main Container - Tech Border Clip */}
       <div
-        className="relative w-[1000px] h-[650px] bg-[#0a0f1e] text-white flex overflow-hidden shadow-2xl clip-tech-border"
+        className="relative w-[1100px] h-[800px] bg-[#0a0f1e] text-white flex overflow-hidden shadow-2xl clip-tech-border"
         style={{
           border: `1px solid ${activeColor}60`,
           boxShadow: `0 0 40px ${activeColor}20`
@@ -73,7 +73,7 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
         <div className="absolute inset-0 scanlines z-0 pointer-events-none" />
 
         {/* -- LEFT COLUMN: CONTROLS -- */}
-        <div className="w-1/3 p-6 flex flex-col gap-6 border-r border-white/10 relative z-10 bg-black/20">
+        <div className="w-[40%] p-8 flex flex-col gap-8 border-r border-white/10 relative z-10 bg-black/20">
 
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
@@ -105,7 +105,7 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
                     onMouseEnter={() => setHoveredClassId(agentClass.id)}
                     onMouseLeave={() => setHoveredClassId(null)}
                     className={`
-                      relative group p-4 border transition-all duration-300 text-left
+                      relative group p-6 border transition-all duration-300 text-left
                       ${isSelected ? 'bg-white/5' : 'bg-transparent hover:bg-white/5'}
                     `}
                     style={{
@@ -169,7 +169,7 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
             <button
               onClick={handleSpawn}
               disabled={!selectedClass}
-              className="w-full h-14 relative group overflow-hidden clip-tech-button mt-4 cursor-pointer"
+              className="w-full h-16 relative group overflow-hidden clip-tech-button mt-6 cursor-pointer"
               style={{
                 background: `linear-gradient(90deg, ${activeColor}20, ${activeColor}40)`,
                 border: `1px solid ${activeColor}`,
@@ -189,7 +189,7 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
         </div>
 
         {/* -- RIGHT COLUMN: VISUAL PREVIEW -- */}
-        <div className="w-2/3 relative bg-[#050510] flex flex-col items-center justify-center overflow-hidden">
+        <div className="w-[60%] relative bg-[#050510] flex flex-col items-center justify-center overflow-hidden">
           {/* Grid Background */}
           <div
             className="absolute inset-0 opacity-20"
