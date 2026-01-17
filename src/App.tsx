@@ -12,9 +12,10 @@ import { PendingQuestsNotification } from './components/ui/QuestTurnIn';
 import { ToastContainer } from './components/ui/Toast';
 import { SoundToggle } from './components/ui/SoundSettings';
 import { CommandPalette } from './components/ui/CommandPalette';
+import { IsometricWorld } from './components/isometric/IsometricWorld';
 import { useKeyboardShortcuts, KEYBOARD_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { agentBridge } from './services/agentBridge';
-import { ChevronRight, Zap, Crosshair, Cpu } from 'lucide-react';
+import { ChevronRight, Zap, Crosshair, Cpu, Layers, Box } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 // Help overlay component
@@ -187,6 +188,7 @@ function App() {
   const [showSpawnDialog, setShowSpawnDialog] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const [useIsometric, setUseIsometric] = useState(true); // Phase 0: Default to isometric for testing
 
   // Initialize keyboard shortcuts
   useKeyboardShortcuts();
@@ -240,19 +242,51 @@ function App() {
 
   return (
     <div className="w-screen h-screen bg-gray-950 overflow-hidden">
-      {/* 3D Canvas */}
-      <Canvas
-        shadows
-        camera={{ position: [0, 25, 25], fov: 50 }}
-        gl={{ antialias: true, alpha: false }}
-        dpr={[1, 2]}
-      >
-        <color attach="background" args={['#0a0a1a']} />
-        <Scene />
-      </Canvas>
+      {/* Render Mode Toggle */}
+      <div className="fixed top-4 left-4 z-50 flex gap-2">
+        <button
+          onClick={() => setUseIsometric(false)}
+          className={`p-2 rounded-lg transition-all ${
+            !useIsometric
+              ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-400/50'
+              : 'bg-black/50 text-gray-500 border border-gray-700 hover:border-gray-500'
+          }`}
+          title="3D View"
+        >
+          <Box size={18} />
+        </button>
+        <button
+          onClick={() => setUseIsometric(true)}
+          className={`p-2 rounded-lg transition-all ${
+            useIsometric
+              ? 'bg-purple-500/30 text-purple-300 border border-purple-400/50'
+              : 'bg-black/50 text-gray-500 border border-gray-700 hover:border-gray-500'
+          }`}
+          title="Isometric View (Phase 0 PoC)"
+        >
+          <Layers size={18} />
+        </button>
+      </div>
+
+      {/* 3D Canvas or Isometric World */}
+      {useIsometric ? (
+        <div className="w-full h-full">
+          <IsometricWorld width={window.innerWidth} height={window.innerHeight} />
+        </div>
+      ) : (
+        <Canvas
+          shadows
+          camera={{ position: [0, 25, 25], fov: 50 }}
+          gl={{ antialias: true, alpha: false }}
+          dpr={[1, 2]}
+        >
+          <color attach="background" args={['#0a0a1a']} />
+          <Scene />
+        </Canvas>
+      )}
 
       {/* 2D Overlays */}
-      <SelectionBoxOverlay />
+      {!useIsometric && <SelectionBoxOverlay />}
       <ResourceBar />
       <Minimap />
       <CommandPanel />
