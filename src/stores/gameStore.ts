@@ -16,6 +16,7 @@ import type {
   FileArtifact,
   Quest,
 } from '../types/agent';
+import { canLearnTalent } from '../config/talents';
 import { ACTIVITY_PATTERNS } from '../types/agent';
 import { v4 as uuidv4 } from 'uuid';
 import { generateHexGrid } from '../utils/hexUtils';
@@ -80,6 +81,11 @@ interface GameState {
   detectQuestCompletion: (agentId: string, output: string) => void;
   detectFileArtifacts: (agentId: string, output: string) => void;
   getAgentsWithPendingQuests: () => Agent[];
+
+  // Talent System Actions
+  allocateTalent: (agentId: string, talentId: string) => boolean;
+  resetTalents: (agentId: string) => void;
+  awardTalentPoint: (agentId: string) => void;
 
   // Selection Box
   startSelection: (x: number, y: number) => void;
@@ -205,6 +211,9 @@ export const useGameStore = create<GameState>()(
         usagePercent: 100, // Start with full usage available
         completedQuests: [],
         producedFiles: [],
+
+        // Talent system
+        talents: { points: 1, allocated: {} }, // Start with 1 talent point
       };
 
       set((state) => {
@@ -590,6 +599,10 @@ export const useGameStore = create<GameState>()(
           attentionReason: undefined,
           experience: agent.experience + 1,
           level: Math.floor((agent.experience + 1) / 5) + 1, // Level up every 5 quests
+          talents: {
+            ...agent.talents,
+            points: agent.talents.points + 1, // Award talent point on quest completion
+          },
           producedFiles: [], // Clear for next quest
         });
         return { agents: newAgents };
@@ -698,6 +711,83 @@ export const useGameStore = create<GameState>()(
       return Array.from(agents.values()).filter(
         (a) => a.currentQuest?.status === 'pending_review'
       );
+    },
+
+    // Talent System Actions
+    allocateTalent: (agentId, talentId) => {
+      const agent = get().agents.get(agentId);
+      if (!agent) return false;
+
+      // Check if we can learn this talent
+      const { canLearn } = canLearnTalent(agent.class, talentId, agent.talents.allocated, agent.talents.points, agent.level);
+      if (!canLearn) {
+        return false;
+      }
+
+      set((state) => {
+        const currentAgent = state.agents.get(agentId);
+        if (!currentAgent) return state;
+
+        const newAgents = new Map(state.agents);
+        const currentRanks = currentAgent.talents.allocated[talentId] || 0;
+
+        newAgents.set(agentId, {
+          ...currentAgent,
+          talents: {
+            points: currentAgent.talents.points - 1,
+            allocated: {
+              ...currentAgent.talents.allocated,
+              [talentId]: currentRanks + 1,
+            },
+          },
+        });
+        return { agents: newAgents };
+      });
+
+      // Add feedback
+      get().addTerminalOutput(agentId, `✨ New talent unlocked!`);
+      return true;
+    },
+
+    resetTalents: (agentId) => {
+      set((state) => {
+        const agent = state.agents.get(agentId);
+        if (!agent) return state;
+
+        // Calculate total points spent
+        const spentPoints = Object.values(agent.talents.allocated).reduce((sum, ranks) => sum + ranks, 0);
+
+        const newAgents = new Map(state.agents);
+        newAgents.set(agentId, {
+          ...agent,
+          talents: {
+            points: agent.talents.points + spentPoints,
+            allocated: {},
+          },
+        });
+        return { agents: newAgents };
+      });
+
+      get().addTerminalOutput(agentId, `⟳ Talents reset. All points refunded.`);
+    },
+
+    awardTalentPoint: (agentId) => {
+      set((state) => {
+        const agent = state.agents.get(agentId);
+        if (!agent) return state;
+
+        const newAgents = new Map(state.agents);
+        newAgents.set(agentId, {
+          ...agent,
+          talents: {
+            ...agent.talents,
+            points: agent.talents.points + 1,
+          },
+        });
+        return { agents: newAgents };
+      });
+
+      get().addTerminalOutput(agentId, `🌟 Talent point earned!`);
     },
 
     // Selection Box

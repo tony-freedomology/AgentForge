@@ -10,6 +10,8 @@ import { useGameStore } from '../../stores/gameStore';
 import { getAgentClass } from '../../config/agentClasses';
 import { ACTIVITY_ICONS } from '../../types/agent';
 import type { Agent } from '../../types/agent';
+import { TalentTree } from './TalentTree';
+import { Sparkles } from 'lucide-react';
 
 // Status bar component
 function StatusBar({
@@ -102,7 +104,15 @@ function ActivityBar({ agent }: { agent: Agent }) {
 }
 
 // Single agent frame
-function AgentFrame({ agent, isSelected }: { agent: Agent; isSelected: boolean }) {
+function AgentFrame({
+  agent,
+  isSelected,
+  onOpenTalents,
+}: {
+  agent: Agent;
+  isSelected: boolean;
+  onOpenTalents: () => void;
+}) {
   const selectAgent = useGameStore((s) => s.selectAgent);
   const classConfig = getAgentClass(agent.class);
 
@@ -233,8 +243,29 @@ function AgentFrame({ agent, isSelected }: { agent: Agent; isSelected: boolean }
               {agent.status}
             </span>
           </div>
-          <div className="text-[10px] text-gray-500 truncate">
-            {classConfig?.title || agent.class} • Lv.{agent.level}
+          <div className="flex items-center gap-2 text-[10px] text-gray-500">
+            <span className="truncate">{classConfig?.title || agent.class} • Lv.{agent.level}</span>
+            {/* Talent indicator */}
+            {(agent.talents.points > 0 || Object.keys(agent.talents.allocated).length > 0) && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenTalents();
+                }}
+                className={`
+                  flex items-center gap-1 px-1.5 py-0.5 rounded
+                  transition-all duration-200 hover:scale-105
+                  ${agent.talents.points > 0
+                    ? 'bg-amber-500/30 border border-amber-500/50 text-amber-400 animate-pulse'
+                    : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white'
+                  }
+                `}
+                title={`${agent.talents.points} talent points available`}
+              >
+                <Sparkles size={10} />
+                {agent.talents.points > 0 && <span className="font-bold">{agent.talents.points}</span>}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -268,6 +299,7 @@ function AgentFrame({ agent, isSelected }: { agent: Agent; isSelected: boolean }
 export function PartyFrames() {
   const agents = useGameStore((s) => s.agents);
   const selectedAgentIds = useGameStore((s) => s.selectedAgentIds);
+  const [talentTreeAgent, setTalentTreeAgent] = useState<Agent | null>(null);
 
   const agentList = Array.from(agents.values());
 
@@ -307,9 +339,18 @@ export function PartyFrames() {
             key={agent.id}
             agent={agent}
             isSelected={selectedAgentIds.has(agent.id)}
+            onOpenTalents={() => setTalentTreeAgent(agent)}
           />
         ))}
       </div>
+
+      {/* Talent Tree Modal */}
+      {talentTreeAgent && (
+        <TalentTree
+          agent={talentTreeAgent}
+          onClose={() => setTalentTreeAgent(null)}
+        />
+      )}
     </div>
   );
 }

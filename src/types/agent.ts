@@ -120,8 +120,12 @@ export interface Agent {
   currentQuest?: Quest;
   completedQuests: Quest[];
 
-  // File artifacts (Phase 4)
+  // File artifacts (Phase 3)
   producedFiles: FileArtifact[];
+
+  // Talent system (Phase 4)
+  talents: AgentTalents;
+  specialization?: string;  // Unlocked at level 10
 }
 
 export interface HexTile {
@@ -225,6 +229,33 @@ export const ACTIVITY_ICONS: Record<AgentActivity, { icon: string; label: string
   waiting: { icon: '❓', label: 'Waiting', color: '#eab308' },
   error: { icon: '❌', label: 'Error', color: '#ef4444' },
 };
+
+// Talent system types
+export type TalentTier = 1 | 2 | 3 | 4 | 5;
+
+export interface Talent {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  tier: TalentTier;
+  column: 0 | 1 | 2;  // Left, Center, Right
+  maxRanks: number;
+  effect: TalentEffect;
+  requires?: string;  // ID of talent that must be unlocked first
+}
+
+export interface TalentEffect {
+  type: 'passive' | 'active' | 'modifier';
+  stat?: 'speed' | 'accuracy' | 'context' | 'creativity' | 'focus';
+  value?: number;
+  description: string;
+}
+
+export interface AgentTalents {
+  points: number;           // Available talent points
+  allocated: Record<string, number>;  // talentId -> ranks allocated
+}
 
 // File type icons
 export const FILE_TYPE_ICONS: Record<string, { icon: string; name: string }> = {

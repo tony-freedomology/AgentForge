@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg_mage_arcane_missiles" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a855f7"/>
+      <stop offset="100%" style="stop-color:#6b21a8"/>
+    </linearGradient>
+    <filter id="glow_mage_arcane_missiles">
+      <feGaussianBlur stdDeviation="2" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect x="4" y="4" width="56" height="56" rx="8" fill="url(#bg_mage_arcane_missiles)" opacity="0.3"/>
+
+  <!-- Border -->
+  <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="#a855f7" stroke-width="2"/>
+
+  <!-- Icon -->
+  <text x="32" y="40" text-anchor="middle" font-size="28" filter="url(#glow_mage_arcane_missiles)">✨</text>
+
+  <!-- Corner accents -->
+  <circle cx="8" cy="8" r="3" fill="#a855f7" opacity="0.6"/>
+  <circle cx="56" cy="8" r="3" fill="#a855f7" opacity="0.6"/>
+  <circle cx="8" cy="56" r="3" fill="#a855f7" opacity="0.6"/>
+  <circle cx="56" cy="56" r="3" fill="#a855f7" opacity="0.6"/>
+</svg>
