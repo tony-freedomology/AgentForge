@@ -140,6 +140,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       <button
         onClick={handleRemove}
         className="flex-shrink-0 p-1 rounded hover:bg-white/10 text-gray-500 hover:text-white transition-colors"
+        aria-label="Dismiss notification"
       >
         <X size={16} />
       </button>
@@ -148,10 +149,11 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       {toast.duration && toast.duration > 0 && (
         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/10">
           <div
-            className="h-full transition-all duration-50 ease-linear"
+            className="h-full ease-linear"
             style={{
               width: `${progress}%`,
               background: config.color,
+              transition: 'width 50ms linear',
             }}
           />
         </div>
@@ -189,7 +191,12 @@ export function ToastContainer() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-[100] w-96 max-w-[calc(100vw-2rem)] space-y-2 pointer-events-none">
+    <div
+      className="fixed top-56 right-4 z-[100] w-96 max-w-[calc(100vw-2rem)] space-y-2 pointer-events-none"
+      role="region"
+      aria-label="Notifications"
+      aria-live="polite"
+    >
       {toasts.map((toast) => (
         <div key={toast.id} className="pointer-events-auto">
           <ToastItem toast={toast} onRemove={() => removeToast(toast.id)} />

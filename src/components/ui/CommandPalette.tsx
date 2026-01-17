@@ -296,6 +296,9 @@ export function CommandPalette({ isOpen, onClose, onOpenSpawnDialog, onOpenHelp 
     <div
       className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 backdrop-blur-sm pt-[15vh]"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command palette"
     >
       <div
         className="fantasy-panel rounded-xl w-[560px] max-w-[90vw] shadow-2xl overflow-hidden"
@@ -304,7 +307,7 @@ export function CommandPalette({ isOpen, onClose, onOpenSpawnDialog, onOpenHelp 
       >
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 py-4 border-b border-white/10">
-          <Command size={20} className="text-amber-400" />
+          <Command size={20} className="text-amber-400" aria-hidden="true" />
           <input
             ref={inputRef}
             type="text"
@@ -313,12 +316,15 @@ export function CommandPalette({ isOpen, onClose, onOpenSpawnDialog, onOpenHelp 
             onKeyDown={handleKeyDown}
             placeholder="Type a command or search..."
             className="flex-1 bg-transparent outline-none text-white placeholder-gray-500 font-medium"
+            aria-label="Search commands"
+            aria-autocomplete="list"
+            aria-controls="command-list"
           />
-          <kbd className="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-500 font-mono">ESC</kbd>
+          <kbd className="px-2 py-1 bg-white/5 rounded text-[10px] text-gray-500 font-mono" aria-hidden="true">ESC</kbd>
         </div>
 
         {/* Command list */}
-        <div ref={listRef} className="max-h-[400px] overflow-y-auto py-2">
+        <div ref={listRef} id="command-list" className="max-h-[400px] overflow-y-auto py-2" role="listbox">
           {filteredCommands.length === 0 ? (
             <div className="px-4 py-8 text-center text-gray-500">
               No commands found for "{query}"
@@ -333,6 +339,8 @@ export function CommandPalette({ isOpen, onClose, onOpenSpawnDialog, onOpenHelp 
                   w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
                   ${index === selectedIndex ? 'bg-white/10' : 'hover:bg-white/5'}
                 `}
+                role="option"
+                aria-selected={index === selectedIndex}
               >
                 <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"

@@ -55,7 +55,7 @@ interface SoundSettingsProps {
 
 export function SoundSettings({ isOpen, onClose }: SoundSettingsProps) {
   const [masterVolume, setMasterVolume] = useState(0.8);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(() => soundManager.isEnabled());
   const [categoryVolumes, setCategoryVolumes] = useState<Record<SoundCategory, number>>({
     ui: 0.7,
     agent: 0.8,
@@ -167,7 +167,7 @@ export function SoundSettings({ isOpen, onClose }: SoundSettingsProps) {
 // Compact sound toggle button for the toolbar
 export function SoundToggle() {
   const [isOpen, setIsOpen] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(() => soundManager.isEnabled());
 
   const handleToggle = useCallback(() => {
     const newEnabled = !soundEnabled;
@@ -177,7 +177,7 @@ export function SoundToggle() {
 
   return (
     <>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1" role="group" aria-label="Sound controls">
         <button
           onClick={handleToggle}
           className={`
@@ -188,6 +188,8 @@ export function SoundToggle() {
             }
           `}
           title={soundEnabled ? 'Sound On' : 'Sound Off'}
+          aria-label={soundEnabled ? 'Mute sound' : 'Unmute sound'}
+          aria-pressed={soundEnabled}
         >
           {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
         </button>
@@ -196,6 +198,7 @@ export function SoundToggle() {
           onClick={() => setIsOpen(true)}
           className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
           title="Sound Settings"
+          aria-label="Open sound settings"
         >
           <Settings size={18} />
         </button>

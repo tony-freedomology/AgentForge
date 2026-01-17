@@ -153,18 +153,22 @@ export function useKeyboardShortcuts() {
   }, [handleKeyDown]);
 }
 
+// Detect if user is on Mac
+const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+const modKey = isMac ? 'Cmd' : 'Ctrl';
+
 // Display keyboard shortcuts
 export const KEYBOARD_SHORTCUTS = [
-  { key: 'Cmd+K', description: 'Command palette' },
+  { key: `${modKey}+K`, description: 'Command palette' },
   { key: 'N', description: 'Summon new agent' },
   { key: '1-9', description: 'Select control group' },
-  { key: 'Ctrl+1-9', description: 'Assign control group' },
+  { key: `${modKey}+1-9`, description: 'Assign control group' },
   { key: 'Escape', description: 'Deselect all' },
   { key: 'Delete', description: 'Remove selected agents' },
   { key: 'M', description: 'Toggle minimap' },
   { key: 'Space', description: 'Pause/Resume' },
   { key: 'C', description: 'Center on selection' },
   { key: 'H', description: 'Center on portal' },
-  { key: 'Ctrl+A', description: 'Select all agents' },
+  { key: `${modKey}+A`, description: 'Select all agents' },
   { key: 'Tab', description: 'Cycle through agents' },
 ];
