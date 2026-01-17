@@ -227,21 +227,31 @@ function App() {
       <AgentTerminal />
 
       {/* Connection status */}
-      <div className="fixed top-20 right-4 flex items-center gap-2">
-        <div className={`flex items-center gap-3 px-6 py-4 fantasy-panel rounded-md text-base tracking-wide font-medium backdrop-blur-xl ${connectionStatus === 'connected' ? 'text-green-400 border-green-500/40 shadow-[0_0_20px_rgba(74,222,128,0.2)]' :
-          connectionStatus === 'connecting' ? 'text-cyan-400 border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'text-red-400 border-red-500/40 shadow-[0_0_20px_rgba(248,113,113,0.2)]'
+      <div className="fixed top-20 right-4 flex items-center gap-3">
+        <div className={`relative flex items-center gap-4 px-8 py-5 fantasy-panel rounded-xl text-sm font-bold tracking-widest uppercase backdrop-blur-xl transition-all duration-300 ${connectionStatus === 'connected'
+          ? 'text-green-400 border-green-500/50 shadow-[0_0_25px_rgba(74,222,128,0.25)]'
+          : connectionStatus === 'connecting'
+            ? 'text-cyan-400 border-cyan-500/50 shadow-[0_0_25px_rgba(6,182,212,0.25)]'
+            : 'text-red-400 border-red-500/50 shadow-[0_0_25px_rgba(248,113,113,0.25)]'
           }`}>
-          <div className="corner-accent top-left !w-1 !h-1" />
-          <div className="corner-accent bottom-right !w-1 !h-1" />
-          <span className={`w-2 h-2 rounded-full ${connectionStatus === 'connected' ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]' :
-            connectionStatus === 'connecting' ? 'bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.5)]' : 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]'
+          <div className="corner-accent top-left" />
+          <div className="corner-accent top-right" />
+          <div className="corner-accent bottom-left" />
+          <div className="corner-accent bottom-right" />
+          <span className={`w-3 h-3 rounded-full ${connectionStatus === 'connected'
+            ? 'bg-green-400 shadow-[0_0_12px_rgba(74,222,128,0.7)]'
+            : connectionStatus === 'connecting'
+              ? 'bg-cyan-400 animate-pulse shadow-[0_0_12px_rgba(6,182,212,0.7)]'
+              : 'bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.7)]'
             }`} />
-          {connectionStatus === 'connected' ? 'Uplink Established' :
-            connectionStatus === 'connecting' ? 'Establishing Uplink...' : 'Uplink Offline'}
+          <span className="relative z-10">
+            {connectionStatus === 'connected' ? 'Uplink Established' :
+              connectionStatus === 'connecting' ? 'Establishing Uplink...' : 'Uplink Offline'}
+          </span>
         </div>
         <button
           onClick={() => setShowHelp(true)}
-          className="px-3 py-1.5 fantasy-panel hover:bg-cyan-900/30 rounded text-cyan-400 hover:text-white text-sm transition-all hover:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
+          className="px-5 py-4 fantasy-panel hover:bg-cyan-900/30 rounded-lg text-cyan-400 hover:text-white text-sm font-bold tracking-wider transition-all hover:shadow-[0_0_15px_rgba(6,182,212,0.4)] hover:border-cyan-400/50"
         >
           F1
         </button>
@@ -251,12 +261,29 @@ function App() {
       {connectionStatus === 'connected' && (
         <button
           onClick={() => setShowSpawnDialog(true)}
-          className="fixed top-36 right-4 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl text-white font-bold text-base tracking-wider shadow-[0_0_25px_rgba(6,182,212,0.4)] hover:shadow-[0_0_35px_rgba(6,182,212,0.6)] transition-all border border-cyan-400/50 hover:scale-105 active:scale-95 group"
+          className="fixed top-44 right-4 group relative overflow-hidden rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
         >
-          <span className="flex items-center gap-2">
-            <span className="text-xl group-hover:rotate-12 transition-transform">✨</span>
-            SUMMON AGENT <span className="opacity-70 text-sm font-mono bg-black/20 px-2 py-0.5 rounded ml-2">N</span>
-          </span>
+          {/* Background layers */}
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/90 to-blue-600/90 rounded-xl" />
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+          {/* Border glow */}
+          <div className="absolute inset-0 rounded-xl border-2 border-cyan-400/60 group-hover:border-cyan-300/80 transition-colors" />
+          <div className="absolute inset-0 rounded-xl shadow-[0_0_30px_rgba(6,182,212,0.4)] group-hover:shadow-[0_0_40px_rgba(6,182,212,0.6)] transition-shadow" />
+
+          {/* Content */}
+          <div className="relative z-10 flex items-center gap-4 px-10 py-6">
+            <span className="text-2xl group-hover:rotate-12 group-hover:scale-110 transition-transform duration-300 drop-shadow-lg">✨</span>
+            <span className="text-white font-black text-lg tracking-widest uppercase drop-shadow-md">
+              Summon Agent
+            </span>
+            <span className="text-cyan-200/80 text-sm font-mono bg-black/30 px-3 py-1.5 rounded-md border border-cyan-400/30 tracking-wider">
+              N
+            </span>
+          </div>
+
+          {/* Shine effect */}
+          <div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 group-hover:animate-shine" />
         </button>
       )}
 

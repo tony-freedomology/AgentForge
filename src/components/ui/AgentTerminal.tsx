@@ -8,7 +8,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useAgentBridge } from '../../services/agentBridge';
-import { X, Send, Minimize2, Maximize2, Terminal, GitBranch, Folder } from 'lucide-react';
+import { X, Send, Minimize2, Maximize2, Terminal, GitBranch, Folder, User } from 'lucide-react';
 
 export function AgentTerminal() {
   const selectedAgentIds = useGameStore((s) => s.selectedAgentIds);
@@ -38,9 +38,14 @@ export function AgentTerminal() {
     }
   }, [selectedAgent?.id]);
 
+  const addTerminalOutput = useGameStore((s) => s.addTerminalOutput);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !selectedId) return;
+
+    // Echo user prompt to terminal first (so user sees what they typed)
+    addTerminalOutput(selectedId, `> ${input}`);
 
     // Send to real agent
     sendInput(selectedId, input);
@@ -167,23 +172,42 @@ export function AgentTerminal() {
         {/* Matrix rain effect overlay (subtle) */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
 
-        {selectedAgent.terminalOutput.map((line, i) => (
-          <div
-            key={i}
-            className={`whitespace-pre-wrap relative z-10 ${line.startsWith('❌') || line.includes('error')
-              ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.3)]'
-              : line.startsWith('✓') || line.includes('success')
-                ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.3)]'
-                : line.startsWith('⚠')
-                  ? 'text-yellow-400'
-                  : line.startsWith('>')
-                    ? 'text-cyan-400 font-bold'
-                    : 'text-cyan-100/80'
+        {selectedAgent.terminalOutput.map((line, i) => {
+          // User input lines start with '>'
+          const isUserInput = line.startsWith('>');
+          const isError = line.startsWith('❌') || line.toLowerCase().includes('error');
+          const isSuccess = line.startsWith('✓') || line.toLowerCase().includes('success');
+          const isWarning = line.startsWith('⚠');
+          const isInfo = line.startsWith('📁') || line.startsWith('🌿') || line.startsWith('[');
+
+          return (
+            <div
+              key={i}
+              className={`whitespace-pre-wrap relative z-10 ${
+                isUserInput
+                  ? 'text-amber-300 font-semibold py-2 mt-3 mb-1 border-l-2 border-amber-400/50 pl-3 bg-amber-500/5 rounded-r'
+                  : isError
+                    ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.3)]'
+                    : isSuccess
+                      ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.3)]'
+                      : isWarning
+                        ? 'text-yellow-400'
+                        : isInfo
+                          ? 'text-cyan-500/70 text-xs'
+                          : 'text-cyan-100/80'
               }`}
-          >
-            {line}
-          </div>
-        ))}
+            >
+              {isUserInput ? (
+                <span className="flex items-center gap-2">
+                  <User size={14} className="text-amber-400" />
+                  <span>{line.slice(2)}</span>
+                </span>
+              ) : (
+                line
+              )}
+            </div>
+          );
+        })}
 
         {selectedAgent.status === 'working' && (
           <div className="text-cyan-400 animate-pulse mt-2 flex items-center gap-2">

@@ -46,7 +46,7 @@ interface GameState {
   controlGroups: Map<number, Set<string>>;
 
   // Actions
-  spawnAgent: (provider: AgentProvider, agentClass: AgentClass, name: string, position: AgentPosition) => Agent;
+  spawnAgent: (provider: AgentProvider, agentClass: AgentClass, name: string, position: AgentPosition, workingDir?: string) => Agent;
   removeAgent: (agentId: string) => void;
   selectAgent: (agentId: string, addToSelection?: boolean) => void;
   selectAgents: (agentIds: string[]) => void;
@@ -131,15 +131,13 @@ export const useGameStore = create<GameState>()(
     controlGroups: new Map(),
 
     // Agent Actions
-    spawnAgent: (provider, agentClass, name, position) => {
+    spawnAgent: (provider, agentClass, name, position, workingDir) => {
       const id = uuidv4();
       const finalName = name || getRandomName(agentClass);
 
-      // Trigger backend process via Bridge
-      // We map the agent class to a specific working directory logic if needed,
-      // but for now we'll use a default or based on class.
-      const workingDir = `/tmp/agentforge/${id}`;
-      agentBridge.spawnAgent(id, finalName, agentClass, workingDir);
+      // Use provided working directory or default to home
+      const finalWorkingDir = workingDir || '~';
+      agentBridge.spawnAgent(id, finalName, agentClass, finalWorkingDir);
 
       const newAgent: Agent = {
         id,

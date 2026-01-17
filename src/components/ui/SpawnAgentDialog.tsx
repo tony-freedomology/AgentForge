@@ -3,7 +3,7 @@ import { useGameStore } from '../../stores/gameStore';
 import type { AgentClassConfig } from '../../config/agentClasses';
 import { AGENT_CLASSES } from '../../config/agentClasses';
 import type { AgentClass, AgentProvider } from '../../types/agent';
-import { Sparkles, X, Hexagon, Shield, Zap, Hammer, Pencil, Crosshair, Cpu } from 'lucide-react';
+import { Sparkles, X, Hexagon, Shield, Zap, Hammer, Pencil, Crosshair, Cpu, FolderOpen } from 'lucide-react';
 
 interface SpawnAgentDialogProps {
   onClose: () => void;
@@ -34,6 +34,7 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
 
   const [selectedClass, setSelectedClass] = useState<AgentClassConfig>(AGENT_CLASSES[0]);
   const [name, setName] = useState('');
+  const [workingDir, setWorkingDir] = useState('~');
   const [hoveredClassId, setHoveredClassId] = useState<string | null>(null);
 
   const activeClass = hoveredClassId
@@ -54,7 +55,7 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
       const agentClassType = selectedClass.id as AgentClass;
       const agentName = name || selectedClass.name;
 
-      spawnAgent(provider, agentClassType, agentName, position);
+      spawnAgent(provider, agentClassType, agentName, position, workingDir || '~');
       onClose();
     }
   };
@@ -164,6 +165,23 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
                 className="input-tech w-full px-4 py-3 text-sm text-white focus:text-[#06b6d4] placeholder-white/20 uppercase"
                 style={{ borderColor: `${activeColor}40` }}
               />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-tech text-[#06b6d4] uppercase tracking-widest pl-1 mb-1 flex items-center gap-2">
+                <FolderOpen size={12} /> Working Directory
+              </label>
+              <input
+                type="text"
+                value={workingDir}
+                onChange={(e) => setWorkingDir(e.target.value)}
+                placeholder="~/projects/my-app"
+                className="input-tech w-full px-4 py-3 text-sm text-white focus:text-[#06b6d4] placeholder-white/20"
+                style={{ borderColor: `${activeColor}40` }}
+              />
+              <p className="text-[9px] text-white/40 mt-1 pl-1">
+                Path to the project this agent should work on
+              </p>
             </div>
 
             <button
