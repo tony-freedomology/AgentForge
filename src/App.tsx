@@ -1,0 +1,268 @@
+import { Canvas } from '@react-three/fiber';
+import { Scene } from './components/3d/Scene';
+import { SelectionBoxOverlay } from './components/3d/SelectionBox';
+import { ResourceBar } from './components/ui/ResourceBar';
+import { Minimap } from './components/ui/Minimap';
+import { CommandPanel } from './components/ui/CommandPanel';
+import { AgentTerminal } from './components/ui/AgentTerminal';
+import { SpawnAgentDialog } from './components/ui/SpawnAgentDialog';
+import { useKeyboardShortcuts, KEYBOARD_SHORTCUTS } from './hooks/useKeyboardShortcuts';
+import { agentBridge } from './services/agentBridge';
+import { ChevronRight, Zap, Crosshair, Cpu } from 'lucide-react';
+import { useState, useEffect } from 'react';
+
+// Help overlay component
+function HelpOverlay({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="fantasy-panel rounded-lg p-6 max-w-lg relative overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="corner-accent top-left" />
+        <div className="corner-accent top-right" />
+        <div className="corner-accent bottom-left" />
+        <div className="corner-accent bottom-right" />
+
+        <h2 className="text-2xl font-bold text-cyan-400 mb-6 flex items-center gap-2">
+          <span className="text-3xl">⌘</span> Neural Uplink Controls
+        </h2>
+        <div className="grid grid-cols-2 gap-3 text-sm relative z-10">
+          {KEYBOARD_SHORTCUTS.map(({ key, description }) => (
+            <div key={key} className="flex items-center gap-3 p-2 rounded bg-cyan-950/20 border border-cyan-900/30">
+              <kbd className="px-2 py-1 bg-cyan-900/40 rounded border border-cyan-500/30 text-cyan-300 font-mono text-xs shadow-[0_0_10px_rgba(6,182,212,0.1)]">
+                {key}
+              </kbd>
+              <span className="text-gray-300">{description}</span>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={onClose}
+          className="mt-6 w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded text-white font-bold tracking-wider uppercase transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]"
+        >
+          Initialize Uplink
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Welcome overlay for first-time users
+function WelcomeOverlay({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-[#050510]/95 flex items-center justify-center z-50 backdrop-blur-xl">
+      <div className="relative w-full max-w-4xl px-8 flex flex-col items-center text-center">
+
+        {/* Background Ambient Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-radial from-cyan-500/10 to-transparent blur-[120px] -z-10 rounded-full animate-pulse-slow" />
+
+        {/* --- HEADER SECTION --- */}
+        <div className="mb-12 relative">
+          <h1 className="text-7xl md:text-8xl font-black font-display tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-900 drop-shadow-[0_0_50px_rgba(6,182,212,0.4)]">
+            AGENT FORGE
+          </h1>
+          <div className="text-lg md:text-xl font-tech text-cyan-400 tracking-[0.3em] uppercase mt-2 opacity-80">
+            Immersive Command Interface
+          </div>
+
+          {/* Decorative Lines */}
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+        </div>
+
+        {/* --- DESCRIPTION --- */}
+        <div className="max-w-2xl mx-auto mb-16 space-y-4">
+          <p className="text-2xl text-white font-light leading-relaxed">
+            Orchestrate your <span className="font-bold text-cyan-300">Digital Legion</span> in real-time.
+          </p>
+          <p className="text-gray-400 text-lg leading-relaxed font-tech">
+            Deploy specialized units like <span className="text-purple-400 font-bold">Architects</span>, <span className="text-blue-400 font-bold">Mages</span>, <span className="text-amber-400 font-bold">Artisans</span>, and <span className="text-green-400 font-bold">Guardians</span> to manifest your vision.
+          </p>
+        </div>
+
+        {/* --- FEATURE GRID --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mb-16">
+          {[
+            {
+              icon: <Zap size={32} />,
+              title: "SUMMON",
+              desc: "Deploy AI Agents (N)",
+              color: "text-amber-400",
+              border: "border-amber-500/30",
+              bg: "bg-amber-500/5"
+            },
+            {
+              icon: <Crosshair size={32} />,
+              title: "COMMAND",
+              desc: "Assign Tasks (T)",
+              color: "text-cyan-400",
+              border: "border-cyan-500/30",
+              bg: "bg-cyan-500/5"
+            },
+            {
+              icon: <Cpu size={32} />,
+              title: "OBSERVE",
+              desc: "Monitor Output",
+              color: "text-purple-400",
+              border: "border-purple-500/30",
+              bg: "bg-purple-500/5"
+            }
+          ].map((feature, idx) => (
+            <div
+              key={idx}
+              className={`
+                relative group p-6 rounded-xl border ${feature.border} ${feature.bg}
+                backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-opacity-20
+                flex flex-col items-center gap-3
+              `}
+            >
+              <div className={`${feature.color} drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]`}>
+                {feature.icon}
+              </div>
+              <div className={`font-display font-bold tracking-widest text-sm ${feature.color}`}>
+                {feature.title}
+              </div>
+              <div className="text-white/40 font-mono text-xs uppercase tracking-wide">
+                {feature.desc}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* --- ENTER BUTTON --- */}
+        <button
+          onClick={onStart}
+          className="group relative px-16 py-6 bg-transparent overflow-hidden clip-tech-button transition-all duration-300 hover:scale-[1.02]"
+        >
+          {/* Button Background & Glow */}
+          <div className="absolute inset-0 bg-cyan-600/20 group-hover:bg-cyan-500/30 transition-colors" />
+          <div className="absolute inset-0 border border-cyan-500/50 group-hover:border-cyan-400 clip-tech-button" />
+
+          <div className="relative z-10 flex items-center gap-4">
+            <span className="text-xl md:text-2xl font-display font-black text-white uppercase tracking-[0.15em] group-hover:text-cyan-100 transition-colors drop-shadow-lg">
+              Enter The Forge
+            </span>
+            <ChevronRight className="w-6 h-6 text-cyan-400 animate-pulse group-hover:translate-x-1 transition-transform" />
+          </div>
+
+          {/* Shine Effect */}
+          <div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 group-hover:animate-shine" />
+        </button>
+
+        {/* --- FOOTER STATUS --- */}
+        <div className="mt-12 flex items-center gap-2 text-cyan-900/40 font-mono text-[10px] uppercase tracking-[0.2em]">
+          <div className="w-1.5 h-1.5 bg-cyan-500/20 rounded-full animate-pulse" />
+          System Version 2.0.4 // Ready for Uplink
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSpawnDialog, setShowSpawnDialog] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts();
+
+  // Connect to backend server
+  useEffect(() => {
+    if (!showWelcome) {
+      setConnectionStatus('connecting');
+      agentBridge.connect()
+        .then(() => setConnectionStatus('connected'))
+        .catch(() => setConnectionStatus('disconnected'));
+    }
+
+    return () => {
+      agentBridge.disconnect();
+    };
+  }, [showWelcome]);
+
+  // F1 for help, N for new agent
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F1') {
+        e.preventDefault();
+        setShowHelp((prev) => !prev);
+      }
+      if (e.key === 'n' && !showWelcome && !showSpawnDialog && connectionStatus === 'connected') {
+        // Check if we're not in an input field
+        if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          setShowSpawnDialog(true);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showWelcome, showSpawnDialog, connectionStatus]);
+
+  const handleStart = () => {
+    setShowWelcome(false);
+  };
+
+  return (
+    <div className="w-screen h-screen bg-gray-950 overflow-hidden">
+      {/* 3D Canvas */}
+      <Canvas
+        shadows
+        camera={{ position: [0, 25, 25], fov: 50 }}
+        gl={{ antialias: true, alpha: false }}
+        dpr={[1, 2]}
+      >
+        <color attach="background" args={['#0a0a1a']} />
+        <Scene />
+      </Canvas>
+
+      {/* 2D Overlays */}
+      <SelectionBoxOverlay />
+      <ResourceBar />
+      <Minimap />
+      <CommandPanel />
+      <AgentTerminal />
+
+      {/* Connection status */}
+      <div className="fixed top-20 right-4 flex items-center gap-2">
+        <div className={`flex items-center gap-2 px-3 py-1.5 fantasy-panel rounded text-sm ${connectionStatus === 'connected' ? 'text-green-400 border-green-500/30' :
+          connectionStatus === 'connecting' ? 'text-cyan-400 border-cyan-500/30' : 'text-red-400 border-red-500/30'
+          }`}>
+          <div className="corner-accent top-left !w-1 !h-1" />
+          <div className="corner-accent bottom-right !w-1 !h-1" />
+          <span className={`w-2 h-2 rounded-full ${connectionStatus === 'connected' ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]' :
+            connectionStatus === 'connecting' ? 'bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(6,182,212,0.5)]' : 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]'
+            }`} />
+          {connectionStatus === 'connected' ? 'Uplink Established' :
+            connectionStatus === 'connecting' ? 'Establishing Uplink...' : 'Uplink Offline'}
+        </div>
+        <button
+          onClick={() => setShowHelp(true)}
+          className="px-3 py-1.5 fantasy-panel hover:bg-cyan-900/30 rounded text-cyan-400 hover:text-white text-sm transition-all hover:shadow-[0_0_10px_rgba(6,182,212,0.3)]"
+        >
+          F1
+        </button>
+      </div>
+
+      {/* Spawn agent button (when connected) */}
+      {connectionStatus === 'connected' && (
+        <button
+          onClick={() => setShowSpawnDialog(true)}
+          className="fixed top-32 right-4 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-white font-medium text-sm shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] transition-all border border-cyan-400/30"
+        >
+          ✨ Summon Agent (N)
+        </button>
+      )}
+
+      {/* Modals */}
+      {showWelcome && <WelcomeOverlay onStart={handleStart} />}
+      {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
+      {showSpawnDialog && <SpawnAgentDialog onClose={() => setShowSpawnDialog(false)} />}
+    </div>
+  );
+}
+
+export default App;
