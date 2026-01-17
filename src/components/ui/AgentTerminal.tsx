@@ -65,7 +65,7 @@ export function AgentTerminal() {
         <div className="corner-accent bottom-left" />
         <div className="corner-accent bottom-right" />
 
-        <div className="p-4 border-b border-cyan-700/20 flex items-center gap-2.5 text-gray-500">
+        <div className="p-6 border-b border-cyan-700/20 flex items-center gap-3 text-gray-500">
           <Terminal size={18} className="text-cyan-600/50" />
           <span className="text-sm font-medium tracking-wide text-cyan-500/50">Select an agent to view terminal</span>
         </div>
@@ -77,7 +77,7 @@ export function AgentTerminal() {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="fixed right-4 bottom-4 px-4 py-2.5 fantasy-panel rounded-lg flex items-center gap-2.5 hover:border-cyan-500/40 transition-all group"
+        className="fixed right-4 bottom-4 px-6 py-4 fantasy-panel rounded-lg flex items-center gap-3 hover:border-cyan-500/40 transition-all group shadow-[0_0_15px_rgba(6,182,212,0.15)]"
       >
         <Terminal size={18} className="text-cyan-400 group-hover:drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
         <span className="text-white font-semibold tracking-wide">{selectedAgent.name}</span>
@@ -111,9 +111,9 @@ export function AgentTerminal() {
       <div className="corner-accent bottom-right" />
 
       {/* Header */}
-      <div className="p-3 border-b border-cyan-800/30 flex items-center justify-between relative z-10 bg-cyan-950/20">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2.5">
+      <div className="px-5 py-4 border-b border-cyan-800/30 flex items-center justify-between relative z-10 bg-cyan-950/20">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span className="text-xl drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]">{selectedAgent.provider === 'claude' ? '🧙' : '⚙️'}</span>
             <span className="text-cyan-50 font-semibold tracking-wide font-mono">{selectedAgent.name}</span>
           </div>

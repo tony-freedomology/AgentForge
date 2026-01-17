@@ -228,8 +228,8 @@ function App() {
 
       {/* Connection status */}
       <div className="fixed top-20 right-4 flex items-center gap-2">
-        <div className={`flex items-center gap-2 px-3 py-1.5 fantasy-panel rounded text-sm ${connectionStatus === 'connected' ? 'text-green-400 border-green-500/30' :
-          connectionStatus === 'connecting' ? 'text-cyan-400 border-cyan-500/30' : 'text-red-400 border-red-500/30'
+        <div className={`flex items-center gap-3 px-6 py-4 fantasy-panel rounded-md text-base tracking-wide font-medium backdrop-blur-xl ${connectionStatus === 'connected' ? 'text-green-400 border-green-500/40 shadow-[0_0_20px_rgba(74,222,128,0.2)]' :
+          connectionStatus === 'connecting' ? 'text-cyan-400 border-cyan-500/40 shadow-[0_0_20px_rgba(6,182,212,0.2)]' : 'text-red-400 border-red-500/40 shadow-[0_0_20px_rgba(248,113,113,0.2)]'
           }`}>
           <div className="corner-accent top-left !w-1 !h-1" />
           <div className="corner-accent bottom-right !w-1 !h-1" />
@@ -251,9 +251,12 @@ function App() {
       {connectionStatus === 'connected' && (
         <button
           onClick={() => setShowSpawnDialog(true)}
-          className="fixed top-32 right-4 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg text-white font-medium text-sm shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] transition-all border border-cyan-400/30"
+          className="fixed top-36 right-4 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl text-white font-bold text-base tracking-wider shadow-[0_0_25px_rgba(6,182,212,0.4)] hover:shadow-[0_0_35px_rgba(6,182,212,0.6)] transition-all border border-cyan-400/50 hover:scale-105 active:scale-95 group"
         >
-          ✨ Summon Agent (N)
+          <span className="flex items-center gap-2">
+            <span className="text-xl group-hover:rotate-12 transition-transform">✨</span>
+            SUMMON AGENT <span className="opacity-70 text-sm font-mono bg-black/20 px-2 py-0.5 rounded ml-2">N</span>
+          </span>
         </button>
       )}
 

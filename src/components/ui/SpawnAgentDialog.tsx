@@ -63,7 +63,7 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
       {/* Main Container - Tech Border Clip */}
       <div
-        className="relative w-[1100px] h-[800px] bg-[#0a0f1e] text-white flex overflow-hidden shadow-2xl clip-tech-border"
+        className="relative w-[1100px] h-[700px] max-h-[90vh] bg-[#0a0f1e] text-white flex overflow-hidden shadow-2xl clip-tech-border"
         style={{
           border: `1px solid ${activeColor}60`,
           boxShadow: `0 0 40px ${activeColor}20`

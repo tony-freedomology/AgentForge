@@ -23,7 +23,7 @@ function ResourceDisplay({ icon, current, max, color }: ResourceDisplayProps) {
   const isLow = percentage < 20;
 
   return (
-    <div className="flex items-center gap-3 px-5 py-3 bg-gradient-to-b from-gray-800/90 to-gray-900/90 rounded-lg border border-gray-700/60 shadow-lg relative overflow-hidden group">
+    <div className="flex items-center gap-3 px-6 py-3 bg-gradient-to-b from-gray-800/90 to-gray-900/90 rounded-lg border border-gray-700/60 shadow-lg relative overflow-hidden group">
       {/* Subtle inner glow */}
       <div
         className="absolute inset-0 opacity-10 transition-opacity group-hover:opacity-20"
