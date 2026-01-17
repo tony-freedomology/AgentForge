@@ -31,6 +31,7 @@ interface ToastState {
 }
 
 let toastCounter = 0;
+const MAX_TOASTS = 5; // Limit visible toasts to prevent screen flooding
 
 export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
@@ -45,9 +46,13 @@ export const useToastStore = create<ToastState>((set) => ({
       createdAt: Date.now(),
     };
 
-    set((state) => ({
-      toasts: [...state.toasts, newToast],
-    }));
+    set((state) => {
+      // Remove oldest toasts if we exceed the limit
+      const existingToasts = state.toasts.length >= MAX_TOASTS
+        ? state.toasts.slice(-(MAX_TOASTS - 1))
+        : state.toasts;
+      return { toasts: [...existingToasts, newToast] };
+    });
 
     // Auto-remove after duration (unless persistent)
     if (duration > 0) {

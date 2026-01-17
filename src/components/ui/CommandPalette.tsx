@@ -18,6 +18,7 @@ import {
   Play,
   Home,
   Volume2,
+  VolumeX,
   HelpCircle,
   Command,
 } from 'lucide-react';
@@ -47,6 +48,7 @@ interface CommandPaletteProps {
 export function CommandPalette({ isOpen, onClose, onOpenSpawnDialog, onOpenHelp }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [soundEnabled, setSoundEnabled] = useState(() => soundManager.isEnabled());
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +63,13 @@ export function CommandPalette({ isOpen, onClose, onOpenSpawnDialog, onOpenHelp 
   const isPaused = useGameStore((s) => s.isPaused);
   const setCameraTarget = useGameStore((s) => s.setCameraTarget);
   const showMinimap = useGameStore((s) => s.showMinimap);
+
+  // Sync sound state when palette opens
+  useEffect(() => {
+    if (isOpen) {
+      setSoundEnabled(soundManager.isEnabled());
+    }
+  }, [isOpen]);
 
   // Build command list
   const commands = useMemo<CommandItem[]>(() => {
@@ -121,12 +130,14 @@ export function CommandPalette({ isOpen, onClose, onOpenSpawnDialog, onOpenHelp 
 
     cmds.push({
       id: 'toggle-sound',
-      label: 'Toggle Sound',
-      description: 'Enable or disable audio',
-      icon: <Volume2 size={16} />,
+      label: soundEnabled ? 'Mute Sound' : 'Unmute Sound',
+      description: soundEnabled ? 'Disable audio' : 'Enable audio',
+      icon: soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />,
       category: 'system',
       action: () => {
-        soundManager.setEnabled(!soundManager.isEnabled());
+        const newEnabled = !soundEnabled;
+        soundManager.setEnabled(newEnabled);
+        setSoundEnabled(newEnabled);
         onClose();
       },
     });
@@ -211,6 +222,7 @@ export function CommandPalette({ isOpen, onClose, onOpenSpawnDialog, onOpenHelp 
     selectedAgentIds,
     isPaused,
     showMinimap,
+    soundEnabled,
     onClose,
     onOpenSpawnDialog,
     onOpenHelp,
