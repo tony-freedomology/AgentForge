@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <filter id="chestGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <linearGradient id="chestWood" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#92400e"/>
+      <stop offset="50%" style="stop-color:#78350f"/>
+      <stop offset="100%" style="stop-color:#451a03"/>
+    </linearGradient>
+
+    <linearGradient id="chestGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fde047"/>
+      <stop offset="50%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#d97706"/>
+    </linearGradient>
+
+    <radialGradient id="innerGlow">
+      <stop offset="0%" style="stop-color:#fde047;stop-opacity:1"/>
+      <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:0.5"/>
+      <stop offset="100%" style="stop-color:#92400e;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Shadow -->
+  <ellipse cx="64" cy="118" rx="50" ry="8" fill="#000" opacity="0.3"/>
+
+  <!-- Chest base (bottom part) -->
+  <rect x="14" y="60" width="100" height="55" rx="4" fill="url(#chestWood)" stroke="#451a03" stroke-width="2"/>
+
+  <!-- Wood grain lines -->
+  <line x1="20" y1="70" x2="108" y2="70" stroke="#451a03" stroke-width="1" opacity="0.5"/>
+  <line x1="20" y1="85" x2="108" y2="85" stroke="#451a03" stroke-width="1" opacity="0.5"/>
+  <line x1="20" y1="100" x2="108" y2="100" stroke="#451a03" stroke-width="1" opacity="0.5"/>
+
+  <!-- Gold trim on base -->
+  <rect x="14" y="60" width="100" height="8" fill="url(#chestGold)"/>
+  <rect x="14" y="107" width="100" height="8" rx="0 0 4 4" fill="url(#chestGold)"/>
+
+  <!-- Vertical gold bands -->
+  <rect x="14" y="60" width="8" height="55" fill="url(#chestGold)"/>
+  <rect x="106" y="60" width="8" height="55" fill="url(#chestGold)"/>
+  <rect x="56" y="60" width="16" height="55" fill="url(#chestGold)"/>
+
+  <!-- Inner glow (chest is slightly open) -->
+  <ellipse cx="64" cy="58" rx="40" ry="15" fill="url(#innerGlow)" filter="url(#chestGlow)">
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite"/>
+  </ellipse>
+
+  <!-- Lid (slightly open) -->
+  <path d="M 14 60 Q 14 35 64 25 Q 114 35 114 60 L 108 55 Q 108 40 64 32 Q 20 40 20 55 Z" fill="url(#chestWood)" stroke="#451a03" stroke-width="2"/>
+
+  <!-- Lid gold trim -->
+  <path d="M 14 60 Q 14 35 64 25 Q 114 35 114 60" fill="none" stroke="url(#chestGold)" stroke-width="4"/>
+
+  <!-- Lock -->
+  <rect x="54" y="65" width="20" height="25" rx="3" fill="url(#chestGold)" stroke="#d97706" stroke-width="2"/>
+  <circle cx="64" cy="75" r="5" fill="#451a03"/>
+  <rect x="62" y="75" width="4" height="10" fill="#451a03"/>
+
+  <!-- Corner gems -->
+  <circle cx="22" cy="68" r="5" fill="#ef4444" filter="url(#chestGlow)"/>
+  <circle cx="106" cy="68" r="5" fill="#ef4444" filter="url(#chestGlow)"/>
+  <circle cx="22" cy="107" r="5" fill="#3b82f6" filter="url(#chestGlow)"/>
+  <circle cx="106" cy="107" r="5" fill="#3b82f6" filter="url(#chestGlow)"/>
+
+  <!-- Sparkles from opening -->
+  <circle cx="45" cy="45" r="3" fill="#fde047" opacity="0.8">
+    <animate attributeName="cy" values="45;35;45" dur="1.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.8;0.3;0.8" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="64" cy="38" r="2" fill="#fde047" opacity="0.6">
+    <animate attributeName="cy" values="38;25;38" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="83" cy="45" r="3" fill="#fde047" opacity="0.7">
+    <animate attributeName="cy" values="45;30;45" dur="1.8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.8s" repeatCount="indefinite"/>
+  </circle>
+</svg>

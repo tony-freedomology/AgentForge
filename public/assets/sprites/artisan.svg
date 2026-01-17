@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <filter id="artisanGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <linearGradient id="forgeGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#f97316"/>
+      <stop offset="50%" style="stop-color:#ea580c"/>
+      <stop offset="100%" style="stop-color:#fed7aa"/>
+    </linearGradient>
+
+    <linearGradient id="leatherGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a16207"/>
+      <stop offset="100%" style="stop-color:#713f12"/>
+    </linearGradient>
+
+    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9ca3af"/>
+      <stop offset="50%" style="stop-color:#6b7280"/>
+      <stop offset="100%" style="stop-color:#374151"/>
+    </linearGradient>
+
+    <radialGradient id="sparkGrad">
+      <stop offset="0%" style="stop-color:#fde047;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#f97316;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Forge glow on ground -->
+  <ellipse cx="256" cy="465" rx="100" ry="20" fill="#f97316" opacity="0.4" filter="url(#artisanGlow)"/>
+
+  <!-- Stocky dwarf body / leather tunic -->
+  <path d="M 170 200 Q 140 320 150 460 L 360 460 Q 370 320 340 200 Z" fill="url(#leatherGrad)" stroke="#78350f" stroke-width="2"/>
+
+  <!-- Leather apron -->
+  <path d="M 190 250 L 180 450 L 330 450 L 320 250 Z" fill="#57534e" stroke="#44403c" stroke-width="2"/>
+  <rect x="190" y="250" width="130" height="15" fill="#78350f"/>
+
+  <!-- Belt with tools -->
+  <rect x="160" y="290" width="190" height="25" fill="#78350f" stroke="#451a03" stroke-width="2"/>
+  <circle cx="200" cy="302" r="8" fill="url(#metalGrad)"/>
+  <circle cx="256" cy="302" r="10" fill="url(#metalGrad)" stroke="#f97316" stroke-width="2"/>
+  <circle cx="310" cy="302" r="8" fill="url(#metalGrad)"/>
+
+  <!-- Tool pouch -->
+  <rect x="330" y="320" width="40" height="50" rx="5" fill="#78350f" stroke="#451a03" stroke-width="2"/>
+  <rect x="335" y="325" width="8" height="20" fill="url(#metalGrad)"/>
+  <rect x="347" y="325" width="6" height="25" fill="url(#metalGrad)"/>
+  <rect x="357" y="325" width="8" height="15" fill="url(#metalGrad)"/>
+
+  <!-- Broad shoulders -->
+  <ellipse cx="170" cy="200" rx="50" ry="40" fill="url(#leatherGrad)" stroke="#78350f" stroke-width="2"/>
+  <ellipse cx="340" cy="200" rx="50" ry="40" fill="url(#leatherGrad)" stroke="#78350f" stroke-width="2"/>
+
+  <!-- Muscular arms -->
+  <path d="M 120 200 Q 80 250 100 320" stroke="#d4a373" stroke-width="40" stroke-linecap="round" fill="none"/>
+  <path d="M 390 200 Q 420 260 400 340" stroke="#d4a373" stroke-width="40" stroke-linecap="round" fill="none"/>
+
+  <!-- Dwarf head -->
+  <ellipse cx="256" cy="140" rx="60" ry="55" fill="#d4a373"/>
+
+  <!-- Epic beard -->
+  <path d="M 196 150 Q 180 280 256 320 Q 332 280 316 150" fill="#b45309" stroke="#92400e" stroke-width="1"/>
+  <path d="M 210 160 Q 200 250 256 290 Q 312 250 302 160" fill="#ca8a04"/>
+  <!-- Beard braids -->
+  <path d="M 220 250 Q 200 310 210 340" stroke="#92400e" stroke-width="6" fill="none"/>
+  <path d="M 292 250 Q 312 310 302 340" stroke="#92400e" stroke-width="6" fill="none"/>
+  <circle cx="210" cy="345" r="8" fill="url(#metalGrad)"/>
+  <circle cx="302" cy="345" r="8" fill="url(#metalGrad)"/>
+
+  <!-- Eyes -->
+  <ellipse cx="230" cy="125" rx="12" ry="8" fill="#1c1917"/>
+  <ellipse cx="282" cy="125" rx="12" ry="8" fill="#1c1917"/>
+  <ellipse cx="232" cy="124" rx="4" ry="3" fill="#f97316"/>
+  <ellipse cx="284" cy="124" rx="4" ry="3" fill="#f97316"/>
+
+  <!-- Bushy eyebrows -->
+  <path d="M 210 115 Q 230 100 250 115" stroke="#b45309" stroke-width="6" fill="none"/>
+  <path d="M 262 115 Q 282 100 302 115" stroke="#b45309" stroke-width="6" fill="none"/>
+
+  <!-- Nose -->
+  <ellipse cx="256" cy="145" rx="15" ry="12" fill="#c9a373"/>
+
+  <!-- Goggles on forehead -->
+  <ellipse cx="256" cy="95" rx="55" ry="20" fill="none" stroke="url(#metalGrad)" stroke-width="4"/>
+  <circle cx="225" cy="95" r="20" fill="none" stroke="#78350f" stroke-width="6"/>
+  <circle cx="287" cy="95" r="20" fill="none" stroke="#78350f" stroke-width="6"/>
+  <circle cx="225" cy="95" r="14" fill="#0ea5e9" opacity="0.6"/>
+  <circle cx="287" cy="95" r="14" fill="#0ea5e9" opacity="0.6"/>
+
+  <!-- EPIC HAMMER -->
+  <g transform="rotate(30 100 320)">
+    <!-- Handle -->
+    <rect x="60" y="200" width="15" height="200" rx="5" fill="#78350f" stroke="#451a03" stroke-width="2"/>
+    <!-- Hammer head -->
+    <rect x="30" y="160" width="75" height="50" rx="5" fill="url(#metalGrad)" stroke="#374151" stroke-width="3"/>
+    <!-- Runes on hammer -->
+    <path d="M 45 175 L 55 195 L 45 195" stroke="#f97316" stroke-width="2" fill="none" filter="url(#artisanGlow)"/>
+    <path d="M 75 175 L 85 195 L 75 195" stroke="#f97316" stroke-width="2" fill="none" filter="url(#artisanGlow)"/>
+    <!-- Forge glow on hammer -->
+    <rect x="35" y="165" width="65" height="40" rx="3" fill="#f97316" opacity="0.3" filter="url(#artisanGlow)">
+      <animate attributeName="opacity" values="0.2;0.5;0.2" dur="2s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- Floating tools (magical) -->
+  <g opacity="0.7">
+    <rect x="380" y="150" width="6" height="40" fill="url(#metalGrad)">
+      <animate attributeName="y" values="150;140;150" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    <polygon points="383,145 370,130 396,130" fill="url(#metalGrad)">
+      <animate attributeName="points" values="383,145 370,130 396,130;383,135 370,120 396,120;383,145 370,130 396,130" dur="3s" repeatCount="indefinite"/>
+    </polygon>
+  </g>
+
+  <!-- Sparks -->
+  <circle cx="120" cy="280" r="4" fill="url(#sparkGrad)">
+    <animate attributeName="cy" values="280;260;280" dur="1s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="140" cy="300" r="3" fill="url(#sparkGrad)">
+    <animate attributeName="cy" values="300;275;300" dur="1.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="100" cy="260" r="5" fill="url(#sparkGrad)">
+    <animate attributeName="cy" values="260;230;260" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Gear motif -->
+  <g transform="translate(400, 380)">
+    <circle cx="0" cy="0" r="25" fill="none" stroke="#f97316" stroke-width="3" opacity="0.5">
+      <animateTransform attributeName="transform" type="rotate" values="0;360" dur="10s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="0" cy="0" r="15" fill="none" stroke="#f97316" stroke-width="2" opacity="0.5"/>
+    <!-- Gear teeth -->
+    <rect x="-4" y="-30" width="8" height="10" fill="#f97316" opacity="0.5"/>
+    <rect x="-4" y="20" width="8" height="10" fill="#f97316" opacity="0.5"/>
+    <rect x="-30" y="-4" width="10" height="8" fill="#f97316" opacity="0.5"/>
+    <rect x="20" y="-4" width="10" height="8" fill="#f97316" opacity="0.5"/>
+  </g>
+</svg>
