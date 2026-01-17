@@ -7,6 +7,7 @@ import { CommandPanel } from './components/ui/CommandPanel';
 import { AgentTerminal } from './components/ui/AgentTerminal';
 import { SpawnAgentDialog } from './components/ui/SpawnAgentDialog';
 import { PartyFrames } from './components/ui/PartyFrames';
+import { LootPanel } from './components/ui/LootPanel';
 import { PendingQuestsNotification } from './components/ui/QuestTurnIn';
 import { useKeyboardShortcuts, KEYBOARD_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { agentBridge } from './services/agentBridge';
@@ -243,6 +244,7 @@ function App() {
       <CommandPanel />
       <AgentTerminal />
       <PartyFrames />
+      <LootPanel />
       <PendingQuestsNotification />
 
       {/* Connection status */}

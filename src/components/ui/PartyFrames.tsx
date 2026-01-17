@@ -203,6 +203,20 @@ function AgentFrame({ agent, isSelected }: { agent: Agent; isSelected: boolean }
             className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-900"
             style={{ background: statusColors[agent.status] || '#6b7280' }}
           />
+          {/* Loot indicator */}
+          {agent.producedFiles.length > 0 && (
+            <div
+              className="absolute -top-1 -left-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+              style={{
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                boxShadow: '0 0 6px rgba(245,158,11,0.5)',
+                color: '#78350f',
+              }}
+              title={`${agent.producedFiles.length} files produced`}
+            >
+              {agent.producedFiles.length > 9 ? '9+' : agent.producedFiles.length}
+            </div>
+          )}
         </div>
 
         {/* Name and status */}
