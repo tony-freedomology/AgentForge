@@ -7,6 +7,7 @@ import { CommandPanel } from './components/ui/CommandPanel';
 import { AgentTerminal } from './components/ui/AgentTerminal';
 import { SpawnAgentDialog } from './components/ui/SpawnAgentDialog';
 import { PartyFrames } from './components/ui/PartyFrames';
+import { PendingQuestsNotification } from './components/ui/QuestTurnIn';
 import { useKeyboardShortcuts, KEYBOARD_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { agentBridge } from './services/agentBridge';
 import { ChevronRight, Zap, Crosshair, Cpu } from 'lucide-react';
@@ -242,6 +243,7 @@ function App() {
       <CommandPanel />
       <AgentTerminal />
       <PartyFrames />
+      <PendingQuestsNotification />
 
       {/* Connection status */}
       <div className="fixed top-20 right-4 flex items-center gap-3">

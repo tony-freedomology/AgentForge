@@ -55,9 +55,13 @@ const CLASS_CONFIG: Record<string, { color: string; texture: string; scale: numb
 // Floating status indicator component
 function StatusIndicator({ agent, yOffset }: { agent: Agent; yOffset: number }) {
   const [attentionFlash, setAttentionFlash] = useState(false);
+  const [questBounce, setQuestBounce] = useState(false);
   const activityInfo = ACTIVITY_ICONS[agent.activity];
   const classConfig = getAgentClass(agent.class);
   const classColor = classConfig?.color || '#06b6d4';
+
+  // Check if agent has a pending quest for review
+  const hasPendingQuest = agent.currentQuest?.status === 'pending_review';
 
   // Attention flash animation
   useEffect(() => {
@@ -76,11 +80,25 @@ function StatusIndicator({ agent, yOffset }: { agent: Agent; yOffset: number }) 
     return () => clearInterval(interval);
   }, [agent.needsAttention, agent.attentionSince]);
 
+  // Quest bounce animation
+  useEffect(() => {
+    if (!hasPendingQuest) {
+      setQuestBounce(false);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setQuestBounce((b) => !b);
+    }, 600);
+
+    return () => clearInterval(interval);
+  }, [hasPendingQuest]);
+
   const getAttentionIcon = () => {
     switch (agent.attentionReason) {
       case 'error': return '!';
       case 'waiting_input': return '?';
-      case 'task_complete': return '✓';
+      case 'task_complete': return '!'; // Use golden ! for quest completion
       case 'idle_timeout': return '💤';
       default: return '!';
     }
@@ -90,7 +108,7 @@ function StatusIndicator({ agent, yOffset }: { agent: Agent; yOffset: number }) 
     switch (agent.attentionReason) {
       case 'error': return '#ef4444';
       case 'waiting_input': return '#eab308';
-      case 'task_complete': return '#22c55e';
+      case 'task_complete': return '#fbbf24'; // Golden for quest completion
       default: return '#f59e0b';
     }
   };
@@ -105,8 +123,50 @@ function StatusIndicator({ agent, yOffset }: { agent: Agent; yOffset: number }) 
       style={{ pointerEvents: 'none', userSelect: 'none' }}
     >
       <div className="flex flex-col items-center gap-1">
-        {/* Attention beacon */}
-        {agent.needsAttention && (
+        {/* Quest completion indicator - WoW-style golden ! */}
+        {hasPendingQuest && (
+          <div
+            className="flex flex-col items-center"
+            style={{
+              transform: questBounce ? 'translateY(-4px)' : 'translateY(0)',
+              transition: 'transform 0.3s ease-out',
+            }}
+          >
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center text-xl font-black relative"
+              style={{
+                background: 'linear-gradient(180deg, #fcd34d 0%, #f59e0b 50%, #d97706 100%)',
+                boxShadow: '0 0 20px #fbbf24, 0 0 40px #fbbf2480, inset 0 -2px 4px rgba(0,0,0,0.3)',
+                border: '2px solid #fef3c7',
+                color: '#78350f',
+                textShadow: '0 1px 0 rgba(255,255,255,0.5)',
+              }}
+            >
+              !
+              {/* Sparkle effect */}
+              <div
+                className="absolute -top-1 -right-1 w-3 h-3 rounded-full"
+                style={{
+                  background: 'radial-gradient(circle, #fff 0%, transparent 70%)',
+                  opacity: questBounce ? 1 : 0.5,
+                }}
+              />
+            </div>
+            <div
+              className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider mt-1"
+              style={{
+                background: 'linear-gradient(180deg, #fbbf24 0%, #d97706 100%)',
+                color: '#78350f',
+                textShadow: '0 1px 0 rgba(255,255,255,0.3)',
+              }}
+            >
+              Quest Ready
+            </div>
+          </div>
+        )}
+
+        {/* Attention beacon (for non-quest attention states) */}
+        {agent.needsAttention && !hasPendingQuest && (
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-base font-bold transition-all duration-150"
             style={{
@@ -123,7 +183,7 @@ function StatusIndicator({ agent, yOffset }: { agent: Agent; yOffset: number }) 
         )}
 
         {/* Activity badge */}
-        {showActivityBadge && (
+        {showActivityBadge && !hasPendingQuest && (
           <div
             className="px-2 py-1 rounded-md text-[10px] font-bold flex items-center gap-1 whitespace-nowrap"
             style={{
@@ -142,8 +202,8 @@ function StatusIndicator({ agent, yOffset }: { agent: Agent; yOffset: number }) 
         <div
           className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
           style={{
-            background: `${classColor}40`,
-            border: `1px solid ${classColor}60`,
+            background: hasPendingQuest ? '#fbbf2440' : `${classColor}40`,
+            border: `1px solid ${hasPendingQuest ? '#fbbf2460' : `${classColor}60`}`,
             color: 'white',
           }}
         >

@@ -56,6 +56,7 @@ export function AgentTerminal() {
   }, [selectedId]);
 
   const addTerminalOutput = useGameStore((s) => s.addTerminalOutput);
+  const startQuest = useGameStore((s) => s.startQuest);
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -71,12 +72,18 @@ export function AgentTerminal() {
     // Echo user prompt to terminal first (so user sees what they typed)
     addTerminalOutput(selectedId, `> ${input}`);
 
+    // Start a quest for this task (if not already on one)
+    const agent = agents.get(selectedId);
+    if (agent && !agent.currentQuest) {
+      startQuest(selectedId, input.trim());
+    }
+
     // Send to real agent
     sendInput(selectedId, input);
 
     // Clear input
     setInput('');
-  }, [input, selectedId, addTerminalOutput, sendInput]);
+  }, [input, selectedId, addTerminalOutput, sendInput, agents, startQuest]);
 
   // Handle keyboard shortcuts including command history
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {

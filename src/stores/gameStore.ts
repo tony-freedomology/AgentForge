@@ -14,6 +14,7 @@ import type {
   AgentProvider,
   AgentTask,
   FileArtifact,
+  Quest,
 } from '../types/agent';
 import { ACTIVITY_PATTERNS } from '../types/agent';
 import { v4 as uuidv4 } from 'uuid';
@@ -70,6 +71,15 @@ interface GameState {
   updateAgentUsage: (agentId: string, percent: number) => void;
   addProducedFile: (agentId: string, file: FileArtifact) => void;
   detectActivityFromOutput: (agentId: string, output: string) => void;
+
+  // Quest System Actions
+  startQuest: (agentId: string, description: string) => void;
+  completeQuest: (agentId: string, notes?: string) => void;
+  approveQuest: (agentId: string) => void;
+  rejectQuest: (agentId: string, feedback: string) => void;
+  detectQuestCompletion: (agentId: string, output: string) => void;
+  detectFileArtifacts: (agentId: string, output: string) => void;
+  getAgentsWithPendingQuests: () => Agent[];
 
   // Selection Box
   startSelection: (x: number, y: number) => void;
@@ -495,6 +505,199 @@ export const useGameStore = create<GameState>()(
           }
         }
       }
+
+      // Also detect file artifacts and quest completion
+      get().detectFileArtifacts(agentId, output);
+      get().detectQuestCompletion(agentId, output);
+    },
+
+    // Quest System Actions
+    startQuest: (agentId, description) => {
+      set((state) => {
+        const agent = state.agents.get(agentId);
+        if (!agent) return state;
+
+        const quest: Quest = {
+          id: uuidv4(),
+          description,
+          startedAt: Date.now(),
+          status: 'in_progress',
+          producedFiles: [],
+        };
+
+        const newAgents = new Map(state.agents);
+        newAgents.set(agentId, {
+          ...agent,
+          currentQuest: quest,
+          status: 'working',
+          activity: 'thinking',
+          activityStartedAt: Date.now(),
+          activityDetails: description.slice(0, 50),
+          needsAttention: false,
+          producedFiles: [], // Reset for new quest
+        });
+        return { agents: newAgents };
+      });
+    },
+
+    completeQuest: (agentId, notes) => {
+      set((state) => {
+        const agent = state.agents.get(agentId);
+        if (!agent || !agent.currentQuest) return state;
+
+        const completedQuest: Quest = {
+          ...agent.currentQuest,
+          status: 'pending_review',
+          completedAt: Date.now(),
+          agentNotes: notes,
+          producedFiles: [...agent.producedFiles], // Copy files produced during quest
+        };
+
+        const newAgents = new Map(state.agents);
+        newAgents.set(agentId, {
+          ...agent,
+          currentQuest: completedQuest,
+          status: 'completed',
+          activity: 'idle',
+          activityDetails: 'Quest complete - awaiting review',
+          needsAttention: true,
+          attentionReason: 'task_complete',
+          attentionSince: Date.now(),
+        });
+        return { agents: newAgents };
+      });
+    },
+
+    approveQuest: (agentId) => {
+      set((state) => {
+        const agent = state.agents.get(agentId);
+        if (!agent || !agent.currentQuest) return state;
+
+        const approvedQuest: Quest = {
+          ...agent.currentQuest,
+          status: 'approved',
+        };
+
+        const newAgents = new Map(state.agents);
+        newAgents.set(agentId, {
+          ...agent,
+          currentQuest: undefined,
+          completedQuests: [...agent.completedQuests, approvedQuest],
+          status: 'idle',
+          activity: 'idle',
+          activityDetails: 'Ready for commands',
+          needsAttention: false,
+          attentionReason: undefined,
+          experience: agent.experience + 1,
+          level: Math.floor((agent.experience + 1) / 5) + 1, // Level up every 5 quests
+          producedFiles: [], // Clear for next quest
+        });
+        return { agents: newAgents };
+      });
+
+      // Add terminal output
+      const agent = get().agents.get(agentId);
+      if (agent) {
+        get().addTerminalOutput(agentId, `✓ Quest approved! ${agent.name} gains experience.`);
+      }
+    },
+
+    rejectQuest: (agentId, feedback) => {
+      set((state) => {
+        const agent = state.agents.get(agentId);
+        if (!agent || !agent.currentQuest) return state;
+
+        const rejectedQuest: Quest = {
+          ...agent.currentQuest,
+          status: 'rejected',
+        };
+
+        const newAgents = new Map(state.agents);
+        newAgents.set(agentId, {
+          ...agent,
+          currentQuest: rejectedQuest,
+          status: 'working',
+          activity: 'thinking',
+          activityDetails: 'Revising work...',
+          needsAttention: false,
+          attentionReason: undefined,
+        });
+        return { agents: newAgents };
+      });
+
+      // Send feedback to agent
+      const agent = get().agents.get(agentId);
+      if (agent) {
+        get().addTerminalOutput(agentId, `⟳ Revision requested: ${feedback}`);
+        // Send the feedback through the agent bridge
+        agentBridge.sendInput(agentId, feedback);
+      }
+    },
+
+    detectQuestCompletion: (agentId, output) => {
+      const agent = get().agents.get(agentId);
+      if (!agent || !agent.currentQuest || agent.currentQuest.status !== 'in_progress') return;
+
+      // Patterns that indicate completion
+      const completionPatterns = [
+        /\bdone\b/i,
+        /\bcompleted?\b/i,
+        /\bfinished\b/i,
+        /ready for review/i,
+        /task complete/i,
+        /successfully/i,
+        /all tests pass/i,
+        /build succeeded/i,
+        /✓.*complete/i,
+        /I've (completed|finished|done)/i,
+        /changes have been (made|applied|committed)/i,
+      ];
+
+      for (const pattern of completionPatterns) {
+        if (pattern.test(output)) {
+          // Extract potential notes from the output
+          const notes = output.slice(0, 200);
+          get().completeQuest(agentId, notes);
+          return;
+        }
+      }
+    },
+
+    detectFileArtifacts: (agentId, output) => {
+      const agent = get().agents.get(agentId);
+      if (!agent) return;
+
+      // Patterns to detect file operations
+      const filePatterns = [
+        { pattern: /(?:Created|Writing|Wrote to|New file):?\s*[`'"]?([^\s`'"]+\.[a-z]+)/gi, type: 'created' as const },
+        { pattern: /(?:Modified|Updated|Edited|Edit\(|Changed):?\s*[`'"]?([^\s`'"]+\.[a-z]+)/gi, type: 'modified' as const },
+        { pattern: /(?:Deleted|Removed|Delete\():?\s*[`'"]?([^\s`'"]+\.[a-z]+)/gi, type: 'deleted' as const },
+        { pattern: /Write\([`'"]([^`'"]+)[`'"]/g, type: 'created' as const },
+        { pattern: /Edit\([`'"]([^`'"]+)[`'"]/g, type: 'modified' as const },
+      ];
+
+      for (const { pattern, type } of filePatterns) {
+        let match;
+        while ((match = pattern.exec(output)) !== null) {
+          const filePath = match[1];
+          // Avoid duplicates
+          const alreadyTracked = agent.producedFiles.some(f => f.path === filePath && f.type === type);
+          if (!alreadyTracked && filePath.includes('.')) {
+            get().addProducedFile(agentId, {
+              path: filePath,
+              type,
+              timestamp: Date.now(),
+            });
+          }
+        }
+      }
+    },
+
+    getAgentsWithPendingQuests: () => {
+      const agents = get().agents;
+      return Array.from(agents.values()).filter(
+        (a) => a.currentQuest?.status === 'pending_review'
+      );
     },
 
     // Selection Box
