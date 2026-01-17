@@ -5,12 +5,13 @@
  * Click talents to allocate points earned through leveling.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { getAgentClass } from '../../config/agentClasses';
 import { CLASS_TALENTS, canLearnTalent, calculateTalentBonuses } from '../../config/talents';
 import type { Agent, Talent, TalentTier } from '../../types/agent';
 import { X, Sparkles, Lock, ChevronUp, Zap } from 'lucide-react';
+import { useTalentSounds } from '../../hooks/useSound';
 
 interface TalentNodeProps {
   talent: Talent;
@@ -206,6 +207,12 @@ export function TalentTree({ agent, onClose }: TalentTreeProps) {
   const classConfig = getAgentClass(agent.class);
   const classColor = classConfig?.color || '#f59e0b';
   const talents = CLASS_TALENTS[agent.class] || [];
+  const { playAllocate, playMaxed, playTreeOpen, playTreeClose } = useTalentSounds();
+
+  // Play open sound on mount
+  useEffect(() => {
+    playTreeOpen();
+  }, [playTreeOpen]);
 
   // Group talents by tier
   const talentsByTier = useMemo(() => {
@@ -230,13 +237,29 @@ export function TalentTree({ agent, onClose }: TalentTreeProps) {
   const pointsSpent = Object.values(agent.talents.allocated).reduce((sum, r) => sum + r, 0);
 
   const handleAllocate = (talentId: string) => {
-    allocateTalent(agent.id, talentId);
+    const talent = talents.find(t => t.id === talentId);
+    const currentRank = agent.talents.allocated[talentId] || 0;
+
+    const success = allocateTalent(agent.id, talentId);
+    if (success) {
+      // Check if we just maxed the talent
+      if (talent && currentRank + 1 >= talent.maxRanks) {
+        playMaxed();
+      } else {
+        playAllocate();
+      }
+    }
+  };
+
+  const handleClose = () => {
+    playTreeClose();
+    onClose();
   };
 
   return (
     <div
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         className="fantasy-panel rounded-2xl w-[600px] max-w-[95vw] max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
@@ -283,7 +306,7 @@ export function TalentTree({ agent, onClose }: TalentTreeProps) {
             </div>
 
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-500 hover:text-white"
             >
               <X size={24} />

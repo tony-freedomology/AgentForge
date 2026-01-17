@@ -1,0 +1,313 @@
+{
+  "version": "1.0",
+  "description": "AgentForge Sound Asset Requirements",
+  "format": "MP3 or OGG, 44100Hz, Mono or Stereo",
+  "sounds": [
+    {
+      "file": "ui/click",
+      "category": "ui",
+      "description": "Soft magical click, like a rune activating",
+      "duration_seconds": 0.2,
+      "style_guide": "Fantasy UI, crystal/glass touch, subtle magic sparkle",
+      "loops": false,
+      "variations": 3
+    },
+    {
+      "file": "ui/hover",
+      "category": "ui",
+      "description": "Subtle shimmer, hovering over enchanted UI element",
+      "duration_seconds": 0.15,
+      "style_guide": "Very soft whoosh, magical whisper, barely audible sparkle",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "ui/panel_open",
+      "category": "ui",
+      "description": "Ancient tome opening, pages rustling with magic",
+      "duration_seconds": 0.5,
+      "style_guide": "Book opening + magical resonance, paper rustling, arcane hum",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "ui/panel_close",
+      "category": "ui",
+      "description": "Tome closing, magical seal forming",
+      "duration_seconds": 0.4,
+      "style_guide": "Book closing thud + magical seal sound, energy dissipating",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "ui/error",
+      "category": "ui",
+      "description": "Dark chord, spell fizzle, warning tone",
+      "duration_seconds": 0.6,
+      "style_guide": "Minor chord, sparking/fizzle effect, ominous but not harsh",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "ui/success",
+      "category": "ui",
+      "description": "Triumphant chime, golden sparkle sound",
+      "duration_seconds": 0.5,
+      "style_guide": "Bright ascending notes, crystalline, satisfying completion",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "ui/notification",
+      "category": "ui",
+      "description": "Crystal bell, gentle alert chime",
+      "duration_seconds": 0.4,
+      "style_guide": "Single clear bell tone, magical resonance, attention-getting",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "agent/spawn",
+      "category": "agent",
+      "description": "Magical summoning, portal opening, energy coalescing",
+      "duration_seconds": 1.5,
+      "style_guide": "Whooshing portal, energy building, crystallization, 'being formed' feeling",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "agent/select",
+      "category": "agent",
+      "description": "Unit acknowledgement, 'Ready', magical affirmation",
+      "duration_seconds": 0.5,
+      "style_guide": "Confident chime, magical ping, 'selected' feedback",
+      "loops": false,
+      "variations": 3
+    },
+    {
+      "file": "agent/deselect",
+      "category": "agent",
+      "description": "Soft magical release, selection fading",
+      "duration_seconds": 0.3,
+      "style_guide": "Soft fade-out sound, gentle release, energy dispersing",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "agent/working",
+      "category": "agent",
+      "description": "Typing on magical keyboard, soft arcane humming",
+      "duration_seconds": 4.0,
+      "style_guide": "Loopable ambient, soft clicks and hums, productive energy",
+      "loops": true,
+      "variations": 0
+    },
+    {
+      "file": "agent/idle",
+      "category": "agent",
+      "description": "Ambient breathing, occasional movement",
+      "duration_seconds": 6.0,
+      "style_guide": "Loopable very soft ambient, subtle magical presence",
+      "loops": true,
+      "variations": 0
+    },
+    {
+      "file": "agent/death",
+      "category": "agent",
+      "description": "Dramatic departure, energy dispersing",
+      "duration_seconds": 1.2,
+      "style_guide": "Sad descending notes, energy scattering, farewell tone",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "agent/attention",
+      "category": "agent",
+      "description": "Urgent ping, crystal alarm, attention required",
+      "duration_seconds": 0.8,
+      "style_guide": "Urgent but not harsh, pulsing crystal ping, 'look at me'",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "agent/level_up",
+      "category": "agent",
+      "description": "Triumphant fanfare, power surge, achievement unlocked",
+      "duration_seconds": 2.0,
+      "style_guide": "Epic ascending fanfare, golden energy burst, celebration",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "quest/start",
+      "category": "quest",
+      "description": "Quest accepted, scroll unrolling, commitment made",
+      "duration_seconds": 0.8,
+      "style_guide": "Scroll unfurling, magical seal breaking, adventure beginning",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "quest/complete",
+      "category": "quest",
+      "description": "Quest finished, achievement sound, ready for review",
+      "duration_seconds": 1.0,
+      "style_guide": "Satisfying completion chime, quest log update, 'done' feeling",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "quest/turn_in",
+      "category": "quest",
+      "description": "Presenting work, quest giver interaction",
+      "duration_seconds": 0.6,
+      "style_guide": "Items being placed, magical inspection, anticipation",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "quest/approved",
+      "category": "quest",
+      "description": "Glorious approval, golden fanfare, success celebration",
+      "duration_seconds": 1.5,
+      "style_guide": "Triumphant brass fanfare, golden sparkles, joy and achievement",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "quest/rejected",
+      "category": "quest",
+      "description": "Rejection tone, sent back, try again",
+      "duration_seconds": 0.8,
+      "style_guide": "Disappointed tone, scroll re-rolling, 'not quite' feeling",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "talent/allocate",
+      "category": "talent",
+      "description": "Power unlocked, skill learned, magical empowerment",
+      "duration_seconds": 0.8,
+      "style_guide": "Energy flowing into character, power surge, skill unlocking",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "talent/reset",
+      "category": "talent",
+      "description": "Talents unwinding, power refund, reset complete",
+      "duration_seconds": 1.0,
+      "style_guide": "Energy reversing, skills dissipating, clean slate sound",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "talent/tree_open",
+      "category": "talent",
+      "description": "Ancient skill book opening, talents revealed",
+      "duration_seconds": 0.6,
+      "style_guide": "Magical book opening, glowing pages, knowledge revealing",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "talent/tree_close",
+      "category": "talent",
+      "description": "Skill book closing, talents stored",
+      "duration_seconds": 0.5,
+      "style_guide": "Book closing, energy settling, talents secured",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "talent/maxed",
+      "category": "talent",
+      "description": "Talent mastered, golden completion, ultimate power",
+      "duration_seconds": 1.2,
+      "style_guide": "Epic mastery fanfare, golden glow, maximum power achieved",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "loot/created",
+      "category": "loot",
+      "description": "Item crafted, scroll appearing, artifact created",
+      "duration_seconds": 0.6,
+      "style_guide": "Crafting completion, item materializing, creation sound",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "loot/modified",
+      "category": "loot",
+      "description": "Item enhanced, gentle modification sound",
+      "duration_seconds": 0.4,
+      "style_guide": "Subtle enhancement, update sound, file edited",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "loot/deleted",
+      "category": "loot",
+      "description": "Item destroyed, dissipating, removal",
+      "duration_seconds": 0.5,
+      "style_guide": "Item fading away, gentle destruction, removal sound",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "loot/drop",
+      "category": "loot",
+      "description": "Treasure drop, coins falling, loot available",
+      "duration_seconds": 0.8,
+      "style_guide": "Exciting loot drop, treasure revealing, gold coins",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "loot/pickup",
+      "category": "loot",
+      "description": "Loot collected, item obtained, satisfying grab",
+      "duration_seconds": 0.4,
+      "style_guide": "Satisfying pickup, item collected, into inventory",
+      "loops": false,
+      "variations": 0
+    },
+    {
+      "file": "ambient/forge",
+      "category": "ambient",
+      "description": "Distant forge sounds, magical workshop ambience, crackling energy",
+      "duration_seconds": 60.0,
+      "style_guide": "Loopable ambient, forge hammering in distance, magical energy hum, workshop atmosphere",
+      "loops": true,
+      "variations": 0
+    },
+    {
+      "file": "music/main_theme",
+      "category": "music",
+      "description": "Epic orchestral theme, heroic and inspiring, fantasy adventure",
+      "duration_seconds": 180.0,
+      "style_guide": "Orchestral, inspiring, heroic, fantasy RPG main menu music",
+      "loops": true,
+      "variations": 0
+    },
+    {
+      "file": "music/battle",
+      "category": "music",
+      "description": "Intense battle music, driving percussion, urgent strings",
+      "duration_seconds": 120.0,
+      "style_guide": "Intense orchestral, driving drums, action music, deadline energy",
+      "loops": true,
+      "variations": 0
+    },
+    {
+      "file": "music/victory",
+      "category": "music",
+      "description": "Victory fanfare, triumphant brass, celebration",
+      "duration_seconds": 8.0,
+      "style_guide": "Triumphant fanfare, brass section, victory celebration",
+      "loops": false,
+      "variations": 0
+    }
+  ]
+}
