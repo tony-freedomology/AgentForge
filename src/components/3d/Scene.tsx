@@ -53,14 +53,9 @@ function AgentUnits() {
       {agents.map((agent) => (
         <AgentUnit
           key={agent.id}
-          id={agent.id}
-          type={agent.class}
-          q={agent.position.q}
-          r={agent.position.r}
-          name={agent.name}
-          status={agent.status}
+          agent={agent}
           isSelected={selectedIds.has(agent.id)}
-          onClick={() => selectAgent(agent.id, false)} // Simple selection for now
+          onClick={() => selectAgent(agent.id, false)}
         />
       ))}
     </group>

@@ -22,6 +22,7 @@ const CLASS_ICONS: Record<AgentClass, React.ReactNode> = {
   scout: <Search className="w-5 h-5" />,
   guardian: <Shield className="w-5 h-5" />,
   architect: <Building2 className="w-5 h-5" />,
+  designer: <Wand2 className="w-5 h-5" />,
 };
 
 const CLASS_DESCRIPTIONS: Record<AgentClass, string> = {
@@ -30,6 +31,7 @@ const CLASS_DESCRIPTIONS: Record<AgentClass, string> = {
   scout: 'Swift explorer agent',
   guardian: 'Security & review sentinel',
   architect: 'System design sage',
+  designer: 'Artisan Designer - UI/UX specialist',
 };
 
 const COMMANDS: Command[] = [

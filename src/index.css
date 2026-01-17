@@ -423,3 +423,90 @@ body {
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
 }
+
+/* Shimmer animation for activity bars */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Attention pulse animation */
+@keyframes attention-pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+}
+
+.animate-attention {
+  animation: attention-pulse 1s ease-in-out infinite;
+}
+
+/* Urgent attention animation */
+@keyframes urgent-attention {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 10px #eab308;
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 25px #eab308, 0 0 40px #eab30850;
+  }
+}
+
+.animate-urgent-attention {
+  animation: urgent-attention 0.5s ease-in-out infinite;
+}
+
+/* Floating animation for status indicators */
+@keyframes float-status {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float-status {
+  animation: float-status 2s ease-in-out infinite;
+}
+
+/* Glow pulse for status badges */
+@keyframes glow-pulse {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 2px currentColor);
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 8px currentColor);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Scrollbar styling for party frames */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.3);
+  border-radius: 2px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.5);
+}
