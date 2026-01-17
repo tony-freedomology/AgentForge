@@ -51,9 +51,10 @@ function VolumeSlider({ label, icon, value, onChange, color }: VolumeSliderProps
 interface SoundSettingsProps {
   isOpen: boolean;
   onClose: () => void;
+  onSoundToggle?: (enabled: boolean) => void;
 }
 
-export function SoundSettings({ isOpen, onClose }: SoundSettingsProps) {
+export function SoundSettings({ isOpen, onClose, onSoundToggle }: SoundSettingsProps) {
   const [masterVolume, setMasterVolume] = useState(0.8);
   const [soundEnabled, setSoundEnabled] = useState(() => soundManager.isEnabled());
   const [categoryVolumes, setCategoryVolumes] = useState<Record<SoundCategory, number>>({
@@ -80,7 +81,8 @@ export function SoundSettings({ isOpen, onClose }: SoundSettingsProps) {
     const newEnabled = !soundEnabled;
     setSoundEnabled(newEnabled);
     soundManager.setEnabled(newEnabled);
-  }, [soundEnabled]);
+    onSoundToggle?.(newEnabled);
+  }, [soundEnabled, onSoundToggle]);
 
   if (!isOpen) return null;
 
@@ -175,6 +177,11 @@ export function SoundToggle() {
     soundManager.setEnabled(newEnabled);
   }, [soundEnabled]);
 
+  // Sync state when settings panel toggles sound
+  const handleSettingsToggle = useCallback((enabled: boolean) => {
+    setSoundEnabled(enabled);
+  }, []);
+
   return (
     <>
       <div className="flex items-center gap-1" role="group" aria-label="Sound controls">
@@ -204,7 +211,11 @@ export function SoundToggle() {
         </button>
       </div>
 
-      <SoundSettings isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      <SoundSettings
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onSoundToggle={handleSettingsToggle}
+      />
     </>
   );
 }

@@ -584,7 +584,9 @@ export const useGameStore = create<GameState>()(
       });
 
       // Show toast notification
-      toast.quest(`Quest Complete!`, `${agent.name} has completed: "${agent.currentQuest.description.slice(0, 50)}..."`);
+      const desc = agent.currentQuest.description;
+      const truncatedDesc = desc.length > 50 ? `${desc.slice(0, 50)}...` : desc;
+      toast.quest(`Quest Complete!`, `${agent.name} has completed: "${truncatedDesc}"`);
     },
 
     approveQuest: (agentId) => {

@@ -23,6 +23,10 @@ import {
 } from 'lucide-react';
 import { soundManager } from '../../services/soundManager';
 
+// Platform detection for keyboard shortcuts
+const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+const modKey = isMac ? 'Cmd' : 'Ctrl';
+
 interface CommandItem {
   id: string;
   label: string;
@@ -147,7 +151,7 @@ export function CommandPalette({ isOpen, onClose, onOpenSpawnDialog, onOpenHelp 
         label: 'Select All Agents',
         description: `Select all ${agents.size} agents`,
         icon: <Users size={16} />,
-        shortcut: 'Ctrl+A',
+        shortcut: `${modKey}+A`,
         category: 'agents',
         action: () => {
           selectAgents(Array.from(agents.keys()));
