@@ -1,0 +1,145 @@
+{
+  "tiles": [
+    "tile_water",
+    "tile_stone_base",
+    "tile_void",
+    "tile_highlight_select",
+    "tile_stone_mossy",
+    "tile_highlight_move",
+    "tile_grass",
+    "tile_stone_cracked",
+    "tile_gold",
+    "tile_highlight_attack",
+    "tile_portal_glow",
+    "tile_arcane",
+    "tile_portal_base",
+    "tile_dirt",
+    "tile_lava"
+  ],
+  "agents": {
+    "gemini": [
+      "gemini_cast_nw",
+      "gemini_cast_s",
+      "gemini_idle_nw",
+      "gemini_celebrate_nw",
+      "gemini_cast_w",
+      "gemini_walk_sw",
+      "gemini_celebrate_s",
+      "gemini_celebrate_w",
+      "gemini_cast_sw",
+      "gemini_idle_sw",
+      "gemini_celebrate_sw",
+      "gemini_walk_nw",
+      "gemini_walk_s",
+      "gemini_idle_w",
+      "gemini_idle_s",
+      "gemini_walk_w"
+    ],
+    "claude": [
+      "claude_celebrate_s",
+      "claude_cast_s",
+      "claude_celebrate_w",
+      "claude_cast_w",
+      "claude_cast_nw",
+      "claude_idle_nw",
+      "claude_celebrate_sw",
+      "claude_walk_sw",
+      "claude_cast_sw",
+      "claude_idle_sw",
+      "claude_walk_s",
+      "claude_celebrate_nw",
+      "claude_idle_w",
+      "claude_walk_nw",
+      "claude_idle_s",
+      "claude_walk_w"
+    ],
+    "codex": [
+      "codex_celebrate_w",
+      "codex_celebrate_sw",
+      "codex_walk_nw",
+      "codex_celebrate_s",
+      "codex_idle_sw",
+      "codex_cast_s",
+      "codex_cast_sw",
+      "codex_cast_w",
+      "codex_idle_w",
+      "codex_celebrate_nw",
+      "codex_walk_sw",
+      "codex_walk_s",
+      "codex_walk_w",
+      "codex_idle_s",
+      "codex_idle_nw",
+      "codex_cast_nw"
+    ],
+    "badges": [
+      "level_badge_silver",
+      "level_badge_platinum",
+      "level_badge_gold",
+      "level_badge_diamond",
+      "level_badge_bronze"
+    ]
+  },
+  "props": [
+    "cauldron",
+    "crystal_blue",
+    "mushroom_cluster",
+    "portal_particles",
+    "crystal_green",
+    "banner_guild",
+    "chest_open",
+    "chest_closed",
+    "tree_magical",
+    "portal_swirl",
+    "crystal_purple",
+    "portal_frame",
+    "torch_wall",
+    "bookshelf"
+  ],
+  "ui": {
+    "buttons": [
+      "btn_primary",
+      "btn_secondary",
+      "btn_close",
+      "btn_danger"
+    ],
+    "frames": [
+      "healthbar_frame",
+      "healthbar_fill_xp",
+      "healthbar_fill_hp",
+      "frame_portrait_selected",
+      "panel_dark",
+      "frame_portrait",
+      "panel_parchment",
+      "panel_stone",
+      "healthbar_fill_mana"
+    ],
+    "icons": [
+      "icon_gold",
+      "icon_quest_progress",
+      "icon_quest_complete",
+      "icon_quest_available",
+      "icon_artifact",
+      "icon_level_up",
+      "icon_talent_point",
+      "icon_xp"
+    ]
+  },
+  "effects": [
+    "effect_levelup",
+    "effect_magic_purple",
+    "effect_magic_blue",
+    "effect_magic_green",
+    "effect_magic_gold",
+    "effect_spawn",
+    "effect_teleport",
+    "effect_quest_complete"
+  ],
+  "minimap": [
+    "minimap_frame",
+    "minimap_agent_codex",
+    "minimap_portal",
+    "minimap_agent_claude",
+    "minimap_agent_gemini",
+    "minimap_quest"
+  ]
+}

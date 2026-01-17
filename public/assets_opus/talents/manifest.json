@@ -1,0 +1,89 @@
+{
+  "talents": {
+    "mage": [
+      "deep_freeze",
+      "ice_barrier",
+      "arcane_power",
+      "presence_of_mind",
+      "arcane_intellect",
+      "frost_nova",
+      "pyroblast",
+      "spell_focus",
+      "combustion",
+      "arcane_missiles",
+      "evocation",
+      "time_warp",
+      "quick_casting"
+    ],
+    "guardian": [
+      "aura_of_devotion",
+      "consecration",
+      "code_armor",
+      "righteous_fury",
+      "lay_on_hands",
+      "holy_wrath",
+      "shield_wall",
+      "vigilance",
+      "last_stand",
+      "divine_shield",
+      "divine_intervention",
+      "guardian_spirit",
+      "blessing_of_protection"
+    ],
+    "architect": [
+      "caching_mastery",
+      "modular_design",
+      "systems_thinking",
+      "microservices",
+      "distributed_systems",
+      "pattern_recognition",
+      "structural_analysis",
+      "dependency_injection",
+      "event_driven",
+      "scalable_architecture",
+      "grand_architect",
+      "big_picture",
+      "load_balancing"
+    ],
+    "scout": [
+      "keen_eye",
+      "shadow_step",
+      "swift_reading",
+      "mark_target",
+      "rapid_assessment",
+      "light_footed",
+      "evasion",
+      "tracking",
+      "critical_strike",
+      "killing_blow",
+      "camouflage",
+      "hunters_mark",
+      "master_scout"
+    ],
+    "artisan": [
+      "resourcefulness",
+      "grand_master",
+      "transmutation",
+      "enchanting",
+      "philosophers_stone",
+      "craftsmanship",
+      "legendary_craft",
+      "mass_production",
+      "salvaging",
+      "assembly_line",
+      "automation",
+      "efficiency",
+      "masterwork"
+    ]
+  },
+  "ui": [
+    "talent_frame_maxed",
+    "talent_frame_gold",
+    "talent_frame_locked",
+    "talent_connection_active",
+    "talent_tree_background",
+    "talent_connection_inactive",
+    "talent_point_orb",
+    "reset_button"
+  ]
+}

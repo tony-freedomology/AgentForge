@@ -26,18 +26,25 @@ except ImportError:
     print("Missing Pillow. Run: pip install pillow")
     sys.exit(1)
 
+try:
+    from rembg import remove as rembg_remove
+    print("✓ rembg loaded (AI background removal)")
+    HAS_REMBG = True
+except ImportError:
+    print("⚠ rembg not available, using chroma key fallback. Install: pip install rembg")
+    HAS_REMBG = False
+
 # Configuration
-API_KEY = "AIzaSyBEeloT86rl--OBrBmViefZuOw_APWe8nk"
-OUTPUT_DIR = Path(__file__).parent.parent / "public" / "assets"
+API_KEY = "AIzaSyBLWDR40WPHP8zuZbukdjn-oF9Nncy_avE"
+OUTPUT_DIR = Path(__file__).parent.parent / "public" / "assets_opus"  # Separate dir to avoid conflicts
 SPRITES_DIR = OUTPUT_DIR / "sprites"
 TEXTURES_DIR = OUTPUT_DIR / "textures"
 UI_DIR = OUTPUT_DIR / "ui"
 FRAMES_DIR = OUTPUT_DIR / "frames"
 
 # API endpoints - using models that support image generation
-# User specified: gemini-3-pro-image-preview
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key={API_KEY}"
-IMAGEN_URL = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key={API_KEY}"
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key={API_KEY}"
+IMAGEN_URL = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key={API_KEY}"
 
 # Ensure directories exist
 for dir_path in [SPRITES_DIR, TEXTURES_DIR, UI_DIR, FRAMES_DIR]:
@@ -328,8 +335,18 @@ def generate_with_imagen(prompt: str, retries: int = 3) -> Image.Image | None:
     return None
 
 
-def remove_background(img: Image.Image, tolerance: int = 50) -> Image.Image:
-    """Remove solid color background, detecting the most common edge color."""
+def remove_background_ai(img: Image.Image) -> Image.Image:
+    """Remove background using AI (rembg) - world-class quality."""
+    print("  Using AI background removal (rembg)...")
+    # rembg expects RGB or RGBA, returns RGBA with transparent background
+    result = rembg_remove(img)
+    print("  ✓ AI background removal complete")
+    return result
+
+
+def remove_background_chroma(img: Image.Image, tolerance: int = 50) -> Image.Image:
+    """Fallback: Remove solid color background using chroma key detection."""
+    print("  Using chroma key background removal (fallback)...")
     img = img.convert("RGBA")
     width, height = img.size
     pixels = img.load()
@@ -368,6 +385,14 @@ def remove_background(img: Image.Image, tolerance: int = 50) -> Image.Image:
                 new_pixels[x, y] = (r, g, b, 255)
 
     return new_img
+
+
+def remove_background(img: Image.Image, tolerance: int = 50) -> Image.Image:
+    """Remove background using best available method."""
+    if HAS_REMBG:
+        return remove_background_ai(img)
+    else:
+        return remove_background_chroma(img, tolerance)
 
 
 def add_glow_effect(img: Image.Image, color: str, intensity: int = 20) -> Image.Image:

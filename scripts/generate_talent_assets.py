@@ -10,18 +10,36 @@ Usage: python scripts/generate_talent_assets.py
 """
 
 import os
+import sys
 import json
+import time
 import base64
 import requests
 from pathlib import Path
+from io import BytesIO
 
-# API Configuration - Replace with your key
-API_KEY = "YOUR_GEMINI_API_KEY_HERE"
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key={API_KEY}"
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
+    print("⚠ PIL not available, images won't be post-processed")
 
-# Output directories
-OUTPUT_DIR = Path("public/assets/talents")
-UI_DIR = Path("public/assets/ui")
+try:
+    from rembg import remove as rembg_remove
+    HAS_REMBG = True
+    print("✓ rembg loaded for AI background removal")
+except ImportError:
+    HAS_REMBG = False
+    print("⚠ rembg not available, using raw images")
+
+# API Configuration
+API_KEY = "AIzaSyBLWDR40WPHP8zuZbukdjn-oF9Nncy_avE"
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key={API_KEY}"
+
+# Output directories - use assets_opus to keep separate from other agent
+OUTPUT_DIR = Path("public/assets_opus/talents")
+UI_DIR = Path("public/assets_opus/ui")
 
 # Talent icon definitions by class
 TALENT_ICONS = {
@@ -141,16 +159,17 @@ def generate_image(prompt: str, filename: str, output_dir: Path):
         print(f"  Skipping {filename} (already exists)")
         return True
 
-    full_prompt = f"""Create a 128x128 pixel icon for a fantasy RPG game.
+    full_prompt = f"""Generate an image: Create a 128x128 pixel icon for a fantasy RPG game.
 Style: World of Warcraft inspired, painterly, vibrant colors, slight glow effects.
-Background: Transparent or very dark to allow transparency.
+Background: Solid bright green (#00FF00) background for easy removal.
 Subject: {prompt}
 Requirements:
 - Centered composition
 - Clear silhouette
 - Rich colors with magical glow
 - Professional game UI quality
-- No text or letters"""
+- No text or letters
+- On solid bright green background"""
 
     payload = {
         "contents": [{
@@ -158,9 +177,7 @@ Requirements:
         }],
         "generationConfig": {
             "responseModalities": ["image", "text"],
-            "imageSizeOptions": {
-                "aspectRatio": "1:1"
-            }
+            "responseMimeType": "text/plain"
         }
     }
 
@@ -175,9 +192,24 @@ Requirements:
             for part in candidate.get("content", {}).get("parts", []):
                 if "inlineData" in part:
                     image_data = base64.b64decode(part["inlineData"]["data"])
-                    with open(output_path, "wb") as f:
-                        f.write(image_data)
-                    print(f"  Generated: {filename}")
+
+                    # Post-process with rembg if available
+                    if HAS_PIL and HAS_REMBG:
+                        try:
+                            img = Image.open(BytesIO(image_data))
+                            img = rembg_remove(img)
+                            # Resize to 128x128
+                            img = img.resize((128, 128), Image.Resampling.LANCZOS)
+                            img.save(output_path, "PNG")
+                            print(f"  ✓ Generated with AI bg removal: {filename}")
+                        except Exception as e:
+                            print(f"  ⚠ Post-processing failed, saving raw: {e}")
+                            with open(output_path, "wb") as f:
+                                f.write(image_data)
+                    else:
+                        with open(output_path, "wb") as f:
+                            f.write(image_data)
+                        print(f"  Generated: {filename}")
                     return True
 
         print(f"  No image in response for {filename}")
@@ -201,6 +233,7 @@ def generate_talent_icons():
         for talent_id, description in class_data["talents"]:
             prompt = f"{description}. Style: {style}"
             generate_image(prompt, talent_id, class_dir)
+            time.sleep(2)  # Rate limiting
 
 
 def generate_ui_elements():
