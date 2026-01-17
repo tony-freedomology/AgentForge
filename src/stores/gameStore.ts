@@ -21,6 +21,7 @@ import { ACTIVITY_PATTERNS } from '../types/agent';
 import { v4 as uuidv4 } from 'uuid';
 import { generateHexGrid } from '../utils/hexUtils';
 import { agentBridge } from '../services/agentBridge';
+import { toast } from './toastStore';
 
 interface GameState {
   // Agents
@@ -240,6 +241,9 @@ export const useGameStore = create<GameState>()(
         get().updateAgentStatus(id, 'idle');
         get().updateAgentActivity(id, 'idle', 'Ready for commands');
       }, 2000);
+
+      // Show toast notification
+      toast.info('Agent Summoned', `${finalName} (${agentClass}) has joined your legion`);
 
       return newAgent;
     },
@@ -550,21 +554,24 @@ export const useGameStore = create<GameState>()(
     },
 
     completeQuest: (agentId, notes) => {
+      const agent = get().agents.get(agentId);
+      if (!agent || !agent.currentQuest) return;
+
       set((state) => {
-        const agent = state.agents.get(agentId);
-        if (!agent || !agent.currentQuest) return state;
+        const stateAgent = state.agents.get(agentId);
+        if (!stateAgent || !stateAgent.currentQuest) return state;
 
         const completedQuest: Quest = {
-          ...agent.currentQuest,
+          ...stateAgent.currentQuest,
           status: 'pending_review',
           completedAt: Date.now(),
           agentNotes: notes,
-          producedFiles: [...agent.producedFiles], // Copy files produced during quest
+          producedFiles: [...stateAgent.producedFiles], // Copy files produced during quest
         };
 
         const newAgents = new Map(state.agents);
         newAgents.set(agentId, {
-          ...agent,
+          ...stateAgent,
           currentQuest: completedQuest,
           status: 'completed',
           activity: 'idle',
@@ -575,9 +582,19 @@ export const useGameStore = create<GameState>()(
         });
         return { agents: newAgents };
       });
+
+      // Show toast notification
+      toast.quest(`Quest Complete!`, `${agent.name} has completed: "${agent.currentQuest.description.slice(0, 50)}..."`);
     },
 
     approveQuest: (agentId) => {
+      const agentBefore = get().agents.get(agentId);
+      if (!agentBefore || !agentBefore.currentQuest) return;
+
+      const oldLevel = agentBefore.level;
+      const newExperience = agentBefore.experience + 1;
+      const newLevel = Math.floor(newExperience / 5) + 1;
+
       set((state) => {
         const agent = state.agents.get(agentId);
         if (!agent || !agent.currentQuest) return state;
@@ -597,8 +614,8 @@ export const useGameStore = create<GameState>()(
           activityDetails: 'Ready for commands',
           needsAttention: false,
           attentionReason: undefined,
-          experience: agent.experience + 1,
-          level: Math.floor((agent.experience + 1) / 5) + 1, // Level up every 5 quests
+          experience: newExperience,
+          level: newLevel,
           talents: {
             ...agent.talents,
             points: agent.talents.points + 1, // Award talent point on quest completion
@@ -609,13 +626,24 @@ export const useGameStore = create<GameState>()(
       });
 
       // Add terminal output
-      const agent = get().agents.get(agentId);
-      if (agent) {
-        get().addTerminalOutput(agentId, `✓ Quest approved! ${agent.name} gains experience.`);
+      get().addTerminalOutput(agentId, `✓ Quest approved! ${agentBefore.name} gains experience.`);
+
+      // Show toast notifications
+      toast.success('Quest Approved!', `${agentBefore.name} earned +1 talent point`);
+
+      // Check for level up
+      if (newLevel > oldLevel) {
+        toast.achievement(
+          `Level Up!`,
+          `${agentBefore.name} reached Level ${newLevel}!`
+        );
       }
     },
 
     rejectQuest: (agentId, feedback) => {
+      const agentBefore = get().agents.get(agentId);
+      if (!agentBefore || !agentBefore.currentQuest) return;
+
       set((state) => {
         const agent = state.agents.get(agentId);
         if (!agent || !agent.currentQuest) return state;
@@ -639,12 +667,12 @@ export const useGameStore = create<GameState>()(
       });
 
       // Send feedback to agent
-      const agent = get().agents.get(agentId);
-      if (agent) {
-        get().addTerminalOutput(agentId, `⟳ Revision requested: ${feedback}`);
-        // Send the feedback through the agent bridge
-        agentBridge.sendInput(agentId, feedback);
-      }
+      get().addTerminalOutput(agentId, `⟳ Revision requested: ${feedback}`);
+      // Send the feedback through the agent bridge
+      agentBridge.sendInput(agentId, feedback);
+
+      // Show toast notification
+      toast.warning('Revision Requested', `${agentBefore.name} is revising their work`);
     },
 
     detectQuestCompletion: (agentId, output) => {

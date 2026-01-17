@@ -117,6 +117,30 @@ function AgentFrame({
   const classConfig = getAgentClass(agent.class);
 
   const [attentionPulse, setAttentionPulse] = useState(false);
+  const [isSpawning, setIsSpawning] = useState(agent.status === 'spawning');
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [prevLevel, setPrevLevel] = useState(agent.level);
+
+  // Detect level up
+  useEffect(() => {
+    if (agent.level > prevLevel) {
+      setShowLevelUp(true);
+      const timer = setTimeout(() => setShowLevelUp(false), 2000);
+      setPrevLevel(agent.level);
+      return () => clearTimeout(timer);
+    }
+  }, [agent.level, prevLevel]);
+
+  // Handle spawn animation
+  useEffect(() => {
+    if (agent.status === 'spawning') {
+      setIsSpawning(true);
+    } else if (isSpawning) {
+      // Keep the animation class briefly after spawning completes
+      const timer = setTimeout(() => setIsSpawning(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [agent.status, isSpawning]);
 
   // Escalating attention animation
   useEffect(() => {
@@ -181,9 +205,30 @@ function AgentFrame({
         bg-gray-900/90 border-2 backdrop-blur-sm
         hover:bg-gray-800/90 hover:scale-[1.02]
         ${agent.needsAttention ? 'animate-attention' : ''}
+        ${isSpawning ? 'animate-spawn-emerge' : ''}
       `}
       style={getBorderStyle()}
     >
+      {/* Level up effect */}
+      {showLevelUp && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute inset-0 animate-[level-up-burst_1s_ease-out]"
+            style={{ background: `radial-gradient(circle, ${classColor}40 0%, transparent 70%)` }}
+          />
+          <div
+            className="absolute inset-0 rounded-lg border-2 animate-[level-up-ring_1.5s_ease-out]"
+            style={{ borderColor: classColor }}
+          />
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-display font-black text-lg uppercase tracking-wider animate-[level-up-text_1.5s_ease-out]"
+            style={{ color: classColor, textShadow: `0 0 20px ${classColor}` }}
+          >
+            Level Up!
+          </div>
+        </div>
+      )}
+
       {/* Attention indicator */}
       {agent.needsAttention && (
         <div

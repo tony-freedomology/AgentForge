@@ -155,18 +155,16 @@ export function useKeyboardShortcuts() {
 
 // Display keyboard shortcuts
 export const KEYBOARD_SHORTCUTS = [
+  { key: 'Cmd+K', description: 'Command palette' },
+  { key: 'N', description: 'Summon new agent' },
   { key: '1-9', description: 'Select control group' },
   { key: 'Ctrl+1-9', description: 'Assign control group' },
   { key: 'Escape', description: 'Deselect all' },
   { key: 'Delete', description: 'Remove selected agents' },
   { key: 'M', description: 'Toggle minimap' },
-  { key: 'P / Space', description: 'Pause/Resume' },
+  { key: 'Space', description: 'Pause/Resume' },
   { key: 'C', description: 'Center on selection' },
   { key: 'H', description: 'Center on portal' },
   { key: 'Ctrl+A', description: 'Select all agents' },
   { key: 'Tab', description: 'Cycle through agents' },
-  { key: 'WASD / Arrows', description: 'Pan camera' },
-  { key: 'Mouse wheel', description: 'Zoom' },
-  { key: 'Middle mouse', description: 'Adjust camera angle' },
-  { key: 'Edge scroll', description: 'Pan camera' },
 ];

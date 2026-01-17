@@ -542,6 +542,13 @@ class SoundManager {
   }
 
   /**
+   * Check if sound is enabled
+   */
+  isEnabled(): boolean {
+    return this.enabled;
+  }
+
+  /**
    * Load a sound file
    */
   private async loadSound(file: string): Promise<AudioBuffer | null> {

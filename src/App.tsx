@@ -9,6 +9,9 @@ import { SpawnAgentDialog } from './components/ui/SpawnAgentDialog';
 import { PartyFrames } from './components/ui/PartyFrames';
 import { LootPanel } from './components/ui/LootPanel';
 import { PendingQuestsNotification } from './components/ui/QuestTurnIn';
+import { ToastContainer } from './components/ui/Toast';
+import { SoundToggle } from './components/ui/SoundSettings';
+import { CommandPalette } from './components/ui/CommandPalette';
 import { useKeyboardShortcuts, KEYBOARD_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { agentBridge } from './services/agentBridge';
 import { ChevronRight, Zap, Crosshair, Cpu } from 'lucide-react';
@@ -182,6 +185,7 @@ function App() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
   const [showSpawnDialog, setShowSpawnDialog] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
 
   // Initialize keyboard shortcuts
@@ -201,16 +205,26 @@ function App() {
     };
   }, [showWelcome]);
 
-  // F1 for help, N for new agent
+  // F1 for help, N for new agent, Cmd+K for command palette
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const isInInput = document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA';
+
+      // Cmd+K / Ctrl+K for command palette (works even in input if not welcome screen)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k' && !showWelcome) {
+        e.preventDefault();
+        setShowCommandPalette((prev) => !prev);
+        return;
+      }
+
       if (e.key === 'F1') {
         e.preventDefault();
         setShowHelp((prev) => !prev);
       }
-      if (e.key === 'n' && !showWelcome && !showSpawnDialog && connectionStatus === 'connected') {
+
+      if (e.key === 'n' && !showWelcome && !showSpawnDialog && !showCommandPalette && connectionStatus === 'connected') {
         // Check if we're not in an input field
-        if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        if (!isInInput) {
           e.preventDefault();
           setShowSpawnDialog(true);
         }
@@ -218,7 +232,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showWelcome, showSpawnDialog, connectionStatus]);
+  }, [showWelcome, showSpawnDialog, showCommandPalette, connectionStatus]);
 
   const handleStart = () => {
     setShowWelcome(false);
@@ -308,10 +322,24 @@ function App() {
         </button>
       )}
 
+      {/* Toast notifications */}
+      <ToastContainer />
+
+      {/* Sound controls */}
+      <div className="fixed bottom-4 right-4 z-40">
+        <SoundToggle />
+      </div>
+
       {/* Modals */}
       {showWelcome && <WelcomeOverlay onStart={handleStart} />}
       {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
       {showSpawnDialog && <SpawnAgentDialog onClose={() => setShowSpawnDialog(false)} />}
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        onOpenSpawnDialog={() => setShowSpawnDialog(true)}
+        onOpenHelp={() => setShowHelp(true)}
+      />
     </div>
   );
 }
