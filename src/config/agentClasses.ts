@@ -14,11 +14,9 @@ export interface AgentClassConfig {
   description: string;
   color: string;        // Theme color
 
-  // CLI Configuration
+  // CLI Configuration - simple commands: claude, codex, gemini
   cli: 'claude' | 'codex' | 'gemini';
-  modelFlag?: string;   // e.g., '--model opus-4-5-20250601'
-  extraArgs?: string[]; // Additional CLI arguments
-  mcpServers?: string[]; // MCP servers to enable
+  cliDescription: string;  // What CLI is launched
 
   // Visual theme
   meshColor: string;    // 3D model color
@@ -31,10 +29,10 @@ export const AGENT_CLASSES: AgentClassConfig[] = [
     name: 'Architect',
     title: 'Grand Architect',
     icon: '📐',
-    description: 'Strategic planning & system design with Opus 4.5',
+    description: 'Strategic planning & system design specialist',
     color: '#a855f7',
     cli: 'claude',
-    modelFlag: '--model opus-4-5-20250601',
+    cliDescription: 'Claude Opus 4.5',
     meshColor: '#7c3aed',
     glowColor: '#c084fc',
   },
@@ -43,10 +41,10 @@ export const AGENT_CLASSES: AgentClassConfig[] = [
     name: 'Mage',
     title: 'Code Mage',
     icon: '🧙',
-    description: 'Implementation & problem-solving with Claude',
+    description: 'Powerful, versatile problem-solver',
     color: '#3b82f6',
     cli: 'claude',
-    // Uses default model (usually Sonnet)
+    cliDescription: 'Claude Opus 4.5',
     meshColor: '#2563eb',
     glowColor: '#60a5fa',
   },
@@ -55,10 +53,10 @@ export const AGENT_CLASSES: AgentClassConfig[] = [
     name: 'Guardian',
     title: 'Code Guardian',
     icon: '🛡️',
-    description: 'Code review & quality assurance with Codex',
+    description: 'Code review & quality assurance',
     color: '#22c55e',
     cli: 'codex',
-    // Codex will use its default model
+    cliDescription: 'OpenAI Codex',
     meshColor: '#16a34a',
     glowColor: '#4ade80',
   },
@@ -67,9 +65,10 @@ export const AGENT_CLASSES: AgentClassConfig[] = [
     name: 'Artisan',
     title: 'Design Artisan',
     icon: '🎨',
-    description: 'UI/UX & visual design with Gemini',
+    description: 'UI/UX & visual design specialist',
     color: '#f59e0b',
-    cli: 'gemini',  // Will use Gemini CLI
+    cli: 'gemini',
+    cliDescription: 'Google Gemini',
     meshColor: '#d97706',
     glowColor: '#fbbf24',
   },
@@ -78,10 +77,10 @@ export const AGENT_CLASSES: AgentClassConfig[] = [
     name: 'Scout',
     title: 'Swift Scout',
     icon: '🔍',
-    description: 'Fast research & exploration with Haiku',
+    description: 'Fast research & exploration',
     color: '#06b6d4',
     cli: 'claude',
-    modelFlag: '--model claude-haiku-4-20250514',
+    cliDescription: 'Claude Opus 4.5',
     meshColor: '#0891b2',
     glowColor: '#22d3ee',
   },
@@ -90,10 +89,10 @@ export const AGENT_CLASSES: AgentClassConfig[] = [
     name: 'Engineer',
     title: 'Build Engineer',
     icon: '⚙️',
-    description: 'Focused implementation with Sonnet',
+    description: 'Focused implementation specialist',
     color: '#64748b',
     cli: 'claude',
-    modelFlag: '--model claude-sonnet-4-20250514',
+    cliDescription: 'Claude Opus 4.5',
     meshColor: '#475569',
     glowColor: '#94a3b8',
   },
@@ -104,17 +103,7 @@ export function getAgentClass(id: string): AgentClassConfig | undefined {
   return AGENT_CLASSES.find(c => c.id === id);
 }
 
-// Helper to get CLI command for a class
+// Helper to get CLI command for a class (simple: claude, codex, or gemini)
 export function getCliCommand(classConfig: AgentClassConfig): string {
-  const parts: string[] = [classConfig.cli];
-
-  if (classConfig.modelFlag) {
-    parts.push(classConfig.modelFlag);
-  }
-
-  if (classConfig.extraArgs) {
-    parts.push(...classConfig.extraArgs);
-  }
-
-  return parts.join(' ');
+  return classConfig.cli;
 }

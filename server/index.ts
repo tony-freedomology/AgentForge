@@ -14,41 +14,49 @@ import * as os from 'os';
 
 const PORT = 3001;
 
-// Agent class configurations (mirrored from frontend)
+// Agent class configurations - maps class to CLI command
+// Commands are simple: claude, codex, gemini
 interface AgentClassConfig {
   id: string;
   cli: 'claude' | 'codex' | 'gemini';
-  modelFlag?: string;
-  extraArgs?: string[];
+  description: string;
 }
 
 const AGENT_CLASSES: Record<string, AgentClassConfig> = {
-  architect: {
-    id: 'architect',
-    cli: 'claude',
-    modelFlag: '--model opus-4-5-20250601',
-  },
+  // Claude-based classes
   mage: {
     id: 'mage',
     cli: 'claude',
+    description: 'Claude Opus 4.5 - Powerful, versatile AI mage',
   },
-  guardian: {
-    id: 'guardian',
-    cli: 'codex',
-  },
-  designer: {
-    id: 'designer',
-    cli: 'gemini',
+  architect: {
+    id: 'architect',
+    cli: 'claude',
+    description: 'Claude Opus 4.5 - System design specialist',
   },
   scout: {
     id: 'scout',
     cli: 'claude',
-    modelFlag: '--model claude-haiku-4-20250514',
+    description: 'Claude - Fast exploration agent',
   },
   engineer: {
     id: 'engineer',
     cli: 'claude',
-    modelFlag: '--model claude-sonnet-4-20250514',
+    description: 'Claude - Code specialist',
+  },
+
+  // Codex-based classes
+  guardian: {
+    id: 'guardian',
+    cli: 'codex',
+    description: 'Codex - Security/review specialist',
+  },
+
+  // Gemini-based classes
+  designer: {
+    id: 'designer',
+    cli: 'gemini',
+    description: 'Gemini - UI/UX specialist',
   },
 };
 
@@ -139,18 +147,11 @@ async function spawnAgent(
   // Get class configuration
   const classConfig = AGENT_CLASSES[classId] || AGENT_CLASSES['mage'];
 
-  console.log(`[AgentForge] Spawning ${classConfig.cli} agent "${name}" (${classId}) in ${workingDir}`);
+  // Simple CLI command - just the command name (claude, codex, or gemini)
+  const cliCommand = classConfig.cli;
 
-  // Build the CLI command based on class
-  let cliCommand = classConfig.cli;
-  if (classConfig.modelFlag) {
-    cliCommand += ` ${classConfig.modelFlag}`;
-  }
-  if (classConfig.extraArgs) {
-    cliCommand += ` ${classConfig.extraArgs.join(' ')}`;
-  }
-
-  console.log(`[AgentForge] CLI command: ${cliCommand}`);
+  console.log(`[AgentForge] Spawning ${cliCommand} agent "${name}" (${classId}) in ${workingDir}`);
+  console.log(`[AgentForge] ${classConfig.description}`);
 
   // Spawn CLI in a PTY
   const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
