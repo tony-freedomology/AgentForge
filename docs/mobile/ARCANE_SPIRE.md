@@ -474,6 +474,205 @@ export interface NotificationPrefs {
 
 ---
 
+## Feature Parity with Desktop
+
+Every feature from the desktop AgentForge isometric app has a mobile equivalent:
+
+### Party Frames → Spire Floors
+
+| Desktop | Mobile |
+|---------|--------|
+| WoW-style unit frames (top-left) | Vertical scrollable floor cards |
+| Health/Mana bars | Context/Usage bars on each floor |
+| Status icons | Status badges on floor cards |
+| Click to select | Tap to expand/select |
+| Hover tooltip | Long-press for details |
+
+### Quest System → Quest Scrolls
+
+**Quest Turn-In Flow (Mobile)**:
+```
+┌─────────────────────────────────────┐
+│ 📜 QUEST COMPLETE                   │
+│ ═══════════════════════════════════ │
+│                                     │
+│ 🧙 Arcanum has finished:            │
+│ "Fix authentication bugs"           │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ 📁 Files Modified               │ │
+│ │   • src/auth/login.ts           │ │
+│ │   • src/auth/session.ts         │ │
+│ │                                 │ │
+│ │ 📁 Files Created                │ │
+│ │   • src/auth/__tests__/login.ts │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ 💬 "Fixed token refresh and added   │
+│    tests. Ready for review."        │
+│                                     │
+│ ┌───────────────┐ ┌───────────────┐ │
+│ │  ✓ ACCEPT     │ │  ↩ REVISE     │ │
+│ └───────────────┘ └───────────────┘ │
+│                                     │
+│        [View Diff] [Skip]           │
+└─────────────────────────────────────┘
+```
+
+- Swipe right on notification to quick-accept
+- Tap to open full review modal
+- "Request Changes" opens reply input
+
+### Loot Panel → Treasure Vault
+
+**File Artifacts as Loot**:
+```
+┌─────────────────────────────────────┐
+│ 💎 TREASURE VAULT                   │
+│ ═══════════════════════════════════ │
+│                                     │
+│ Recent Artifacts:                   │
+│                                     │
+│ ┌─────────────────────────────────┐ │
+│ │ 📜 login.ts              [Open] │ │
+│ │ Modified by Arcanum • 2m ago    │ │
+│ └─────────────────────────────────┘ │
+│ ┌─────────────────────────────────┐ │
+│ │ 📜 session.ts            [Open] │ │
+│ │ Modified by Arcanum • 2m ago    │ │
+│ └─────────────────────────────────┘ │
+│ ┌─────────────────────────────────┐ │
+│ │ ⚗️ login.test.ts         [Open] │ │
+│ │ Created by Arcanum • 2m ago     │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ Tap to preview • Long-press to share│
+└─────────────────────────────────────┘
+```
+
+- Tap file → Preview in-app (syntax highlighted)
+- Long-press → Share sheet (AirDrop to Mac, copy path)
+- Badge count on tab shows uncollected loot
+- Files grouped by agent or by time
+
+### Status Indicators
+
+| Desktop Visual | Mobile Equivalent |
+|----------------|-------------------|
+| Animated sprite state | Floor card glow + icon |
+| Particle effects | Subtle animations (Reanimated) |
+| Progress bar (3/10 tests) | Progress bar on floor card |
+| Attention wobble | Pulsing border + haptic |
+| Idle timeout (💤) | Dimmed floor + "Dormant" badge |
+
+**Mobile Status Display**:
+```
+┌─────────────────────────────────────┐
+│ ⚡ CHANNELING                       │  ← Status badge
+│ ████████████░░░░ 8/12 tests        │  ← Progress bar
+│ Context: ██████████░░ 78%          │  ← Resource bars
+│ "Running test suite..."             │  ← Activity text
+└─────────────────────────────────────┘
+```
+
+### Activity Detection
+
+Same pattern matching from desktop, displayed as:
+- Activity icon on floor card (🔍 researching, ✍️ writing, 🧪 testing)
+- Activity text below agent name
+- Chronicle feed entries
+
+### Progress Bars
+
+Parsed from output, shown on floor cards:
+- `3/10 tests` → Test progress bar
+- `Building... 45%` → Build progress bar
+- Files processed count
+- Elapsed time for indeterminate tasks
+
+### Attention System
+
+| Trigger | Mobile Response |
+|---------|-----------------|
+| Waiting for input | Push notification + pulsing floor |
+| Error state | Push notification + red floor tint |
+| Idle timeout | Badge + dimmed floor |
+| Quest complete | Push notification + golden glow |
+
+### Talent Tree → Skill Grimoire
+
+```
+┌─────────────────────────────────────┐
+│ 🌳 SKILL GRIMOIRE                   │
+│ ═══════════════════════════════════ │
+│ Arcanum • Level 12 • 3 points       │
+│                                     │
+│      ┌─────┐                        │
+│      │ ⚡  │ Haste                  │
+│      │ 2/3 │ Faster responses       │
+│      └──┬──┘                        │
+│    ┌────┴────┐                      │
+│ ┌──┴──┐   ┌──┴──┐                   │
+│ │ 📚  │   │ 🎯  │                   │
+│ │ 0/3 │   │ 1/3 │                   │
+│ │Lore │   │Focus│                   │
+│ └─────┘   └─────┘                   │
+│                                     │
+│ Tap talent to learn • Pinch to zoom │
+└─────────────────────────────────────┘
+```
+
+- Simplified tree view (vertical scroll)
+- Tap to allocate points
+- Long-press for talent description
+
+### Session Persistence
+
+- Auto-save agent state locally
+- Sync with daemon on reconnect
+- "Continue where you left off" on app launch
+
+### Project Zones → Realms
+
+Group agents by project:
+```
+┌─────────────────────────────────────┐
+│ Filter by Realm:                    │
+│ ┌─────────┐ ┌─────────┐ ┌────────┐ │
+│ │🏰 All   │ │🌲 API   │ │⚔️ Web  │ │
+│ └─────────┘ └─────────┘ └────────┘ │
+└─────────────────────────────────────┘
+```
+
+- Horizontal scroll of realm filters
+- Tap to filter spire view
+- Create/edit realms in Grimoire (settings)
+
+### Control Groups → Favorites
+
+- Star agents to pin to top
+- Quick-access from Chronicle
+- No keyboard shortcuts (mobile), but swipe gestures
+
+### Sound System
+
+Same sound events, mobile-optimized:
+- Haptic feedback accompanies sounds
+- Respects iOS silent mode
+- Per-category volume in Grimoire
+
+### Toast Notifications → Mystical Alerts
+
+In-app toasts styled as floating scrolls:
+```
+┌─────────────────────────────────┐
+│ 📜 Arcanum completed a quest!   │
+│    Tap to review                │
+└─────────────────────────────────┘
+```
+
+---
+
 ## File Structure
 
 ```
