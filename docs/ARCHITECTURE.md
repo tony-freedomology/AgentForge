@@ -3,33 +3,39 @@
 ## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        FRONTEND (React)                         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐ │
-│  │   3D Scene  │  │  UI Panels  │  │     Agent Terminal      │ │
-│  │  (R3F/drei) │  │  (React)    │  │  (Dialogue Interface)   │ │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘ │
-│                            │                                     │
-│                     ┌──────┴──────┐                             │
-│                     │ AgentBridge │ (WebSocket Client)          │
-│                     └──────┬──────┘                             │
-└────────────────────────────┼────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                        FRONTEND (React + PixiJS)                     │
+│  ┌──────────────────┐  ┌─────────────┐  ┌───────────────────────┐  │
+│  │  Isometric World │  │  UI Panels  │  │    Agent Terminal     │  │
+│  │  (PixiJS/@pixi/  │  │  (React +   │  │  (RPG Dialogue Box)   │  │
+│  │   react)         │  │   Tailwind) │  │                       │  │
+│  └──────────────────┘  └─────────────┘  └───────────────────────┘  │
+│                            │                                        │
+│         ┌──────────────────┴──────────────────┐                    │
+│         │            Zustand Store            │                    │
+│         │  (agents, hexGrid, quests, zones)   │                    │
+│         └──────────────────┬──────────────────┘                    │
+│                            │                                        │
+│                     ┌──────┴──────┐                                │
+│                     │ AgentBridge │ (WebSocket Client)             │
+│                     └──────┬──────┘                                │
+└────────────────────────────┼───────────────────────────────────────┘
                              │ WebSocket
                              │
-┌────────────────────────────┼────────────────────────────────────┐
-│                     ┌──────┴──────┐                             │
-│                     │  WS Server  │                             │
-│                     └──────┬──────┘                             │
-│                            │                                     │
-│  ┌─────────────────────────┼─────────────────────────────────┐ │
-│  │              Process Manager (node-pty)                    │ │
-│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐      │ │
-│  │  │  PTY 1  │  │  PTY 2  │  │  PTY 3  │  │  PTY n  │      │ │
-│  │  │ claude  │  │  codex  │  │ gemini  │  │   ...   │      │ │
-│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘      │ │
-│  └───────────────────────────────────────────────────────────┘ │
-│                        BACKEND (Node.js)                        │
-└─────────────────────────────────────────────────────────────────┘
+┌────────────────────────────┼───────────────────────────────────────┐
+│                     ┌──────┴──────┐                                │
+│                     │  WS Server  │                                │
+│                     └──────┬──────┘                                │
+│                            │                                        │
+│  ┌─────────────────────────┼───────────────────────────────────┐  │
+│  │              Process Manager (node-pty)                      │  │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐        │  │
+│  │  │  PTY 1  │  │  PTY 2  │  │  PTY 3  │  │  PTY n  │        │  │
+│  │  │ claude  │  │  codex  │  │ gemini  │  │   ...   │        │  │
+│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘        │  │
+│  └─────────────────────────────────────────────────────────────┘  │
+│                        BACKEND (Node.js)                           │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Core Principle: Real Terminals, Not Simulation
@@ -42,11 +48,55 @@
 - Output streams directly from the PTY
 - If you can do it in Terminal.app, you can do it here
 
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Rendering | PixiJS v8 + @pixi/react |
+| UI Framework | React 18 + TypeScript |
+| Styling | Tailwind CSS |
+| State Management | Zustand |
+| Build Tool | Vite |
+| Backend | Node.js + WebSocket + node-pty |
+
 ## Key Components
+
+### Isometric World (`src/components/isometric/`)
+
+PixiJS-based isometric game world:
+
+| Component | Purpose |
+|-----------|---------|
+| `IsometricWorld.tsx` | Main PixiJS Stage, camera, hex grid rendering |
+| `IsometricAgent.tsx` | Agent sprite with procedural animations |
+| `AnimatedSprite.tsx` | Sprite sheet animation helper |
+| `ParticleEffects.tsx` | Visual effects (sparkles, etc.) |
+
+**Coordinate System:**
+- Uses axial hex coordinates (q, r)
+- Isometric projection: `x = (q - r) * tileWidth/2`, `y = (q + r) * tileHeight/4`
+- Camera supports pan (drag) and zoom (scroll wheel)
+
+### UI Components (`src/components/ui/`)
+
+| Component | Purpose |
+|-----------|---------|
+| `AgentTerminal.tsx` | **RPG Dialogue Box** — terminal I/O for selected agent |
+| `PartyFrames.tsx` | WoW-style unit frames (top-left) |
+| `ResourceBar.tsx` | Global resource display |
+| `QuestLog.tsx` | Track all agent quests |
+| `QuestTurnIn.tsx` | Quest completion modal |
+| `LootPanel.tsx` | File artifacts as collectible loot |
+| `SpawnAgentDialog.tsx` | Class selection, directory input |
+| `CommandPalette.tsx` | Quick command access (Cmd+K) |
+| `ProjectZones.tsx` | Group hexes into project areas |
+| `SessionControls.tsx` | Save/load/clear session |
+| `TalentTree.tsx` | Agent talent/skill progression |
+| `Minimap.tsx` | Overview of agent positions |
 
 ### Backend (`server/index.ts`)
 
-The backend is a WebSocket server that manages PTY processes:
+WebSocket server that manages PTY processes:
 
 ```typescript
 // Core responsibilities:
@@ -59,51 +109,160 @@ The backend is a WebSocket server that manages PTY processes:
 **Message Types:**
 | Message | Direction | Purpose |
 |---------|-----------|---------|
-| `agent:spawn` | Client → Server | Create new agent with class, directory |
-| `agent:input` | Client → Server | Send terminal input to agent |
-| `agent:output` | Server → Client | Stream terminal output from agent |
-| `agent:status` | Server → Client | Agent status changed |
-| `agent:kill` | Client → Server | Terminate agent process |
+| `init` | Server → Client | Initial agent list on connect |
+| `agent:spawn` | Client → Server | Create new agent |
+| `agent:spawned` | Server → Client | Confirm agent created |
+| `agent:input` | Client → Server | Send terminal input |
+| `agent:output` | Server → Client | Stream terminal output |
+| `agent:status` | Server → Client | Status changed |
+| `agent:exit` | Server → Client | Agent process ended |
+| `error` | Server → Client | Error message |
 
 ### Frontend Bridge (`src/services/agentBridge.ts`)
 
-WebSocket client that connects frontend to backend:
-
-```typescript
-// Singleton that manages WebSocket connection
-// Provides methods: spawnAgent, sendInput, killAgent
-// Handles reconnection, message queuing
-```
-
-### 3D Scene (`src/components/3d/`)
-
-React Three Fiber scene with:
-
-| Component | Purpose |
-|-----------|---------|
-| `Scene.tsx` | Main scene composition |
-| `Environment.tsx` | Hex grid, lighting, atmosphere |
-| `AgentUnit.tsx` | 3D agent character visualization |
-| `SelectionBox.tsx` | RTS-style drag selection |
-
-### UI Components (`src/components/ui/`)
-
-| Component | Purpose |
-|-----------|---------|
-| `AgentTerminal.tsx` | **THE DIALOGUE BOX** — shows terminal I/O for selected agent |
-| `SpawnAgentDialog.tsx` | Class selection, directory input |
-| `CommandPanel.tsx` | Quick actions |
-| `Minimap.tsx` | Overview of agent positions |
-| `ResourceBar.tsx` | Token usage, etc. |
+WebSocket client with:
+- Automatic reconnection with exponential backoff
+- Message queuing during disconnection
+- Type-safe message handling
+- Toast notifications for connection events
 
 ### State Management (`src/stores/gameStore.ts`)
 
 Zustand store holding:
-- Active agents (Map)
-- Selected agent IDs (Set)
-- Hex grid state
-- Camera position
-- UI state
+
+```typescript
+interface GameState {
+  // Agents
+  agents: Map<string, Agent>;
+  selectedAgentIds: Set<string>;
+  hoveredAgentId: string | null;
+
+  // World
+  hexGrid: Map<string, HexTile>;
+  projectZones: Map<string, ProjectZone>;
+  camera: CameraState;
+
+  // Resources
+  resources: GameResources;
+
+  // UI State
+  showSpawnDialog: boolean;
+  showCommandPanel: boolean;
+  isPaused: boolean;
+
+  // Control Groups (RTS-style)
+  controlGroups: Map<number, Set<string>>;
+}
+```
+
+### Toast System (`src/stores/toastStore.ts`)
+
+Global notification system:
+- Success, error, warning, info variants
+- Auto-dismiss with configurable duration
+- Stacking support
+
+### Sound Manager (`src/services/soundManager.ts`)
+
+Audio feedback system:
+- Agent spawn/death sounds
+- Selection feedback
+- Quest completion chimes
+- Ambient sounds
+- Volume controls per category
+
+## Agent Data Model
+
+```typescript
+interface Agent {
+  id: string;
+  name: string;
+  provider: 'claude' | 'openai' | 'gemini';
+  class: AgentClass;
+  status: 'spawning' | 'idle' | 'working' | 'error' | 'completed';
+
+  // Position
+  position: { q: number; r: number; x: number; y: number };
+
+  // Resources (RPG-style)
+  health: number;        // API usage remaining
+  mana: number;          // Context window usage
+  contextTokens: number;
+  contextLimit: number;
+  usagePercent: number;
+
+  // Activity Detection
+  activity: AgentActivity;
+  activityStartedAt: number;
+  needsAttention: boolean;
+  attentionReason?: AttentionReason;
+  idleSince?: number;
+
+  // Progress Tracking
+  taskProgress?: TaskProgress;
+
+  // Quest System
+  currentQuest?: Quest;
+  completedQuests: Quest[];
+  producedFiles: FileArtifact[];
+
+  // Terminal
+  terminalOutput: string[];
+  taskQueue: AgentTask[];
+
+  // Progression
+  level: number;
+  experience: number;
+  talents: AgentTalents;
+}
+```
+
+## File Structure
+
+```
+AgentForge/
+├── server/
+│   └── index.ts              # WebSocket server, PTY management
+├── src/
+│   ├── components/
+│   │   ├── isometric/        # PixiJS isometric rendering
+│   │   │   ├── IsometricWorld.tsx
+│   │   │   ├── IsometricAgent.tsx
+│   │   │   ├── AnimatedSprite.tsx
+│   │   │   └── ParticleEffects.tsx
+│   │   └── ui/               # React UI components
+│   │       ├── AgentTerminal.tsx
+│   │       ├── PartyFrames.tsx
+│   │       ├── QuestLog.tsx
+│   │       ├── QuestTurnIn.tsx
+│   │       ├── LootPanel.tsx
+│   │       └── ...
+│   ├── config/
+│   │   ├── agentClasses.ts   # Class definitions
+│   │   └── talents.ts        # Talent tree config
+│   ├── constants/
+│   │   └── zIndex.ts         # Z-index hierarchy
+│   ├── hooks/
+│   │   ├── useIdleMonitor.ts # Idle detection
+│   │   └── useKeyboardShortcuts.ts
+│   ├── services/
+│   │   ├── agentBridge.ts    # WebSocket client
+│   │   └── soundManager.ts   # Audio system
+│   ├── stores/
+│   │   ├── gameStore.ts      # Main Zustand store
+│   │   └── toastStore.ts     # Notification store
+│   ├── types/
+│   │   └── agent.ts          # TypeScript types
+│   ├── utils/
+│   │   └── hexUtils.ts       # Hex grid utilities
+│   └── App.tsx               # Main app
+├── docs/                     # Documentation
+└── public/
+    └── assets_isometric/     # Isometric sprites & UI
+        ├── agents/           # Agent sprites per provider
+        ├── tiles/            # Hex tile textures
+        └── ui/               # UI elements
+```
 
 ## Data Flow: Sending a Prompt
 
@@ -117,61 +276,40 @@ Zustand store holding:
 7. CLI writes output to PTY
 8. Server's pty.onData fires with output
 9. Server broadcasts: { type: 'agent:output', agentId, data }
-10. Frontend receives, adds to agent's terminalOutput
-11. AgentTerminal re-renders showing new output
+10. Frontend receives, updates agent's terminalOutput
+11. gameStore detects activity from output patterns
+12. AgentTerminal re-renders showing new output
+13. PartyFrames updates status indicators
 ```
 
-## Agent Classes (`src/config/agentClasses.ts`)
+## Session Persistence
 
-Each class defines:
+The app supports saving/loading sessions:
 
 ```typescript
-interface AgentClassConfig {
-  id: string;           // 'architect', 'mage', etc.
-  name: string;         // Display name
-  cli: 'claude' | 'codex' | 'gemini';  // Which CLI to spawn
-  modelFlag?: string;   // e.g., '--model opus-4-5-20250601'
-  color: string;        // Theme color for UI
-  // ... visual properties
-}
+// Saved data includes:
+- Agent positions, levels, talents, completed quests
+- Project zones
+- Control groups
+- Camera position
+- Resource state
 ```
 
-The server reads `classId` and constructs the appropriate CLI command:
+Sessions are stored in `localStorage` under `agentforge_session`.
 
-```bash
-# Architect spawns:
-claude --model opus-4-5-20250601
+## Z-Index Hierarchy
 
-# Guardian spawns:
-codex
+Consistent layering defined in `src/constants/zIndex.ts`:
 
-# Artisan spawns:
-gemini
-```
-
-## File Structure
-
-```
-AgentForge/
-├── server/
-│   └── index.ts          # WebSocket server, PTY management
-├── src/
-│   ├── components/
-│   │   ├── 3d/           # Three.js components
-│   │   └── ui/           # React UI components
-│   ├── config/
-│   │   └── agentClasses.ts  # Class definitions
-│   ├── services/
-│   │   └── agentBridge.ts   # WebSocket client
-│   ├── stores/
-│   │   └── gameStore.ts     # Zustand state
-│   ├── types/
-│   │   └── agent.ts         # TypeScript types
-│   └── App.tsx              # Main app
-├── docs/                     # You are here
-└── public/
-    └── assets/              # Sprites, textures
-```
+| Layer | Z-Index | Components |
+|-------|---------|------------|
+| Base UI | 30 | Party frames, resource bar |
+| Floating Panel | 40 | Loot button, notifications |
+| Agent Terminal | 45 | Dialogue box |
+| Modal | 50 | Quest log, settings, dialogs |
+| Command Palette | 60 | Quick command access |
+| Welcome Screen | 70 | Onboarding |
+| Toast | 80 | Notifications |
 
 ## Running the System
 
@@ -182,8 +320,33 @@ npm run server
 # Terminal 2: Start frontend
 npm run dev
 
-# Or both:
+# Or both together:
 npm start
 ```
 
-Backend runs on `ws://localhost:3001`, frontend on `http://localhost:3000`.
+Backend runs on `ws://localhost:3001`, frontend on `http://localhost:5173` (Vite default).
+
+## Agent Classes (`src/config/agentClasses.ts`)
+
+Each class defines visual and behavioral properties:
+
+```typescript
+interface AgentClassConfig {
+  id: AgentClass;
+  title: string;
+  description: string;
+  icon: string;           // Emoji
+  color: string;          // Theme color
+  provider: AgentProvider;
+  modelFlag?: string;     // CLI model flag
+  spriteSheet?: string;   // Animation sprite
+}
+```
+
+Available classes:
+- **Mage** (Claude) - General coding wizard
+- **Architect** (Claude Opus) - System design specialist
+- **Engineer** (OpenAI Codex) - Implementation focused
+- **Scout** (Claude) - Research and exploration
+- **Guardian** (Codex) - Code review and security
+- **Designer** (Gemini) - UI/UX and visual work
