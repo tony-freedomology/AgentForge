@@ -225,8 +225,8 @@ Technical requirements:
             "parts": [{"text": full_prompt}]
         }],
         "generationConfig": {
-            "response_modalities": ["image", "text"],
-            "response_mime_type": "image/png"
+            "responseModalities": ["image", "text"],
+            "responseMimeType": "text/plain"
         }
     }
 
