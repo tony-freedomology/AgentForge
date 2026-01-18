@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { cn } from '../../utils/cn'; // Assuming utils/cn exists, I will need to check or create it
 
 interface PixelButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

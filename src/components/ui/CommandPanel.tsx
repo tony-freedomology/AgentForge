@@ -7,13 +7,9 @@ import {
   Search,
   Shield,
   Building2,
-  Square,
-  Trash2,
-  MessageSquare,
   Zap,
   Users,
   Eye,
-  Terminal,
   Scroll,
   BookOpen,
   Hand

@@ -1,15 +1,34 @@
 /**
- * Agent Grimoire (Terminal) Panel
+ * Agent Dialogue Panel
  *
- * Shows historical output and allows sending decrees to selected agents.
- * Designed to feel like a magical tome or scroll.
+ * An immersive RPG-style dialogue interface for communicating with agents.
+ * Designed to feel like conversing with an NPC in a fantasy game.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useAgentBridge } from '../../services/agentBridge';
 import { getAgentClass } from '../../config/agentClasses';
-import { X, Send, Minimize2, Maximize2, BookOpen, GitBranch, Folder, User, AlertCircle, Scroll } from 'lucide-react';
+import { X, Send, Minimize2, Maximize2, GitBranch, Folder, ChevronRight, Sparkles, MessageCircle } from 'lucide-react';
+
+// Provider to sprite mapping
+const PROVIDER_SPRITES: Record<string, string> = {
+  claude: '/assets_isometric/agents/claude/claude_idle_s.png',
+  anthropic: '/assets_isometric/agents/claude/claude_idle_s.png',
+  openai: '/assets_isometric/agents/codex/codex_idle_s.png',
+  codex: '/assets_isometric/agents/codex/codex_idle_s.png',
+  gemini: '/assets_isometric/agents/gemini/gemini_idle_s.png',
+  google: '/assets_isometric/agents/gemini/gemini_idle_s.png',
+};
+
+// Class-specific dialogue flavor text
+const CLASS_GREETINGS: Record<string, string[]> = {
+  mage: ['What arcane knowledge do you seek?', 'The mystical arts await your command.', 'Speak, and I shall weave the code.'],
+  engineer: ['Systems online. Awaiting directives.', 'Ready to construct and optimize.', 'Engineering solutions at your service.'],
+  scout: ['Reconnaissance complete. Orders?', 'The path ahead is clear. What now?', 'Swift and silent, I await.'],
+  guardian: ['Standing watch. How may I protect?', 'Defense protocols ready.', 'Your fortress stands strong.'],
+  architect: ['Blueprints ready. What shall we design?', 'The grand vision awaits form.', 'Let us build something magnificent.'],
+};
 
 export function AgentTerminal() {
   const selectedAgentIds = useGameStore((s) => s.selectedAgentIds);
@@ -29,9 +48,12 @@ export function AgentTerminal() {
 
   // Get agent class config for theming
   const agentClass = selectedAgent ? getAgentClass(selectedAgent.class) : null;
-  const classColor = agentClass?.color || '#06b6d4';
+  const classColor = agentClass?.color || '#f59e0b';
   const classIcon = agentClass?.icon || '🤖';
-  const classTitle = agentClass?.title || 'AI Agent';
+  const classTitle = agentClass?.title || 'Agent';
+
+  // Get agent sprite
+  const agentSprite = selectedAgent ? (PROVIDER_SPRITES[selectedAgent.provider] || PROVIDER_SPRITES.claude) : null;
 
   // Auto-scroll terminal
   useEffect(() => {
@@ -66,10 +88,10 @@ export function AgentTerminal() {
     });
     setHistoryIndex(-1);
 
-    // Echo user prompt to terminal first (so user sees what they typed)
-    addTerminalOutput(selectedId, `> ${input}`);
+    // Echo user prompt to terminal first
+    addTerminalOutput(selectedId, `[YOU] ${input}`);
 
-    // Start a quest for this task (if not already on one)
+    // Start a quest for this task
     const agent = agents.get(selectedId);
     if (agent && !agent.currentQuest) {
       startQuest(selectedId, input.trim());
@@ -77,31 +99,25 @@ export function AgentTerminal() {
 
     // Send to real agent
     sendInput(selectedId, input);
-
-    // Clear input
     setInput('');
   }, [input, selectedId, addTerminalOutput, sendInput, agents, startQuest]);
 
-  // Handle keyboard shortcuts including command history
+  // Handle keyboard shortcuts
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    // Escape - blur input
     if (e.key === 'Escape') {
       inputRef.current?.blur();
       return;
     }
 
-    // Ctrl+C - send interrupt signal
     if (e.ctrlKey && e.key === 'c') {
       e.preventDefault();
       if (selectedId) {
-        // Send Ctrl+C (ASCII 3) to the terminal
         sendInput(selectedId, '\x03');
-        addTerminalOutput(selectedId, '^C');
+        addTerminalOutput(selectedId, '[INTERRUPTED]');
       }
       return;
     }
 
-    // Up arrow - previous command
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (commandHistory.length > 0) {
@@ -112,7 +128,6 @@ export function AgentTerminal() {
       return;
     }
 
-    // Down arrow - next command
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       if (historyIndex > 0) {
@@ -127,280 +142,452 @@ export function AgentTerminal() {
     }
   }, [selectedId, commandHistory, historyIndex, sendInput, addTerminalOutput]);
 
+  // No agent selected state
   if (!selectedAgent) {
     return (
       <div
-        className="!fixed right-4 bottom-4 w-[420px] bg-stone-900/95 border-2 border-stone-800 rounded-2xl overflow-hidden shadow-2xl z-50 backdrop-blur-sm"
+        className="!fixed right-4 bottom-4 w-[450px] overflow-hidden z-50"
         style={{ maxWidth: 'calc(100vw - 340px)' }}
       >
-        {/* Corner accents */}
-        <div className="corner-accent top-left" style={{ borderColor: '#d97706' }} />
-        <div className="corner-accent top-right" style={{ borderColor: '#d97706' }} />
-        <div className="corner-accent bottom-left" style={{ borderColor: '#d97706' }} />
-        <div className="corner-accent bottom-right" style={{ borderColor: '#d97706' }} />
+        {/* Ornate frame */}
+        <div className="relative bg-gradient-to-b from-stone-900 via-stone-950 to-stone-900 rounded-2xl border-2 border-amber-900/50 shadow-[0_0_40px_rgba(0,0,0,0.8)]">
+          {/* Decorative top bar */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-amber-600 to-transparent" />
 
-        <div className="px-8 py-8 flex flex-col items-center justify-center gap-4 text-center">
-          <div className="w-16 h-16 rounded-full bg-stone-950/50 border border-stone-700/50 flex items-center justify-center">
-            <BookOpen size={28} className="text-stone-500" />
-          </div>
-          <div>
-            <p className="text-stone-400 font-bold tracking-wide font-serif">No Unit Selected</p>
-            <p className="text-stone-600 text-sm mt-1 font-serif italic">Select a unit on the field to reveal its secrets.</p>
+          {/* Corner ornaments */}
+          <div className="absolute top-2 left-2 w-6 h-6 border-t-2 border-l-2 border-amber-600/60 rounded-tl-lg" />
+          <div className="absolute top-2 right-2 w-6 h-6 border-t-2 border-r-2 border-amber-600/60 rounded-tr-lg" />
+          <div className="absolute bottom-2 left-2 w-6 h-6 border-b-2 border-l-2 border-amber-600/60 rounded-bl-lg" />
+          <div className="absolute bottom-2 right-2 w-6 h-6 border-b-2 border-r-2 border-amber-600/60 rounded-br-lg" />
+
+          <div className="px-8 py-10 flex flex-col items-center justify-center gap-4 text-center">
+            <div className="w-20 h-20 rounded-full bg-stone-950/80 border-2 border-amber-900/40 flex items-center justify-center relative">
+              <MessageCircle size={32} className="text-amber-900/60" />
+              <div className="absolute inset-0 rounded-full border border-amber-600/20 animate-pulse" />
+            </div>
+            <div>
+              <p className="text-amber-200/80 font-bold tracking-wide text-lg" style={{ fontFamily: 'Georgia, serif' }}>
+                No Champion Selected
+              </p>
+              <p className="text-stone-500 text-sm mt-2" style={{ fontFamily: 'Georgia, serif' }}>
+                Select a unit to begin your discourse
+              </p>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // Minimized state
   if (isMinimized) {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="!fixed right-4 bottom-4 px-6 py-5 bg-stone-900/95 border-2 rounded-xl flex items-center gap-4 hover:border-amber-500/40 transition-all group shadow-[0_0_20px_rgba(0,0,0,0.5)] backdrop-blur-sm"
-        style={{ borderColor: `${classColor}40` }}
+        className="!fixed right-4 bottom-4 overflow-hidden rounded-xl z-50 group transition-all hover:scale-105"
+        style={{ maxWidth: 'calc(100vw - 340px)' }}
       >
-        <span className="text-2xl drop-shadow-lg">{classIcon}</span>
-        <div className="text-left">
-          <span className="text-stone-200 font-bold tracking-wide block font-serif">{selectedAgent.name}</span>
-          <span className="text-xs opacity-60 font-serif" style={{ color: classColor }}>{classTitle}</span>
+        <div
+          className="relative px-5 py-4 flex items-center gap-4 bg-gradient-to-r from-stone-900 to-stone-950 border-2 rounded-xl"
+          style={{ borderColor: `${classColor}50` }}
+        >
+          {/* Agent portrait mini */}
+          <div
+            className="w-12 h-12 rounded-lg overflow-hidden border-2 relative"
+            style={{
+              borderColor: `${classColor}60`,
+              background: `linear-gradient(135deg, ${classColor}20, transparent)`
+            }}
+          >
+            {agentSprite ? (
+              <img src={agentSprite} alt={selectedAgent.name} className="w-full h-full object-cover scale-150" />
+            ) : (
+              <span className="text-2xl absolute inset-0 flex items-center justify-center">{classIcon}</span>
+            )}
+            {selectedAgent.status === 'working' && (
+              <div className="absolute inset-0 bg-amber-500/20 animate-pulse" />
+            )}
+          </div>
+
+          <div className="text-left">
+            <span className="text-stone-100 font-bold block" style={{ fontFamily: 'Georgia, serif' }}>
+              {selectedAgent.name}
+            </span>
+            <span className="text-xs" style={{ color: classColor, fontFamily: 'Georgia, serif' }}>
+              {selectedAgent.status === 'working' ? 'Casting...' : classTitle}
+            </span>
+          </div>
+
+          <ChevronRight size={20} className="text-stone-500 group-hover:text-stone-300 transition-colors ml-2" />
         </div>
-        {selectedAgent.status === 'working' && (
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 status-glow-working ml-2 animate-pulse" />
-        )}
       </button>
     );
   }
 
-  const statusColors: Record<string, string> = {
-    idle: 'text-emerald-400',
-    working: 'text-amber-400',
-    spawning: 'text-blue-400',
-    error: 'text-red-400',
-    waiting: 'text-purple-400',
-    completed: 'text-emerald-400',
-    blocked: 'text-orange-400',
-  };
-  const statusColor = statusColors[selectedAgent.status] || 'text-stone-400';
+  // Parse message type
+  const parseMessage = (line: string) => {
+    const isUserInput = line.startsWith('[YOU]');
+    const isInterrupt = line === '[INTERRUPTED]';
+    const isError = line.includes('error') || line.includes('Error') || line.startsWith('❌');
+    const isSuccess = line.includes('success') || line.includes('Success') || line.startsWith('✓') || line.startsWith('✅');
+    const isThinking = line.includes('thinking') || line.includes('Thinking') || line.startsWith('🤔');
+    const isSystem = line.startsWith('[') && !isUserInput;
 
-  const statusBgColors: Record<string, string> = {
-    idle: 'bg-emerald-900/20 border-emerald-900/40',
-    working: 'bg-amber-900/20 border-amber-900/40',
-    spawning: 'bg-blue-900/20 border-blue-900/40',
-    error: 'bg-red-900/20 border-red-900/40',
-    waiting: 'bg-purple-900/20 border-purple-900/40',
-    completed: 'bg-emerald-900/20 border-emerald-900/40',
-    blocked: 'bg-orange-900/20 border-orange-900/40',
+    return { isUserInput, isInterrupt, isError, isSuccess, isThinking, isSystem };
   };
-  const statusBgColor = statusBgColors[selectedAgent.status] || 'bg-stone-800/20 border-stone-800/40';
 
   return (
     <div
-      className={`!fixed right-4 bottom-4 bg-stone-900/95 border-2 rounded-2xl flex flex-col transition-all overflow-hidden shadow-2xl z-50 backdrop-blur-md ${isExpanded ? 'w-[650px] h-[550px]' : 'w-[420px] h-[380px]'
-        }`}
-      style={{
-        borderColor: `${classColor}40`,
-        boxShadow: `0 0 40px rgba(0,0,0,0.5)`,
-        maxWidth: 'calc(100vw - 340px)'
-      }}
+      className={`!fixed right-4 bottom-4 overflow-hidden z-50 transition-all ${isExpanded ? 'w-[680px]' : 'w-[480px]'}`}
+      style={{ maxWidth: 'calc(100vw - 340px)' }}
     >
-      {/* Corner accents with class color */}
-      <div className="corner-accent top-left" style={{ '--accent-color': classColor } as React.CSSProperties} />
-      <div className="corner-accent top-right" style={{ '--accent-color': classColor } as React.CSSProperties} />
-      <div className="corner-accent bottom-left" style={{ '--accent-color': classColor } as React.CSSProperties} />
-      <div className="corner-accent bottom-right" style={{ '--accent-color': classColor } as React.CSSProperties} />
-
-      {/* Character Header - Game Dialogue Style */}
+      {/* Main dialogue box */}
       <div
-        className="px-6 py-5 border-b flex items-center justify-between relative z-10"
-        style={{
-          borderColor: `${classColor}30`,
-          background: `linear-gradient(180deg, ${classColor}10 0%, transparent 100%)`
-        }}
+        className="relative bg-gradient-to-b from-stone-900 via-stone-950 to-stone-900 rounded-2xl border-2 shadow-[0_0_60px_rgba(0,0,0,0.9)]"
+        style={{ borderColor: `${classColor}40` }}
       >
-        <div className="flex items-center gap-5">
-          {/* Character Portrait */}
-          <div
-            className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl relative"
-            style={{
-              background: `linear-gradient(135deg, ${classColor}30, ${classColor}10)`,
-              border: `2px solid ${classColor}50`,
-              boxShadow: `inset 0 0 20px ${classColor}20`
-            }}
-          >
-            {classIcon}
-            {/* Status indicator on portrait */}
+        {/* Decorative elements */}
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 rounded-full"
+          style={{ background: `linear-gradient(90deg, transparent, ${classColor}, transparent)` }}
+        />
+        <div
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-0.5 rounded-full"
+          style={{ background: `linear-gradient(90deg, transparent, ${classColor}60, transparent)` }}
+        />
+
+        {/* Corner ornaments */}
+        <div className="absolute top-3 left-3 w-8 h-8 border-t-2 border-l-2 rounded-tl-lg" style={{ borderColor: `${classColor}50` }} />
+        <div className="absolute top-3 right-3 w-8 h-8 border-t-2 border-r-2 rounded-tr-lg" style={{ borderColor: `${classColor}50` }} />
+        <div className="absolute bottom-3 left-3 w-8 h-8 border-b-2 border-l-2 rounded-bl-lg" style={{ borderColor: `${classColor}50` }} />
+        <div className="absolute bottom-3 right-3 w-8 h-8 border-b-2 border-r-2 rounded-br-lg" style={{ borderColor: `${classColor}50` }} />
+
+        {/* Header with portrait */}
+        <div
+          className="relative px-6 py-4 flex items-center gap-5 border-b"
+          style={{
+            borderColor: `${classColor}30`,
+            background: `linear-gradient(180deg, ${classColor}15 0%, transparent 100%)`
+          }}
+        >
+          {/* Large character portrait */}
+          <div className="relative">
             <div
-              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-stone-900 ${selectedAgent.status === 'working' ? 'bg-amber-400 animate-pulse' :
-                selectedAgent.status === 'idle' ? 'bg-emerald-400' :
-                  selectedAgent.status === 'error' ? 'bg-red-400' : 'bg-blue-400'
-                }`}
+              className="w-20 h-20 rounded-xl overflow-hidden border-3 relative"
+              style={{
+                borderColor: classColor,
+                background: `linear-gradient(135deg, ${classColor}30, ${classColor}10)`,
+                boxShadow: `0 0 30px ${classColor}30, inset 0 0 20px ${classColor}20`
+              }}
+            >
+              {agentSprite ? (
+                <img
+                  src={agentSprite}
+                  alt={selectedAgent.name}
+                  className="w-full h-full object-cover scale-[1.8] translate-y-2"
+                  style={{ imageRendering: 'pixelated' }}
+                />
+              ) : (
+                <span className="text-4xl absolute inset-0 flex items-center justify-center">{classIcon}</span>
+              )}
+
+              {/* Animated overlay when working */}
+              {selectedAgent.status === 'working' && (
+                <div className="absolute inset-0 bg-gradient-to-t from-amber-500/30 to-transparent animate-pulse" />
+              )}
+            </div>
+
+            {/* Status gem */}
+            <div
+              className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-stone-900 shadow-lg ${
+                selectedAgent.status === 'working' ? 'bg-amber-400 animate-pulse shadow-amber-400/50' :
+                selectedAgent.status === 'idle' ? 'bg-emerald-400 shadow-emerald-400/50' :
+                selectedAgent.status === 'error' ? 'bg-red-400 shadow-red-400/50' :
+                'bg-blue-400 shadow-blue-400/50'
+              }`}
             />
+
+            {/* Sparkle effect when working */}
+            {selectedAgent.status === 'working' && (
+              <Sparkles
+                size={16}
+                className="absolute -top-1 -right-1 text-amber-400 animate-pulse"
+              />
+            )}
           </div>
 
-          {/* Character Info */}
-          <div>
+          {/* Character name and info */}
+          <div className="flex-1">
             <div className="flex items-center gap-3">
-              <span className="text-stone-100 font-bold text-lg tracking-wide font-serif">{selectedAgent.name}</span>
+              <h3
+                className="text-xl font-bold text-stone-100 tracking-wide"
+                style={{ fontFamily: 'Georgia, serif' }}
+              >
+                {selectedAgent.name}
+              </h3>
               <span
-                className={`text-xs font-semibold px-3 py-1 rounded-full border ${statusBgColor} ${statusColor} uppercase tracking-wider font-serif`}
+                className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider"
+                style={{
+                  backgroundColor: `${classColor}20`,
+                  color: classColor,
+                  border: `1px solid ${classColor}40`
+                }}
               >
                 {selectedAgent.status}
               </span>
             </div>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm font-medium tracking-wide font-serif" style={{ color: classColor }}>
+
+            <div className="flex items-center gap-3 mt-1">
+              <span
+                className="text-sm font-medium"
+                style={{ color: classColor, fontFamily: 'Georgia, serif' }}
+              >
                 {classTitle}
               </span>
               <span className="text-stone-600">•</span>
-              <span className="text-stone-500 text-xs font-serif">Level {selectedAgent.level || 1}</span>
+              <span className="text-stone-500 text-sm" style={{ fontFamily: 'Georgia, serif' }}>
+                Level {selectedAgent.level || 1}
+              </span>
             </div>
+
+            {/* Git info if available */}
+            {(selectedAgent as any).gitBranch && (
+              <div className="flex items-center gap-4 mt-2 text-xs">
+                <div className="flex items-center gap-1.5 text-stone-500">
+                  <Folder size={12} />
+                  <span className="font-mono truncate max-w-[150px]">{(selectedAgent as any).workingDir}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <GitBranch size={12} className="text-emerald-500" />
+                  <span className="text-emerald-400 font-mono font-semibold">{(selectedAgent as any).gitBranch}</span>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* Window Controls */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2.5 hover:bg-stone-800 rounded-lg transition-all text-stone-500 hover:text-stone-300"
-            title={isExpanded ? 'Shrink' : 'Expand'}
-          >
-            {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-          </button>
-          <button
-            onClick={() => setIsMinimized(true)}
-            className="p-2.5 hover:bg-stone-800 rounded-lg transition-all text-stone-500 hover:text-stone-300"
-            title="Minimize"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* Git/Project Info Bar */}
-      {(selectedAgent as any).gitBranch && (
-        <div className="px-5 py-3 bg-black/60 border-b border-stone-800/50 flex items-center gap-6 text-xs font-serif">
-          <div className="flex items-center gap-2 text-stone-500">
-            <Folder size={14} />
-            <span className="text-stone-400 font-mono truncate max-w-[200px]">
-              {(selectedAgent as any).workingDir}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <GitBranch size={14} className="text-emerald-600" />
-            <span className="text-emerald-500 font-mono font-semibold">{(selectedAgent as any).gitBranch}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Terminal Output - Dialogue Area */}
-      <div
-        ref={terminalRef}
-        className="flex-1 px-5 py-4 overflow-y-auto font-mono text-sm leading-relaxed bg-black/80 terminal-text relative custom-scrollbar"
-      >
-        {/* Subtle texture overlay */}
-        <div className="absolute inset-0 bg-[url('/assets/textures/paper-texture.png')] opacity-10 pointer-events-none mix-blend-overlay" />
-
-        {selectedAgent.terminalOutput.map((line, i) => {
-          // User input lines start with '>'
-          const isUserInput = line.startsWith('>');
-          const isError = line.startsWith('❌') || line.toLowerCase().includes('error');
-          const isSuccess = line.startsWith('✓') || line.toLowerCase().includes('success');
-          const isWarning = line.startsWith('⚠');
-          const isInfo = line.startsWith('📁') || line.startsWith('🌿') || line.startsWith('[');
-          const isInterrupt = line === '^C';
-
-          return (
-            <div
-              key={i}
-              className={`whitespace-pre-wrap relative z-10 ${isUserInput
-                ? 'py-3 mt-4 mb-2 border-l-3 pl-4 rounded-r-lg font-serif italic'
-                : isInterrupt
-                  ? 'text-red-400 font-bold py-1'
-                  : isError
-                    ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.3)]'
-                    : isSuccess
-                      ? 'text-emerald-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.3)]'
-                      : isWarning
-                        ? 'text-amber-400'
-                        : isInfo
-                          ? 'text-cyan-600/70 text-xs py-1'
-                          : 'text-stone-300 py-0.5'
-                }`}
-              style={isUserInput ? {
-                borderColor: classColor,
-                backgroundColor: `${classColor}10`,
-                color: classColor
-              } : undefined}
+          {/* Window controls */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-2.5 hover:bg-stone-800/60 rounded-lg transition-all text-stone-500 hover:text-stone-300"
+              title={isExpanded ? 'Compact' : 'Expand'}
             >
-              {isUserInput ? (
-                <span className="flex items-center gap-3">
-                  <User size={16} style={{ color: classColor }} />
-                  <span className="font-semibold">{line.slice(2)}</span>
-                </span>
-              ) : isInterrupt ? (
-                <span className="flex items-center gap-2">
-                  <AlertCircle size={14} />
-                  <span>Disrupted</span>
-                </span>
-              ) : (
-                line
-              )}
-            </div>
-          );
-        })}
-
-        {selectedAgent.status === 'working' && (
-          <div className="mt-4 flex items-center gap-3 py-2" style={{ color: classColor }}>
-            <span className="animate-spin-slow text-lg">⟳</span>
-            <span className="animate-pulse font-medium tracking-wide font-serif">{selectedAgent.name} is casting...</span>
+              {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
+            <button
+              onClick={() => setIsMinimized(true)}
+              className="p-2.5 hover:bg-stone-800/60 rounded-lg transition-all text-stone-500 hover:text-stone-300"
+              title="Minimize"
+            >
+              <X size={16} />
+            </button>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Input Area - Dialogue Input Style */}
-      <form
-        onSubmit={handleSubmit}
-        className="p-4 border-t relative z-10 bg-stone-900"
-        style={{
-          borderColor: `${classColor}20`
-        }}
-      >
+        {/* Dialogue history */}
         <div
-          className="flex items-center gap-3 bg-black/60 rounded-xl px-4 py-3 border transition-all shadow-inner focus-within:shadow-lg"
+          ref={terminalRef}
+          className={`overflow-y-auto px-6 py-4 space-y-3 custom-scrollbar ${isExpanded ? 'h-[350px]' : 'h-[250px]'}`}
+          style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%)' }}
+        >
+          {/* Welcome message if empty */}
+          {selectedAgent.terminalOutput.length === 0 && (
+            <div className="flex gap-4 items-start">
+              <div
+                className="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center text-lg border"
+                style={{
+                  borderColor: `${classColor}40`,
+                  background: `linear-gradient(135deg, ${classColor}20, transparent)`
+                }}
+              >
+                {classIcon}
+              </div>
+              <div
+                className="flex-1 p-4 rounded-xl rounded-tl-sm relative"
+                style={{
+                  background: `linear-gradient(135deg, ${classColor}15, ${classColor}05)`,
+                  border: `1px solid ${classColor}30`
+                }}
+              >
+                <p className="text-stone-300 italic" style={{ fontFamily: 'Georgia, serif' }}>
+                  "{CLASS_GREETINGS[selectedAgent.class]?.[0] || 'Awaiting your command...'}"
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Message history */}
+          {selectedAgent.terminalOutput.map((line, i) => {
+            const { isUserInput, isInterrupt, isError, isSuccess, isSystem } = parseMessage(line);
+
+            if (isUserInput) {
+              // User message - right aligned speech bubble
+              return (
+                <div key={i} className="flex justify-end">
+                  <div
+                    className="max-w-[80%] p-4 rounded-xl rounded-br-sm"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.1))',
+                      border: '1px solid rgba(245,158,11,0.3)'
+                    }}
+                  >
+                    <p className="text-amber-100 font-medium" style={{ fontFamily: 'Georgia, serif' }}>
+                      {line.replace('[YOU] ', '')}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
+            if (isInterrupt) {
+              // Interrupt indicator
+              return (
+                <div key={i} className="flex justify-center">
+                  <span className="text-xs text-red-400/60 px-4 py-1 rounded-full bg-red-900/20 border border-red-900/30">
+                    — Spell Interrupted —
+                  </span>
+                </div>
+              );
+            }
+
+            // Agent message - left aligned with avatar
+            return (
+              <div key={i} className="flex gap-3 items-start">
+                {/* Mini avatar for first message in sequence or every 5th */}
+                {(i === 0 || i % 5 === 0) && (
+                  <div
+                    className="w-8 h-8 rounded-lg shrink-0 overflow-hidden border"
+                    style={{
+                      borderColor: `${classColor}40`,
+                      background: `linear-gradient(135deg, ${classColor}20, transparent)`
+                    }}
+                  >
+                    {agentSprite ? (
+                      <img
+                        src={agentSprite}
+                        alt=""
+                        className="w-full h-full object-cover scale-150"
+                        style={{ imageRendering: 'pixelated' }}
+                      />
+                    ) : (
+                      <span className="text-sm flex items-center justify-center h-full">{classIcon}</span>
+                    )}
+                  </div>
+                )}
+                {(i !== 0 && i % 5 !== 0) && <div className="w-8 shrink-0" />}
+
+                <div
+                  className={`flex-1 p-3 rounded-xl rounded-tl-sm font-mono text-sm leading-relaxed ${
+                    isError ? 'bg-red-900/20 border-red-800/40 text-red-300' :
+                    isSuccess ? 'bg-emerald-900/20 border-emerald-800/40 text-emerald-300' :
+                    isSystem ? 'bg-stone-800/30 border-stone-700/30 text-stone-500 text-xs' :
+                    'bg-stone-800/40 border-stone-700/30 text-stone-300'
+                  }`}
+                  style={{ border: '1px solid' }}
+                >
+                  <p className="whitespace-pre-wrap break-words">{line}</p>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Typing indicator when working */}
+          {selectedAgent.status === 'working' && (
+            <div className="flex gap-3 items-start">
+              <div
+                className="w-8 h-8 rounded-lg shrink-0 overflow-hidden border animate-pulse"
+                style={{
+                  borderColor: `${classColor}40`,
+                  background: `linear-gradient(135deg, ${classColor}20, transparent)`
+                }}
+              >
+                {agentSprite ? (
+                  <img
+                    src={agentSprite}
+                    alt=""
+                    className="w-full h-full object-cover scale-150"
+                    style={{ imageRendering: 'pixelated' }}
+                  />
+                ) : (
+                  <span className="text-sm flex items-center justify-center h-full">{classIcon}</span>
+                )}
+              </div>
+              <div
+                className="p-4 rounded-xl rounded-tl-sm"
+                style={{
+                  background: `linear-gradient(135deg, ${classColor}10, transparent)`,
+                  border: `1px solid ${classColor}30`
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ color: classColor, animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ color: classColor, animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ color: classColor, animationDelay: '300ms' }} />
+                  </div>
+                  <span className="text-sm italic" style={{ color: classColor, fontFamily: 'Georgia, serif' }}>
+                    {selectedAgent.name} is channeling...
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input area */}
+        <form
+          onSubmit={handleSubmit}
+          className="p-4 border-t"
           style={{
-            borderColor: input ? `${classColor}50` : 'rgba(255,255,255,0.1)',
-            boxShadow: input ? `0 0 20px ${classColor}10` : undefined
+            borderColor: `${classColor}20`,
+            background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.3))'
           }}
         >
-          <span className="text-xl" style={{ color: classColor }}>❯</span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={`What shall ${selectedAgent.name} undertake?`}
-            className="flex-1 bg-transparent border-none outline-none text-stone-200 placeholder-stone-600 font-serif text-base tracking-wide"
-            disabled={selectedAgent.status === 'spawning'}
-          />
-          <div className="flex items-center gap-2 text-stone-600 text-xs font-mono">
-            <span className="opacity-50">↑↓</span>
-            <span className="opacity-30">|</span>
-            <span className="opacity-50">^C</span>
-          </div>
-          <button
-            type="submit"
-            disabled={!input.trim() || selectedAgent.status === 'spawning'}
-            className="p-2.5 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          <div
+            className="flex items-center gap-3 rounded-xl px-4 py-3 transition-all"
             style={{
-              color: input.trim() ? classColor : 'gray',
-              backgroundColor: input.trim() ? `${classColor}20` : 'transparent'
+              background: 'rgba(0,0,0,0.4)',
+              border: `2px solid ${input ? `${classColor}50` : 'rgba(255,255,255,0.1)'}`,
+              boxShadow: input ? `0 0 20px ${classColor}15` : undefined
             }}
           >
-            <Scroll size={18} />
-          </button>
-        </div>
-      </form>
+            <ChevronRight
+              size={20}
+              style={{ color: input ? classColor : '#6b7280' }}
+              className="transition-colors"
+            />
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={`Speak to ${selectedAgent.name}...`}
+              className="flex-1 bg-transparent border-none outline-none text-stone-200 placeholder-stone-600 text-base"
+              style={{ fontFamily: 'Georgia, serif' }}
+              disabled={selectedAgent.status === 'spawning'}
+            />
+
+            {/* Keyboard hints */}
+            <div className="flex items-center gap-2 text-stone-600 text-xs font-mono">
+              <span className="opacity-50">↑↓</span>
+            </div>
+
+            <button
+              type="submit"
+              disabled={!input.trim() || selectedAgent.status === 'spawning'}
+              className="p-2.5 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+              style={{
+                color: input.trim() ? classColor : '#6b7280',
+                background: input.trim() ? `${classColor}20` : 'transparent',
+                border: input.trim() ? `1px solid ${classColor}40` : '1px solid transparent'
+              }}
+            >
+              <Send size={18} />
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

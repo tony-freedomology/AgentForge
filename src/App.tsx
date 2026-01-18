@@ -18,7 +18,7 @@ import { WelcomeScreen } from './components/ui/WelcomeScreen';
 import { IsometricWorld } from './components/isometric/IsometricWorld';
 import { useKeyboardShortcuts, KEYBOARD_SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import { agentBridge } from './services/agentBridge';
-import { ChevronRight, Zap, Crosshair, Cpu, Layers, Box } from 'lucide-react';
+// Icons unused after refactor but kept for potential future use
 import { useState, useEffect } from 'react';
 
 function HelpOverlay({ onClose }: { onClose: () => void }) {

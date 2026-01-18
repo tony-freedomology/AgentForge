@@ -3,7 +3,7 @@ import { useGameStore } from '../../stores/gameStore';
 import type { AgentClassConfig } from '../../config/agentClasses';
 import { AGENT_CLASSES } from '../../config/agentClasses';
 import type { AgentClass, AgentProvider } from '../../types/agent';
-import { Sparkles, X, Hexagon, Shield, Zap, Hammer, Pencil, Crosshair, Cpu, FolderOpen, Terminal, Scroll } from 'lucide-react';
+import { Sparkles, X, Hexagon, Shield, Zap, Hammer, Pencil, Crosshair, FolderOpen, Scroll } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { PixelButton } from './PixelButton';
 
@@ -39,7 +39,6 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
   const [workingDir, setWorkingDir] = useState('~');
 
   const activeId = selectedClass.id;
-  const activeColor = selectedClass.color;
   // Use GIF if available for these classes, else PNG
   const activeSprite = (activeId === 'mage' || activeId === 'guardian')
     ? `/assets/sprites/${activeId}.gif`

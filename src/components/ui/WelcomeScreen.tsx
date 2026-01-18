@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { PixelButton } from './PixelButton';
 import { ChevronRight, Activity, Zap, Shield, BookOpen } from 'lucide-react';
 
