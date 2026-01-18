@@ -8,7 +8,7 @@
  * - Asset loading with progress indicator
  */
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo, useContext } from 'react';
 import { Application, extend, useApplication, useTick } from '@pixi/react';
 import { Container, Graphics, Text, TextStyle, Ticker, Sprite, Texture } from 'pixi.js';
 import { gridToScreen, screenToGrid, TILE_WIDTH, TILE_HEIGHT } from '../../utils/isoCoords';
@@ -47,9 +47,26 @@ interface IsometricWorldProps {
   height?: number;
 }
 
+// Selection box context for sharing state between wrapper and scene
+interface SelectionBoxState {
+  isSelecting: boolean;
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+  setIsSelecting: (v: boolean) => void;
+  setStart: (v: { x: number; y: number }) => void;
+  setEnd: (v: { x: number; y: number }) => void;
+}
+
+const SelectionBoxContext = React.createContext<SelectionBoxState | null>(null);
+
 export function IsometricWorld({ width = 800, height = 600 }: IsometricWorldProps) {
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+
+  // Box selection state (lifted up for overlay rendering)
+  const [isBoxSelecting, setIsBoxSelecting] = useState(false);
+  const [boxStart, setBoxStart] = useState({ x: 0, y: 0 });
+  const [boxEnd, setBoxEnd] = useState({ x: 0, y: 0 });
 
   // Load assets on mount
   useEffect(() => {
@@ -72,21 +89,55 @@ export function IsometricWorld({ width = 800, height = 600 }: IsometricWorldProp
     loadAssets();
   }, []);
 
+  // Calculate selection box dimensions
+  const selectionBox = isBoxSelecting ? {
+    left: Math.min(boxStart.x, boxEnd.x),
+    top: Math.min(boxStart.y, boxEnd.y),
+    width: Math.abs(boxEnd.x - boxStart.x),
+    height: Math.abs(boxEnd.y - boxStart.y),
+  } : null;
+
+  const selectionContextValue: SelectionBoxState = {
+    isSelecting: isBoxSelecting,
+    start: boxStart,
+    end: boxEnd,
+    setIsSelecting: setIsBoxSelecting,
+    setStart: setBoxStart,
+    setEnd: setBoxEnd,
+  };
+
   return (
-    <Application
-      width={width}
-      height={height}
-      backgroundColor={0x0a0a1a}
-      antialias={true}
-      resolution={window.devicePixelRatio || 1}
-      autoDensity={true}
-    >
-      {!assetsLoaded ? (
-        <LoadingScreen progress={loadingProgress} />
-      ) : (
-        <IsometricScene width={width} height={height} />
+    <div className="relative" style={{ width, height }}>
+      <SelectionBoxContext.Provider value={selectionContextValue}>
+        <Application
+          width={width}
+          height={height}
+          backgroundColor={0x0a0a1a}
+          antialias={true}
+          resolution={window.devicePixelRatio || 1}
+          autoDensity={true}
+        >
+          {!assetsLoaded ? (
+            <LoadingScreen progress={loadingProgress} />
+          ) : (
+            <IsometricScene width={width} height={height} />
+          )}
+        </Application>
+      </SelectionBoxContext.Provider>
+
+      {/* Selection box overlay */}
+      {selectionBox && selectionBox.width > 5 && selectionBox.height > 5 && (
+        <div
+          className="absolute pointer-events-none border-2 border-cyan-400 bg-cyan-400/20"
+          style={{
+            left: selectionBox.left,
+            top: selectionBox.top,
+            width: selectionBox.width,
+            height: selectionBox.height,
+          }}
+        />
       )}
-    </Application>
+    </div>
   );
 }
 
@@ -134,6 +185,17 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
   const agents = useGameStore((state) => state.agents);
   const selectedAgentIds = useGameStore((state) => state.selectedAgentIds);
   const selectAgent = useGameStore((state) => state.selectAgent);
+  const selectAgents = useGameStore((state) => state.selectAgents);
+  const deselectAll = useGameStore((state) => state.deselectAll);
+
+  // Box selection from context
+  const selectionBox = useContext(SelectionBoxContext);
+  const isBoxSelecting = selectionBox?.isSelecting ?? false;
+  const boxStart = selectionBox?.start ?? { x: 0, y: 0 };
+  const boxEnd = selectionBox?.end ?? { x: 0, y: 0 };
+  const setIsBoxSelecting = selectionBox?.setIsSelecting ?? (() => {});
+  const setBoxStart = selectionBox?.setStart ?? (() => {});
+  const setBoxEnd = selectionBox?.setEnd ?? (() => {});
 
   // Demo agent for when no real agents exist
   const [demoAgentPosition, setDemoAgentPosition] = useState({ x: 5, y: 5 });
@@ -215,6 +277,12 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
       const x = e.clientX - bounds.left;
       const y = e.clientY - bounds.top;
 
+      // Update box selection end point
+      if (isBoxSelecting) {
+        setBoxEnd({ x, y });
+        return;
+      }
+
       if (isDragging) {
         const dx = x - dragStart.current.x;
         const dy = y - dragStart.current.y;
@@ -241,10 +309,19 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
       const x = e.clientX - bounds.left;
       const y = e.clientY - bounds.top;
 
+      // Right/middle click for camera pan
       if (e.button === 1 || e.button === 2) {
         setIsDragging(true);
         dragStart.current = { x, y };
         cameraStart.current = { ...cameraOffset };
+        return;
+      }
+
+      // Left click - start box selection if shift is held and we have real agents
+      if (e.shiftKey && hasRealAgents) {
+        setIsBoxSelecting(true);
+        setBoxStart({ x, y });
+        setBoxEnd({ x, y });
         return;
       }
 
@@ -264,12 +341,47 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
             setDemoAgentTarget(gridPos);
             setIsDemoMoving(true);
           }
+        } else {
+          // Click on empty tile with no modifiers deselects all
+          if (!e.ctrlKey && !e.metaKey) {
+            deselectAll();
+          }
         }
-        // TODO: With real agents, implement move command via store
       }
     };
 
     const handlePointerUp = () => {
+      // Complete box selection
+      if (isBoxSelecting) {
+        const minX = Math.min(boxStart.x, boxEnd.x);
+        const maxX = Math.max(boxStart.x, boxEnd.x);
+        const minY = Math.min(boxStart.y, boxEnd.y);
+        const maxY = Math.max(boxStart.y, boxEnd.y);
+
+        // Find all agents within the box
+        const selectedIds: string[] = [];
+        agentList.forEach((agent) => {
+          const agentGridX = agent.position.q + 5;
+          const agentGridY = agent.position.r + 5;
+          const screenPos = gridToScreen(agentGridX, agentGridY);
+
+          // Convert to canvas coordinates
+          const canvasX = screenPos.x * cameraZoom + centerOffsetX + cameraOffset.x;
+          const canvasY = (screenPos.y - 30) * cameraZoom + centerOffsetY + cameraOffset.y;
+
+          if (canvasX >= minX && canvasX <= maxX && canvasY >= minY && canvasY <= maxY) {
+            selectedIds.push(agent.id);
+          }
+        });
+
+        if (selectedIds.length > 0) {
+          selectAgents(selectedIds);
+        }
+
+        setIsBoxSelecting(false);
+        return;
+      }
+
       setIsDragging(false);
     };
 
@@ -295,7 +407,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
       canvas.removeEventListener('wheel', handleWheel);
       canvas.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [app, isDragging, cameraOffset, cameraZoom, centerOffsetX, centerOffsetY, hasRealAgents, demoAgentTarget, demoAgentPosition]);
+  }, [app, isDragging, cameraOffset, cameraZoom, centerOffsetX, centerOffsetY, hasRealAgents, demoAgentTarget, demoAgentPosition, isBoxSelecting, boxStart, boxEnd, agentList, selectAgents, deselectAll]);
 
   // Generate tiles in render order
   const tiles: { x: number; y: number }[] = [];
@@ -594,7 +706,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
 
       {/* UI Text */}
       <pixiText
-        text={`Click to move | Right-drag to pan | Scroll to zoom (${Math.round(cameraZoom * 100)}%) | L=LevelUp M=Magic`}
+        text={`Click to move | Shift+drag to box select | Right-drag to pan | Scroll to zoom (${Math.round(cameraZoom * 100)}%)`}
         x={(-centerOffsetX + 10) / cameraZoom}
         y={(-centerOffsetY + height - 30) / cameraZoom}
         scale={1 / cameraZoom}
