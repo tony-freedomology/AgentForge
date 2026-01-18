@@ -120,7 +120,14 @@ export interface AgentThought {
   id: string;
   content: string;
   timestamp: Date;
-  type: 'thinking' | 'action' | 'result';
+  type: 'thinking' | 'action' | 'result' | 'tool';
+}
+
+// File change tracking for agent work session
+export interface FileChange {
+  path: string;
+  action: 'created' | 'modified' | 'deleted';
+  linesChanged?: number;
 }
 
 // Core Agent interface
@@ -174,6 +181,9 @@ export interface Agent {
 
   // Favorited/pinned
   isFavorite: boolean;
+
+  // Files changed during current work session
+  filesChanged?: FileChange[];
 }
 
 // Create a new agent with defaults

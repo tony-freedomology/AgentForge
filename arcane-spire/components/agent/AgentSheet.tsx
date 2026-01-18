@@ -363,10 +363,10 @@ function TalentsTab({ agent }: { agent: Agent }) {
       <View style={styles.xpSection}>
         <View style={styles.xpHeader}>
           <Text style={styles.xpLabel}>Level {agent.level}</Text>
-          <Text style={styles.xpValue}>{agent.xp || 0} / {(agent.level + 1) * 100} XP</Text>
+          <Text style={styles.xpValue}>{agent.xp || 0} / {agent.xpToNextLevel} XP</Text>
         </View>
         <ProgressBar
-          progress={((agent.xp || 0) / ((agent.level + 1) * 100)) * 100}
+          progress={((agent.xp || 0) / agent.xpToNextLevel) * 100}
           variant="xp"
           height={8}
         />

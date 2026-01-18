@@ -10,6 +10,7 @@ import {
   questArtifactsToLoot,
   QuestPriority,
 } from '../shared/types/quest';
+import { AgentClass } from '../shared/types/agent';
 
 interface QuestState {
   // Quest data
@@ -28,13 +29,14 @@ interface QuestState {
   startQuest: (
     agentId: string,
     agentName: string,
-    agentClass: string,
+    agentClass: AgentClass,
     title: string,
     description: string,
     priority?: QuestPriority
   ) => Quest;
   completeQuest: (id: string, summary: string, artifacts: QuestArtifact[]) => void;
   acceptQuest: (id: string) => number; // Returns XP reward
+  rejectQuest: (id: string) => void;
   requestRevision: (id: string, notes: string) => void;
   failQuest: (id: string) => void;
 
@@ -135,6 +137,22 @@ export const useQuestStore = create<QuestState>()(
         }));
 
         return quest.xpReward;
+      },
+
+      rejectQuest: (id) => {
+        const quest = get().quests[id];
+        if (!quest) return;
+
+        set((state) => ({
+          quests: {
+            ...state.quests,
+            [id]: {
+              ...quest,
+              status: 'failed',
+              reviewedAt: new Date(),
+            },
+          },
+        }));
       },
 
       requestRevision: (id, notes) => {

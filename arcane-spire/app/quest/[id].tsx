@@ -177,7 +177,7 @@ export default function QuestDetailScreen() {
                     >
                       <LootItem
                         type={getArtifactType(artifact)}
-                        rarity={artifact.status === 'created' ? 'epic' : 'rare'}
+                        rarity={artifact.changeType === 'created' ? 'epic' : 'rare'}
                         size={56}
                       />
                     </Animated.View>
@@ -249,10 +249,10 @@ export default function QuestDetailScreen() {
                   Level {agent.level} {AGENT_CLASSES[agentClass]?.name}
                 </Text>
                 <ProgressBar
-                  current={agent.xp}
-                  max={agent.xpToNextLevel}
+                  progress={(agent.xp / agent.xpToNextLevel) * 100}
                   variant="xp"
                   showLabel
+                  label={`${agent.xp} / ${agent.xpToNextLevel} XP`}
                   style={styles.agentXp}
                 />
               </View>
@@ -368,8 +368,8 @@ interface ArtifactItemProps {
 }
 
 function ArtifactItem({ artifact, color }: ArtifactItemProps) {
-  const getStatusIcon = () => {
-    switch (artifact.status) {
+  const getChangeIcon = () => {
+    switch (artifact.changeType) {
       case 'created':
         return { icon: 'add-circle', color: Colors.fel.green, label: 'Created' };
       case 'modified':
@@ -377,17 +377,17 @@ function ArtifactItem({ artifact, color }: ArtifactItemProps) {
       case 'deleted':
         return { icon: 'remove-circle', color: Colors.fire.orange, label: 'Deleted' };
       default:
-        return { icon: 'document', color: Colors.textMuted, label: artifact.status };
+        return { icon: 'document', color: Colors.textMuted, label: artifact.changeType };
     }
   };
 
-  const status = getStatusIcon();
+  const changeInfo = getChangeIcon();
   const fileName = artifact.path.split('/').pop() || artifact.path;
 
   return (
     <View style={styles.artifactItem}>
       <View style={styles.artifactIcon}>
-        <Ionicons name={status.icon as any} size={20} color={status.color} />
+        <Ionicons name={changeInfo.icon as any} size={20} color={changeInfo.color} />
       </View>
       <View style={styles.artifactInfo}>
         <Text style={styles.artifactName} numberOfLines={1}>
@@ -397,9 +397,9 @@ function ArtifactItem({ artifact, color }: ArtifactItemProps) {
           {artifact.path}
         </Text>
       </View>
-      <View style={[styles.artifactStatus, { backgroundColor: status.color + '20' }]}>
-        <Text style={[styles.artifactStatusText, { color: status.color }]}>
-          {status.label}
+      <View style={[styles.artifactStatus, { backgroundColor: changeInfo.color + '20' }]}>
+        <Text style={[styles.artifactStatusText, { color: changeInfo.color }]}>
+          {changeInfo.label}
         </Text>
       </View>
     </View>

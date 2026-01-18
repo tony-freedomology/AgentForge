@@ -1,3 +1,5 @@
+import { AgentClass } from './agent';
+
 // Quest status
 export type QuestStatus =
   | 'active'      // Currently being worked on
@@ -26,7 +28,7 @@ export interface Quest {
   id: string;
   agentId: string;
   agentName: string;
-  agentClass: string;
+  agentClass: AgentClass;
 
   // Quest details
   title: string;
@@ -56,7 +58,7 @@ export interface Quest {
 export function createQuest(
   agentId: string,
   agentName: string,
-  agentClass: string,
+  agentClass: AgentClass,
   title: string,
   description: string,
   priority: QuestPriority = 'normal'
