@@ -13,6 +13,7 @@ import { Application, extend, useApplication, useTick } from '@pixi/react';
 import { Container, Graphics, Text, TextStyle, Ticker, Sprite, Texture } from 'pixi.js';
 import { gridToScreen, screenToGrid, TILE_WIDTH, TILE_HEIGHT } from '../../utils/isoCoords';
 import { assetLoader, DEFAULT_MANIFEST, loadAgentSprites } from '../../utils/assetLoader';
+import { useParticleEffects } from './ParticleEffects';
 
 // Register PixiJS components for JSX use
 extend({ Container, Graphics, Text, Sprite });
@@ -24,6 +25,9 @@ const GRID_SIZE = 10;
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2.0;
 const ZOOM_SPEED = 0.1;
+
+// Movement configuration
+const MOVE_SPEED = 4; // Grid units per second
 
 // Colors for fallback rendering
 const COLORS = {
@@ -123,8 +127,13 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
   const app = useApplication();
   const [hoveredTile, setHoveredTile] = useState<{ x: number; y: number } | null>(null);
   const [selectedTile, setSelectedTile] = useState<{ x: number; y: number } | null>(null);
+
+  // Agent state - separate current position from target for smooth movement
+  const [agentTarget, setAgentTarget] = useState({ x: 5, y: 5 });
   const [agentPosition, setAgentPosition] = useState({ x: 5, y: 5 });
   const [agentDirection, setAgentDirection] = useState<'s' | 'sw' | 'w' | 'nw'>('s');
+  const [isMoving, setIsMoving] = useState(false);
+
   const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
   const [cameraZoom, setCameraZoom] = useState(1.0);
   const [isDragging, setIsDragging] = useState(false);
@@ -132,13 +141,52 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
   const cameraStart = useRef({ x: 0, y: 0 });
   const [portalPulse, setPortalPulse] = useState(0);
 
+  // Particle effects
+  const { spawnEffect, EffectsRenderer } = useParticleEffects();
+  const wasMoving = useRef(false);
+
   // Center the view
   const centerOffsetX = width / 2;
   const centerOffsetY = height / 3;
 
-  // Animate portal pulse
+  // Animate portal pulse and agent movement
   useTick((ticker: Ticker) => {
     setPortalPulse((p) => (p + ticker.deltaTime * 0.05) % (Math.PI * 2));
+
+    // Smooth agent movement
+    const dx = agentTarget.x - agentPosition.x;
+    const dy = agentTarget.y - agentPosition.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > 0.01) {
+      const speed = MOVE_SPEED * (ticker.deltaTime / 60);
+
+      if (distance < speed) {
+        // Arrived at target
+        setAgentPosition({ x: agentTarget.x, y: agentTarget.y });
+        setIsMoving(false);
+
+        // Spawn arrival effect
+        if (wasMoving.current) {
+          const arrivalPos = gridToScreen(agentTarget.x, agentTarget.y);
+          spawnEffect(arrivalPos.x, arrivalPos.y - 30, 'teleport');
+          wasMoving.current = false;
+        }
+      } else {
+        // Move towards target
+        const nx = dx / distance;
+        const ny = dy / distance;
+        setAgentPosition((prev) => ({
+          x: prev.x + nx * speed,
+          y: prev.y + ny * speed,
+        }));
+        setIsMoving(true);
+        wasMoving.current = true;
+
+        // Update direction while moving
+        setAgentDirection(getDirectionFromDelta(dx, dy));
+      }
+    }
   });
 
   // Setup interaction handlers
@@ -193,12 +241,13 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
 
       if (gridPos.x >= 0 && gridPos.x < GRID_SIZE && gridPos.y >= 0 && gridPos.y < GRID_SIZE) {
         setSelectedTile(gridPos);
-        if (gridPos.x !== agentPosition.x || gridPos.y !== agentPosition.y) {
-          // Calculate direction towards target
+        if (gridPos.x !== agentTarget.x || gridPos.y !== agentTarget.y) {
+          // Set target for smooth movement
           const dx = gridPos.x - agentPosition.x;
           const dy = gridPos.y - agentPosition.y;
           setAgentDirection(getDirectionFromDelta(dx, dy));
-          setAgentPosition(gridPos);
+          setAgentTarget(gridPos);
+          setIsMoving(true);
         }
       }
     };
@@ -229,7 +278,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
       canvas.removeEventListener('wheel', handleWheel);
       canvas.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [app, isDragging, cameraOffset, cameraZoom, centerOffsetX, centerOffsetY, agentPosition]);
+  }, [app, isDragging, cameraOffset, cameraZoom, centerOffsetX, centerOffsetY, agentTarget, agentPosition]);
 
   // Generate tiles in render order
   const tiles: { x: number; y: number }[] = [];
@@ -242,6 +291,21 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
 
   const portalPosition = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
 
+  // Environment props - decorative elements around the map
+  const environmentProps = [
+    { x: 1, y: 1, prop: 'crystal_purple' },
+    { x: 8, y: 1, prop: 'crystal_blue' },
+    { x: 1, y: 8, prop: 'crystal_green' },
+    { x: 8, y: 8, prop: 'tree_magical' },
+    { x: 0, y: 4, prop: 'torch_wall' },
+    { x: 9, y: 4, prop: 'torch_wall' },
+    { x: 4, y: 0, prop: 'banner_guild' },
+    { x: 3, y: 8, prop: 'cauldron' },
+    { x: 6, y: 8, prop: 'bookshelf' },
+    { x: 2, y: 3, prop: 'mushroom_cluster' },
+    { x: 7, y: 2, prop: 'chest_closed' },
+  ];
+
   // Get tile texture based on position
   const getTileTexture = (x: number, y: number, isPortal: boolean): Texture | null => {
     if (isPortal) {
@@ -253,14 +317,32 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
     return assetLoader.getTexture(tileTypes[index]) || null;
   };
 
-  // Get agent sprite texture
+  // Get agent sprite texture based on movement state
   const getAgentTexture = (): Texture | null => {
-    const spriteId = `claude_idle_${agentDirection}`;
+    const animation = isMoving ? 'walk' : 'idle';
+    const spriteId = `claude_${animation}_${agentDirection}`;
     return assetLoader.getTexture(spriteId) || null;
   };
 
+  // Handle keyboard for effects demo (L = level-up, M = magic)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'l' || e.key === 'L') {
+        const pos = gridToScreen(agentPosition.x, agentPosition.y);
+        spawnEffect(pos.x, pos.y - 30, 'levelup');
+      }
+      if (e.key === 'm' || e.key === 'M') {
+        const pos = gridToScreen(agentPosition.x, agentPosition.y);
+        spawnEffect(pos.x, pos.y - 30, 'magic');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [agentPosition, spawnEffect]);
+
   return (
-    <pixiContainer x={centerOffsetX + cameraOffset.x} y={centerOffsetY + cameraOffset.y} scale={cameraZoom}>
+    <pixiContainer x={centerOffsetX + cameraOffset.x} y={centerOffsetY + cameraOffset.y} scale={cameraZoom} sortableChildren={true}>
       {/* Tiles */}
       {tiles.map(({ x, y }) => {
         const isHovered = hoveredTile?.x === x && hoveredTile?.y === y;
@@ -270,7 +352,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
         const tileTexture = getTileTexture(x, y, isPortal);
 
         return (
-          <pixiContainer key={`tile-${x}-${y}`} x={screenPos.x} y={screenPos.y}>
+          <pixiContainer key={`tile-${x}-${y}`} x={screenPos.x} y={screenPos.y} zIndex={x + y}>
             {/* Base tile - use texture if available, otherwise fallback to graphics */}
             {tileTexture && tileTexture !== Texture.WHITE ? (
               <pixiSprite
@@ -310,6 +392,64 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
                 texture={assetLoader.getTexture('tile_highlight_select') || Texture.WHITE}
                 anchor={{ x: 0.5, y: 0.5 }}
                 alpha={0.8}
+              />
+            )}
+          </pixiContainer>
+        );
+      })}
+
+      {/* Environment Props */}
+      {environmentProps.map((propData, index) => {
+        const screenPos = gridToScreen(propData.x, propData.y);
+        const propTexture = assetLoader.getTexture(propData.prop);
+        const zIndex = propData.x + propData.y + 10;
+
+        return (
+          <pixiContainer key={`prop-${index}`} x={screenPos.x} y={screenPos.y} zIndex={zIndex}>
+            {propTexture && propTexture !== Texture.WHITE ? (
+              <pixiSprite
+                texture={propTexture}
+                anchor={{ x: 0.5, y: 1 }}
+                y={TILE_HEIGHT / 2}
+              />
+            ) : (
+              // Fallback prop graphics
+              <pixiGraphics
+                draw={(g: Graphics) => {
+                  g.clear();
+                  // Draw a simple prop placeholder
+                  if (propData.prop.includes('crystal')) {
+                    const color = propData.prop.includes('purple') ? 0x8b5cf6 :
+                                  propData.prop.includes('blue') ? 0x3b82f6 : 0x22c55e;
+                    g.moveTo(0, -40);
+                    g.lineTo(-10, -10);
+                    g.lineTo(10, -10);
+                    g.closePath();
+                    g.fill({ color, alpha: 0.8 });
+                    g.stroke({ color: 0xffffff, width: 1, alpha: 0.5 });
+                  } else if (propData.prop.includes('tree')) {
+                    g.circle(0, -35, 25);
+                    g.fill({ color: 0x22c55e, alpha: 0.8 });
+                    g.rect(-5, -15, 10, 20);
+                    g.fill({ color: 0x8b4513 });
+                  } else if (propData.prop.includes('torch')) {
+                    g.rect(-3, -30, 6, 25);
+                    g.fill({ color: 0x8b4513 });
+                    g.circle(0, -35, 8);
+                    g.fill({ color: 0xf59e0b, alpha: 0.9 });
+                  } else if (propData.prop.includes('chest')) {
+                    g.rect(-15, -20, 30, 18);
+                    g.fill({ color: 0x8b4513 });
+                    g.rect(-12, -25, 24, 8);
+                    g.fill({ color: 0xa0522d });
+                    g.rect(-3, -17, 6, 6);
+                    g.fill({ color: 0xf59e0b });
+                  } else {
+                    // Generic prop
+                    g.rect(-12, -25, 24, 20);
+                    g.fill({ color: 0x4a5568, alpha: 0.8 });
+                  }
+                }}
               />
             )}
           </pixiContainer>
@@ -396,7 +536,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
 
       {/* UI Text */}
       <pixiText
-        text={`Click to move | Right-drag to pan | Scroll to zoom (${Math.round(cameraZoom * 100)}%)`}
+        text={`Click to move | Right-drag to pan | Scroll to zoom (${Math.round(cameraZoom * 100)}%) | L=LevelUp M=Magic`}
         x={(-centerOffsetX + 10) / cameraZoom}
         y={(-centerOffsetY + height - 30) / cameraZoom}
         scale={1 / cameraZoom}
@@ -420,6 +560,167 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
           })}
         />
       )}
+
+      {/* Agent Status Panel - UI Overlay */}
+      <pixiContainer
+        x={(-centerOffsetX + 10) / cameraZoom}
+        y={(-centerOffsetY + 50) / cameraZoom}
+        scale={1 / cameraZoom}
+        zIndex={10000}
+      >
+        {/* Panel background */}
+        {(() => {
+          const panelTexture = assetLoader.getTexture('panel_stone');
+          if (panelTexture && panelTexture !== Texture.WHITE) {
+            return (
+              <pixiSprite
+                texture={panelTexture}
+                width={180}
+                height={80}
+                alpha={0.9}
+              />
+            );
+          }
+          return (
+            <pixiGraphics
+              draw={(g: Graphics) => {
+                g.clear();
+                g.roundRect(0, 0, 180, 80, 8);
+                g.fill({ color: 0x1a1a2e, alpha: 0.95 });
+                g.stroke({ color: 0x8b5cf6, width: 2 });
+              }}
+            />
+          );
+        })()}
+
+        {/* Portrait frame */}
+        <pixiContainer x={10} y={10}>
+          {(() => {
+            const frameTexture = assetLoader.getTexture('frame_portrait');
+            const agentIdleTexture = assetLoader.getTexture('claude_idle_s');
+            return (
+              <>
+                {agentIdleTexture && agentIdleTexture !== Texture.WHITE ? (
+                  <pixiSprite
+                    texture={agentIdleTexture}
+                    width={50}
+                    height={50}
+                    anchor={{ x: 0, y: 0 }}
+                  />
+                ) : (
+                  <pixiGraphics
+                    draw={(g: Graphics) => {
+                      g.clear();
+                      g.rect(0, 0, 50, 50);
+                      g.fill({ color: 0x8b5cf6 });
+                      g.circle(25, 25, 18);
+                      g.fill({ color: 0xa855f7 });
+                    }}
+                  />
+                )}
+                {frameTexture && frameTexture !== Texture.WHITE ? (
+                  <pixiSprite
+                    texture={frameTexture}
+                    width={54}
+                    height={54}
+                    x={-2}
+                    y={-2}
+                  />
+                ) : (
+                  <pixiGraphics
+                    draw={(g: Graphics) => {
+                      g.clear();
+                      g.rect(-2, -2, 54, 54);
+                      g.stroke({ color: 0xf59e0b, width: 2 });
+                    }}
+                  />
+                )}
+              </>
+            );
+          })()}
+        </pixiContainer>
+
+        {/* Agent name */}
+        <pixiText
+          text="Claude"
+          x={70}
+          y={10}
+          style={new TextStyle({
+            fontFamily: 'monospace',
+            fontSize: 14,
+            fontWeight: 'bold',
+            fill: 0xf59e0b,
+          })}
+        />
+
+        {/* HP bar */}
+        <pixiContainer x={70} y={30}>
+          <pixiGraphics
+            draw={(g: Graphics) => {
+              g.clear();
+              // Background
+              g.rect(0, 0, 100, 12);
+              g.fill({ color: 0x1a1a2e });
+              g.stroke({ color: 0x4b5563, width: 1 });
+              // Fill (85% HP)
+              g.rect(1, 1, 83, 10);
+              g.fill({ color: 0x22c55e });
+            }}
+          />
+          <pixiText
+            text="HP"
+            x={-20}
+            y={-1}
+            style={new TextStyle({
+              fontFamily: 'monospace',
+              fontSize: 10,
+              fill: 0x888888,
+            })}
+          />
+        </pixiContainer>
+
+        {/* XP bar */}
+        <pixiContainer x={70} y={48}>
+          <pixiGraphics
+            draw={(g: Graphics) => {
+              g.clear();
+              // Background
+              g.rect(0, 0, 100, 12);
+              g.fill({ color: 0x1a1a2e });
+              g.stroke({ color: 0x4b5563, width: 1 });
+              // Fill (60% XP)
+              g.rect(1, 1, 60, 10);
+              g.fill({ color: 0x8b5cf6 });
+            }}
+          />
+          <pixiText
+            text="XP"
+            x={-20}
+            y={-1}
+            style={new TextStyle({
+              fontFamily: 'monospace',
+              fontSize: 10,
+              fill: 0x888888,
+            })}
+          />
+        </pixiContainer>
+
+        {/* Level badge */}
+        <pixiText
+          text="Lv 5"
+          x={135}
+          y={62}
+          style={new TextStyle({
+            fontFamily: 'monospace',
+            fontSize: 11,
+            fontWeight: 'bold',
+            fill: 0xf59e0b,
+          })}
+        />
+      </pixiContainer>
+
+      {/* Particle Effects Layer */}
+      <EffectsRenderer />
     </pixiContainer>
   );
 }
