@@ -14,12 +14,20 @@ const TERRAIN_COLORS: Record<HexTile['type'], string> = {
   portal: '#9333ea',
 };
 
+// Agent class colors (for class-based coloring)
 const CLASS_COLORS: Record<string, string> = {
   mage: '#3b82f6',
   engineer: '#f59e0b',
   scout: '#22c55e',
   guardian: '#ef4444',
   architect: '#a855f7',
+};
+
+// Agent provider colors (for provider-based coloring)
+const PROVIDER_COLORS: Record<string, string> = {
+  claude: '#8b5cf6',
+  codex: '#22c55e',
+  gemini: '#3b82f6',
 };
 
 export function Minimap() {
@@ -75,11 +83,19 @@ export function Minimap() {
       const x = centerX + worldX * SCALE;
       const y = centerY + worldZ * SCALE;
 
-      // Agent dot
-      ctx.fillStyle = CLASS_COLORS[agent.class] || '#ffffff';
+      // Agent dot - use provider color as fallback
+      ctx.fillStyle = CLASS_COLORS[agent.class] || PROVIDER_COLORS[agent.provider] || '#f59e0b';
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
       ctx.fill();
+
+      // Add glow effect
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
 
       // Selection ring
       if (selectedAgentIds.has(agent.id)) {
@@ -139,34 +155,63 @@ export function Minimap() {
   if (!showMinimap) return null;
 
   return (
-    <div className="absolute bottom-4 left-4 rounded-lg overflow-hidden border-2 border-cyan-700/50 shadow-[0_0_15px_rgba(6,182,212,0.2)] fantasy-panel">
-      {/* Decorative frame */}
-      <div className="absolute inset-0 pointer-events-none z-10">
-        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-500" />
-        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-500" />
-        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-500" />
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-500" />
-
-        {/* Scanline overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent opacity-30 pointer-events-none" />
-      </div>
-
-      <canvas
-        ref={canvasRef}
-        width={MINIMAP_SIZE}
-        height={MINIMAP_SIZE}
-        onClick={handleClick}
-        className="cursor-pointer bg-black/80"
+    <div
+      className="absolute bottom-4 left-4 rounded-xl overflow-hidden shadow-[0_0_25px_rgba(245,158,11,0.2)]"
+      style={{
+        width: MINIMAP_SIZE + 20,
+        height: MINIMAP_SIZE + 20,
+      }}
+    >
+      {/* Fantasy frame background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'url(/assets_isometric/ui/panels/panel_minimap_frame.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       />
 
-      {/* Legend */}
-      <div className="absolute bottom-2 left-2 flex gap-1.5 z-20 bg-black/40 p-1 rounded backdrop-blur-sm">
-        {Object.entries(CLASS_COLORS).map(([cls, color]) => (
+      {/* Fallback decorative frame */}
+      <div className="absolute inset-0 pointer-events-none z-10 rounded-xl border-2 border-amber-600/50">
+        {/* Corner ornaments */}
+        <div className="absolute -top-0.5 -left-0.5 w-5 h-5 border-t-2 border-l-2 border-amber-400 rounded-tl-lg" />
+        <div className="absolute -top-0.5 -right-0.5 w-5 h-5 border-t-2 border-r-2 border-amber-400 rounded-tr-lg" />
+        <div className="absolute -bottom-0.5 -left-0.5 w-5 h-5 border-b-2 border-l-2 border-amber-400 rounded-bl-lg" />
+        <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 border-b-2 border-r-2 border-amber-400 rounded-br-lg" />
+
+        {/* Inner glow */}
+        <div className="absolute inset-2 rounded-lg border border-amber-500/20" />
+      </div>
+
+      {/* Canvas container */}
+      <div className="absolute inset-[10px] rounded-lg overflow-hidden">
+        <canvas
+          ref={canvasRef}
+          width={MINIMAP_SIZE}
+          height={MINIMAP_SIZE}
+          onClick={handleClick}
+          className="cursor-pointer"
+          style={{
+            background: 'linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%)',
+          }}
+        />
+
+        {/* Compass markers */}
+        <div className="absolute top-1 left-1/2 -translate-x-1/2 text-[9px] font-bold text-amber-400/70">N</div>
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-bold text-amber-400/70">S</div>
+        <div className="absolute left-1 top-1/2 -translate-y-1/2 text-[9px] font-bold text-amber-400/70">W</div>
+        <div className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] font-bold text-amber-400/70">E</div>
+      </div>
+
+      {/* Legend with provider colors */}
+      <div className="absolute bottom-3 left-3 flex gap-1.5 z-20 bg-black/60 px-2 py-1 rounded-lg backdrop-blur-sm border border-amber-500/20">
+        {Object.entries(PROVIDER_COLORS).map(([provider, color]) => (
           <div
-            key={cls}
-            className="w-2 h-2 rounded-full shadow-sm"
+            key={provider}
+            className="w-2.5 h-2.5 rounded-full"
             style={{ backgroundColor: color, boxShadow: `0 0 4px ${color}` }}
-            title={cls}
+            title={provider}
           />
         ))}
       </div>

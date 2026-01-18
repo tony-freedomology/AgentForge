@@ -172,8 +172,45 @@ DECORATIONS = [
 ]
 
 
+def rgb_to_hsv(r: int, g: int, b: int) -> tuple:
+    """Convert RGB (0-255) to HSV (0-360, 0-1, 0-1)."""
+    r, g, b = r / 255.0, g / 255.0, b / 255.0
+    max_c = max(r, g, b)
+    min_c = min(r, g, b)
+    diff = max_c - min_c
+    v = max_c
+    s = 0 if max_c == 0 else diff / max_c
+    if diff == 0:
+        h = 0
+    elif max_c == r:
+        h = 60 * ((g - b) / diff % 6)
+    elif max_c == g:
+        h = 60 * ((b - r) / diff + 2)
+    else:
+        h = 60 * ((r - g) / diff + 4)
+    return h, s, v
+
+
+def should_remove_pixel(r: int, g: int, b: int) -> bool:
+    """Check if a pixel should be made transparent."""
+    # Near-black
+    if r <= 20 and g <= 20 and b <= 20:
+        return True
+    # Near-white
+    if r >= 240 and g >= 240 and b >= 240:
+        return True
+    # Green screen (HSV-based detection)
+    h, s, v = rgb_to_hsv(r, g, b)
+    if 80 <= h <= 160 and s >= 0.25 and v >= 0.2:
+        return True
+    # Blue screen
+    if 180 <= h <= 260 and s >= 0.25 and v >= 0.2:
+        return True
+    return False
+
+
 def remove_background(image_data: bytes) -> bytes:
-    """Remove background from image using rembg or chroma key."""
+    """Remove background from image using rembg or enhanced chroma key."""
     if not HAS_PIL:
         return image_data
 
@@ -186,18 +223,16 @@ def remove_background(image_data: bytes) -> bytes:
         result.save(output, format='PNG')
         return output.getvalue()
     else:
-        # Simple chroma key (remove near-white/near-black backgrounds)
+        # Enhanced chroma key (removes green/blue screens + black/white)
         img = img.convert("RGBA")
         data = img.getdata()
         new_data = []
         for item in data:
-            # Remove very light or very dark pixels
-            if item[0] > 240 and item[1] > 240 and item[2] > 240:
-                new_data.append((255, 255, 255, 0))
-            elif item[0] < 15 and item[1] < 15 and item[2] < 15:
-                new_data.append((0, 0, 0, 0))
+            r, g, b, a = item[0], item[1], item[2], item[3] if len(item) > 3 else 255
+            if should_remove_pixel(r, g, b):
+                new_data.append((r, g, b, 0))
             else:
-                new_data.append(item)
+                new_data.append((r, g, b, a))
         img.putdata(new_data)
         output = BytesIO()
         img.save(output, format='PNG')
