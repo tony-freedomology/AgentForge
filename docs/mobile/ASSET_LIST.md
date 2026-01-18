@@ -155,8 +155,41 @@ The tower itself needs distinct visual pieces. **Variable sizes**.
 | `panel_parchment.9.png` | 9-slice | Scroll/parchment background |
 | `panel_dark.9.png` | 9-slice | Dark mystical panel |
 | `panel_gold.9.png` | 9-slice | Golden achievement panel |
+| `panel_quest_scroll.9.png` | 9-slice | Quest turn-in scroll frame |
+| `panel_loot_chest.9.png` | 9-slice | Treasure vault panel |
+| `panel_talent_tree.9.png` | 9-slice | Skill grimoire background |
 | `card_agent.9.png` | 9-slice | Agent info card frame |
+| `card_file.9.png` | 9-slice | File/loot item card |
+| `card_quest.9.png` | 9-slice | Quest entry card |
 | `sheet_handle.png` | 48x8 | Bottom sheet drag handle |
+| `divider_ornate.png` | 280x8 | Decorative section divider |
+| `header_banner.png` | 320x48 | Modal header banner |
+
+### 3.3 Quest Turn-In Elements
+| Asset | Size | Description |
+|-------|------|-------------|
+| `quest_header_complete.png` | 280x64 | "Quest Complete" banner |
+| `quest_seal_accept.png` | 64x64 | Wax seal (accept) |
+| `quest_seal_revise.png` | 64x64 | Broken seal (revise) |
+| `quest_ribbon.png` | 200x32 | Decorative ribbon |
+| `quest_scroll_bg.png` | 320x480 | Full scroll background |
+
+### 3.4 Treasure Vault Elements
+| Asset | Size | Description |
+|-------|------|-------------|
+| `vault_header.png` | 280x64 | "Treasure Vault" banner |
+| `vault_chest_large.png` | 128x128 | Large chest illustration |
+| `vault_item_slot.png` | 64x64 | Item slot frame |
+| `vault_glow.png` | 96x96 | Glow effect behind items |
+
+### 3.5 Talent Tree Elements
+| Asset | Size | Description |
+|-------|------|-------------|
+| `talent_node_bg.png` | 64x64 | Talent node background |
+| `talent_node_active.png` | 64x64 | Active/selected node |
+| `talent_connector.png` | 8x32 | Line between talents |
+| `talent_connector_h.png` | 32x8 | Horizontal connector |
+| `talent_header.png` | 280x64 | "Skill Grimoire" banner |
 
 ### 3.3 Tab Bar
 | Asset | Size | Description |
@@ -209,8 +242,63 @@ All icons **32x32 pixels** unless noted.
 | `icon_quest_active.png` | Yellow exclamation mark |
 | `icon_quest_complete.png` | Yellow question mark |
 | `icon_quest_failed.png` | Red X mark |
+| `icon_quest_pending.png` | Hourglass (pending review) |
 | `icon_scroll.png` | Quest scroll |
 | `icon_loot.png` | Treasure chest |
+| `icon_accept.png` | Green checkmark in circle |
+| `icon_revise.png` | Orange return arrow |
+| `icon_diff.png` | Split document (view diff) |
+
+### 4.3 Activity Icons (24x24)
+| Asset | Description |
+|-------|-------------|
+| `icon_activity_idle.png` | Zzz / moon |
+| `icon_activity_thinking.png` | Thought bubble |
+| `icon_activity_researching.png` | Magnifying glass / book |
+| `icon_activity_reading.png` | Open book / scroll |
+| `icon_activity_writing.png` | Quill pen |
+| `icon_activity_testing.png` | Alchemy flask |
+| `icon_activity_building.png` | Hammer / anvil |
+| `icon_activity_git.png` | Branch / tree |
+| `icon_activity_waiting.png` | Speech bubble with "?" |
+| `icon_activity_error.png` | Lightning bolt / explosion |
+
+### 4.4 Loot & Treasure Icons
+| Asset | Description |
+|-------|-------------|
+| `icon_chest_closed.png` | Closed treasure chest |
+| `icon_chest_open.png` | Open chest with glow |
+| `icon_artifact.png` | Glowing gem/artifact |
+| `icon_file_modified.png` | Scroll with quill |
+| `icon_file_created.png` | Scroll with sparkle |
+| `icon_file_deleted.png` | Scroll with X |
+| `icon_preview.png` | Eye symbol |
+| `icon_share.png` | Outward arrows |
+
+### 4.5 Talent Tree Icons
+| Asset | Description |
+|-------|-------------|
+| `icon_talent_locked.png` | Locked rune (grayed) |
+| `icon_talent_available.png` | Glowing rune (can learn) |
+| `icon_talent_learned.png` | Bright rune (already learned) |
+| `icon_talent_point.png` | Skill point star |
+| `icon_talent_haste.png` | Lightning bolt (speed) |
+| `icon_talent_lore.png` | Book (knowledge) |
+| `icon_talent_focus.png` | Target (precision) |
+| `icon_talent_endurance.png` | Shield (stamina) |
+| `icon_talent_mastery.png` | Crown (expertise) |
+
+### 4.6 Realm/Zone Icons
+| Asset | Description |
+|-------|-------------|
+| `icon_realm_all.png` | Castle (all projects) |
+| `icon_realm_api.png` | Server tower |
+| `icon_realm_web.png` | Globe with magic |
+| `icon_realm_mobile.png` | Crystal phone |
+| `icon_realm_custom.png` | Blank banner |
+| `icon_realm_add.png` | Plus in circle |
+
+### 4.7 Action Icons
 
 ### 4.3 Action Icons
 | Asset | Description |
@@ -392,13 +480,20 @@ Must be: Pixel-perfect, no anti-aliasing, clear silhouette
 | Spire Architecture | 12 |
 | Chamber Backgrounds | 6 |
 | UI Buttons | 7 |
-| UI Panels | 7 |
+| UI Panels & Cards | 15 |
+| Quest Turn-In Elements | 5 |
+| Treasure Vault Elements | 4 |
+| Talent Tree Elements | 5 |
 | Tab Bar | 9 |
 | Progress Bars | 5 |
 | Input Fields | 3 |
 | Status Icons | 6 |
-| Quest Icons | 5 |
-| Action Icons | 10 |
+| Quest Icons | 9 |
+| Activity Icons | 10 |
+| Loot & Treasure Icons | 8 |
+| Talent Tree Icons | 9 |
+| Realm/Zone Icons | 6 |
+| Action Icons | 8 |
 | File Icons | 5 |
 | Provider Icons | 3 |
 | Badges | 3 |
@@ -413,7 +508,7 @@ Must be: Pixel-perfect, no anti-aliasing, clear silhouette
 | Branding | 6 |
 | Sound Effects | 11 |
 
-**Total: ~190 unique assets**
+**Total: ~250 unique assets**
 
 ---
 
