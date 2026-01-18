@@ -350,6 +350,40 @@ Sprite sheets for animated effects. **Variable sizes**.
 | `effect_quest_complete.png` | 10 | 128x128 | Quest turn-in fanfare |
 | `effect_error_flash.png` | 6 | 64x64 | Red error pulse |
 | `effect_typing.png` | 4 | 32x32 | Typing indicator dots |
+| `effect_thinking.png` | 6 | 48x48 | Thought process sparkles |
+
+### 5.2 Thought Bubble Elements
+| Asset | Size | Description |
+|-------|------|-------------|
+| `bubble_thought.9.png` | 9-slice | Cloud-style thought bubble (stretchable) |
+| `bubble_thought_tail.png` | 24x32 | Bubble tail pointing down |
+| `bubble_speech.9.png` | 9-slice | Speech bubble for dialogue |
+| `bubble_speech_tail.png` | 16x24 | Speech tail |
+| `bubble_action.9.png` | 9-slice | Action callout (what agent is doing) |
+| `thought_dots.png` | 32x16 | Animated "..." thinking dots |
+
+### 5.3 Party Dock Elements
+| Asset | Size | Description |
+|-------|------|-------------|
+| `dock_bg.png` | 390x80 | Party dock background |
+| `dock_slot.png` | 56x64 | Single agent slot frame |
+| `dock_slot_alert.png` | 56x64 | Pulsing alert slot |
+| `dock_mini_bar.png` | 48x6 | Mini context/health bar frame |
+| `dock_expand_handle.png` | 48x16 | Pull-down expand handle |
+
+### 5.4 Chamber View Elements
+| Asset | Size | Description |
+|-------|------|-------------|
+| `chamber_frame.png` | 358x400 | Expanded chamber frame |
+| `chamber_floor.png` | 320x120 | Chamber floor (agent walks on) |
+| `thought_history_bg.9.png` | 9-slice | Thought history panel |
+| `chamber_bookshelf.png` | 64x96 | Bookshelf prop (mage) |
+| `chamber_cauldron.png` | 48x64 | Cauldron prop (testing) |
+| `chamber_desk.png` | 80x48 | Writing desk prop |
+| `chamber_telescope.png` | 48x80 | Research telescope |
+| `chamber_anvil.png` | 64x48 | Engineering anvil |
+
+### 5.5 Ambient Effects
 
 ### 5.2 Ambient Effects
 | Asset | Frames | Size | Description |
