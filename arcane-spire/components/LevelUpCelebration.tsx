@@ -210,7 +210,7 @@ export function LevelUpCelebration({
             {/* Agent showcase */}
             <Animated.View style={[styles.agentContainer, agentStyle]}>
               <View style={[styles.agentGlow, { backgroundColor: agentColor + '30' }]}>
-                <AgentSprite agentClass={agentClass} size="xl" state="success" />
+                <AgentSprite agentClass={agentClass} size="xl" state="complete" />
               </View>
               <Text style={styles.agentName}>{agent.name}</Text>
               <Text style={styles.agentClass}>{classInfo?.name}</Text>

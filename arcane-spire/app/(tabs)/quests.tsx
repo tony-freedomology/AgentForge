@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, AgentColors } from '../../constants/theme';
+import { EmptyStates } from '../../constants/assets';
 import { useQuestStore } from '../../stores/questStore';
 import { Quest, QuestStatus } from '../../shared/types/quest';
 import { AGENT_CLASSES } from '../../shared/types/agent';
@@ -102,7 +103,11 @@ export default function QuestsScreen() {
   const ListEmpty = useCallback(
     () => (
       <View style={styles.emptyContainer}>
-        <Ionicons name="map-outline" size={64} color={Colors.textMuted} />
+        <Image
+          source={EmptyStates.quests}
+          style={styles.emptyImage}
+          resizeMode="contain"
+        />
         <Text style={styles.emptyTitle}>No Quests Yet</Text>
         <Text style={styles.emptyText}>
           Assign tasks to your agents to begin quests
@@ -407,11 +412,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.xxl * 2,
   },
+  emptyImage: {
+    width: 150,
+    height: 150,
+    marginBottom: Spacing.md,
+  },
   emptyTitle: {
     fontSize: FontSize.xl,
     fontWeight: '700',
     color: Colors.text,
-    marginTop: Spacing.lg,
   },
   emptyText: {
     fontSize: FontSize.md,

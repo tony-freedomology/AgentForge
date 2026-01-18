@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { Colors, Spacing, FontSize } from '../../constants/theme';
+import { EmptyStates } from '../../constants/assets';
 import { FantasyButton } from '../ui/FantasyButton';
 
 interface EmptySpireProps {
@@ -14,9 +14,13 @@ export function EmptySpire({ isConnected, onSummonPress, onConnectPress }: Empty
   if (!isConnected) {
     return (
       <View style={styles.container}>
-        {/* Empty tower illustration placeholder */}
+        {/* Empty tower illustration */}
         <View style={styles.illustration}>
-          <Ionicons name="cloud-offline" size={80} color={Colors.stone.default} />
+          <Image
+            source={EmptyStates.spire}
+            style={styles.illustrationImage}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={styles.title}>Spire Disconnected</Text>
@@ -39,9 +43,13 @@ export function EmptySpire({ isConnected, onSummonPress, onConnectPress }: Empty
 
   return (
     <View style={styles.container}>
-      {/* Empty tower illustration placeholder */}
+      {/* Empty tower illustration */}
       <View style={styles.illustration}>
-        <Ionicons name="business-outline" size={80} color={Colors.stone.default} />
+        <Image
+          source={EmptyStates.spire}
+          style={styles.illustrationImage}
+          resizeMode="contain"
+        />
       </View>
 
       <Text style={styles.title}>Your Spire Awaits</Text>
@@ -75,9 +83,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.lg,
-    // Placeholder for pixel art illustration
-    backgroundColor: Colors.shadow.lighter,
-    borderRadius: 20,
+  },
+  illustrationImage: {
+    width: '100%',
+    height: '100%',
   },
   title: {
     fontSize: FontSize.xxl,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withRepeat,
@@ -11,6 +11,7 @@ import Animated, {
 import { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, Shadows } from '../../constants/theme';
+import { Effects } from '../../constants/assets';
 import { soundService } from '../../services/sound';
 
 interface SummonPortalProps {
@@ -90,15 +91,13 @@ export function SummonPortal({ onPress, disabled = false }: SummonPortalProps) {
       {/* Glow effect */}
       <Animated.View style={[styles.glow, glowStyle]} />
 
-      {/* Portal ring */}
+      {/* Portal ring with pixel art */}
       <Animated.View style={[styles.portalRing, portalStyle]}>
-        <View style={styles.portalInner}>
-          <Ionicons
-            name="add"
-            size={32}
-            color={disabled ? Colors.textMuted : Colors.arcane.purple}
-          />
-        </View>
+        <Image
+          source={Effects.spawnPortal}
+          style={styles.portalImage}
+          resizeMode="contain"
+        />
       </Animated.View>
 
       {/* Label */}
@@ -154,25 +153,14 @@ const styles = StyleSheet.create({
     ...Shadows.glow(Colors.arcane.purple),
   },
   portalRing: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 3,
-    borderColor: Colors.arcane.purple,
-    borderStyle: 'dashed',
+    width: 100,
+    height: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.shadow.darker,
   },
-  portalInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: Colors.shadow.lighter,
-    borderWidth: 2,
-    borderColor: Colors.arcane.purpleDark,
-    alignItems: 'center',
-    justifyContent: 'center',
+  portalImage: {
+    width: 100,
+    height: 100,
   },
   label: {
     marginTop: Spacing.md,
