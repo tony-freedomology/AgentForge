@@ -22,6 +22,14 @@ interface TalentNodeProps {
   onAllocate: () => void;
 }
 
+// Talent frame asset paths
+const TALENT_FRAME_ASSETS = {
+  locked: '/assets_isometric/ui/talents/talent_frame_locked.png',
+  available: '/assets_isometric/ui/talents/talent_frame_available.png',
+  learned: '/assets_isometric/ui/talents/talent_frame_learned.png',
+  maxed: '/assets_isometric/ui/talents/talent_frame_maxed.png',
+};
+
 function TalentNode({ talent, agent, currentRank, canLearn, reason, onAllocate }: TalentNodeProps) {
   const [isHovered, setIsHovered] = useState(false);
   const classConfig = getAgentClass(agent.class);
@@ -31,31 +39,46 @@ function TalentNode({ talent, agent, currentRank, canLearn, reason, onAllocate }
   const isLocked = currentRank === 0 && !canLearn;
   const isPartial = currentRank > 0 && currentRank < talent.maxRanks;
 
-  // Determine node style based on state
+  // Determine which frame asset to use
+  const getFrameAsset = () => {
+    if (isMaxed) return TALENT_FRAME_ASSETS.maxed;
+    if (isPartial) return TALENT_FRAME_ASSETS.learned;
+    if (canLearn) return TALENT_FRAME_ASSETS.available;
+    return TALENT_FRAME_ASSETS.locked;
+  };
+
+  // Determine node style based on state (fallback + enhancements)
   const getNodeStyle = () => {
+    const frameAsset = getFrameAsset();
+    const baseStyle = {
+      backgroundImage: `url(${frameAsset})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    };
+
     if (isMaxed) {
       return {
-        background: `linear-gradient(135deg, ${classColor}40, ${classColor}20)`,
+        ...baseStyle,
         border: `2px solid ${classColor}`,
         boxShadow: `0 0 20px ${classColor}50, inset 0 0 15px ${classColor}30`,
       };
     }
     if (isPartial) {
       return {
-        background: `linear-gradient(135deg, ${classColor}25, ${classColor}10)`,
+        ...baseStyle,
         border: `2px solid ${classColor}80`,
         boxShadow: `0 0 10px ${classColor}30`,
       };
     }
     if (canLearn) {
       return {
-        background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(146,64,14,0.1))',
+        ...baseStyle,
         border: '2px solid rgba(245,158,11,0.5)',
         boxShadow: '0 0 10px rgba(245,158,11,0.2)',
       };
     }
     return {
-      background: 'rgba(0,0,0,0.4)',
+      ...baseStyle,
       border: '2px solid rgba(255,255,255,0.1)',
       boxShadow: 'none',
     };

@@ -15,9 +15,36 @@ import { gridToScreen, TILE_HEIGHT } from '../../utils/isoCoords';
 import { assetLoader } from '../../utils/assetLoader';
 import { soundManager } from '../../services/soundManager';
 import type { Agent, AgentActivity } from '../../types/agent';
-import { ACTIVITY_ICONS } from '../../types/agent';
 
 extend({ Graphics, Text, Sprite });
+
+// Map activity to asset id
+const ACTIVITY_ASSET_MAP: Record<AgentActivity, string> = {
+  idle: 'activity_waiting',
+  thinking: 'activity_thinking',
+  researching: 'activity_researching',
+  reading: 'activity_reading',
+  writing: 'activity_writing',
+  testing: 'activity_testing',
+  building: 'activity_building',
+  git: 'activity_git',
+  waiting: 'activity_waiting',
+  error: 'activity_error',
+};
+
+// Activity labels for text display
+const ACTIVITY_LABELS: Record<AgentActivity, string> = {
+  idle: 'Idle',
+  thinking: 'Thinking',
+  researching: 'Researching',
+  reading: 'Reading',
+  writing: 'Writing',
+  testing: 'Testing',
+  building: 'Building',
+  git: 'Git',
+  waiting: 'Waiting',
+  error: 'Error',
+};
 
 // Movement configuration
 const MOVE_SPEED = 4; // Grid units per second
@@ -146,7 +173,9 @@ export function IsometricAgent({ agent, isSelected, onSelect, onSpawnEffect }: I
   const agentTexture = assetLoader.getTexture(spriteId);
 
   // Activity bubble info
-  const activityInfo = ACTIVITY_ICONS[agent.activity];
+  const activityAssetId = ACTIVITY_ASSET_MAP[agent.activity];
+  const activityTexture = assetLoader.getTexture(activityAssetId);
+  const activityLabel = ACTIVITY_LABELS[agent.activity];
   const showActivityBubble = agent.activity !== 'idle' || agent.needsAttention;
 
   return (
@@ -218,15 +247,25 @@ export function IsometricAgent({ agent, isSelected, onSelect, onSpawnEffect }: I
               g.stroke({ color: bubbleColor, width: 2 });
             }}
           />
+          {/* Activity icon sprite */}
+          {activityTexture && activityTexture !== Texture.WHITE && !agent.needsAttention && (
+            <pixiSprite
+              texture={activityTexture}
+              anchor={{ x: 0.5, y: 0.5 }}
+              x={-22}
+              scale={{ x: 0.5, y: 0.5 }}
+            />
+          )}
           {/* Activity text */}
           <pixiText
-            text={agent.needsAttention ? '❓ Input' : `${activityInfo.icon} ${activityInfo.label}`}
+            text={agent.needsAttention ? '❓ Input' : activityLabel}
+            x={activityTexture && activityTexture !== Texture.WHITE && !agent.needsAttention ? 8 : 0}
             anchor={{ x: 0.5, y: 0.5 }}
             style={new TextStyle({
               fontFamily: 'monospace',
               fontSize: 11,
               fontWeight: 'bold',
-              fill: agent.needsAttention ? 0xef4444 : parseInt(activityInfo.color.replace('#', ''), 16),
+              fill: agent.needsAttention ? 0xef4444 : ACTIVITY_COLORS[agent.activity],
             })}
           />
         </pixiContainer>

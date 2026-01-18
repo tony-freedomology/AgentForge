@@ -306,6 +306,7 @@ export const DEFAULT_MANIFEST: AssetManifest = {
     { id: 'effect_magic_gold', path: '/assets_isometric/effects/effect_magic_gold.png', frames: 8 },
   ],
   ui: [
+    // Frames
     { id: 'frame_portrait', path: '/assets_isometric/ui/frames/frame_portrait.png' },
     { id: 'frame_portrait_selected', path: '/assets_isometric/ui/frames/frame_portrait_selected.png' },
     { id: 'healthbar_frame', path: '/assets_isometric/ui/frames/healthbar_frame.png' },
@@ -315,6 +316,31 @@ export const DEFAULT_MANIFEST: AssetManifest = {
     { id: 'panel_stone', path: '/assets_isometric/ui/frames/panel_stone.png' },
     { id: 'panel_dark', path: '/assets_isometric/ui/frames/panel_dark.png' },
     { id: 'panel_parchment', path: '/assets_isometric/ui/frames/panel_parchment.png' },
+    // Talent frames
+    { id: 'talent_frame_locked', path: '/assets_isometric/ui/talents/talent_frame_locked.png' },
+    { id: 'talent_frame_available', path: '/assets_isometric/ui/talents/talent_frame_available.png' },
+    { id: 'talent_frame_learned', path: '/assets_isometric/ui/talents/talent_frame_learned.png' },
+    { id: 'talent_frame_maxed', path: '/assets_isometric/ui/talents/talent_frame_maxed.png' },
+    // Panels
+    { id: 'panel_talent_tree', path: '/assets_isometric/ui/panels/panel_talent_tree.png' },
+    { id: 'panel_quest_scroll', path: '/assets_isometric/ui/panels/panel_quest_scroll.png' },
+    { id: 'panel_loot', path: '/assets_isometric/ui/panels/panel_loot.png' },
+    { id: 'panel_minimap_frame', path: '/assets_isometric/ui/panels/panel_minimap_frame.png' },
+    // Activity icons
+    { id: 'activity_thinking', path: '/assets_isometric/ui/activities/activity_thinking.png' },
+    { id: 'activity_researching', path: '/assets_isometric/ui/activities/activity_researching.png' },
+    { id: 'activity_reading', path: '/assets_isometric/ui/activities/activity_reading.png' },
+    { id: 'activity_writing', path: '/assets_isometric/ui/activities/activity_writing.png' },
+    { id: 'activity_testing', path: '/assets_isometric/ui/activities/activity_testing.png' },
+    { id: 'activity_building', path: '/assets_isometric/ui/activities/activity_building.png' },
+    { id: 'activity_git', path: '/assets_isometric/ui/activities/activity_git.png' },
+    { id: 'activity_waiting', path: '/assets_isometric/ui/activities/activity_waiting.png' },
+    { id: 'activity_error', path: '/assets_isometric/ui/activities/activity_error.png' },
+    // Decorations
+    { id: 'corner_ornament_gold', path: '/assets_isometric/ui/decorations/corner_ornament_gold.png' },
+    { id: 'divider_horizontal', path: '/assets_isometric/ui/decorations/divider_horizontal.png' },
+    { id: 'glow_purple', path: '/assets_isometric/ui/decorations/glow_purple.png' },
+    { id: 'glow_gold', path: '/assets_isometric/ui/decorations/glow_gold.png' },
   ],
 };
 
