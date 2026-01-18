@@ -117,6 +117,7 @@ export function IsometricAgent({ agent, isSelected, onSelect, onSpawnEffect }: I
   const [currentPosition, setCurrentPosition] = useState({ x: targetX, y: targetY });
   const [direction, setDirection] = useState<Direction>('s');
   const [isMoving, setIsMoving] = useState(false);
+  const [animTime, setAnimTime] = useState(0); // Animation time for procedural effects
   const wasMoving = useRef(false);
   const hasSpawned = useRef(false);
 
@@ -129,8 +130,11 @@ export function IsometricAgent({ agent, isSelected, onSelect, onSpawnEffect }: I
     }
   }, [targetX, targetY, onSpawnEffect]);
 
-  // Animate movement
+  // Animate movement and update animation time
   useTick((ticker: Ticker) => {
+    // Update animation time for procedural effects (60 FPS normalized)
+    setAnimTime((t) => t + ticker.deltaTime / 60);
+
     const dx = targetX - currentPosition.x;
     const dy = targetY - currentPosition.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -198,24 +202,48 @@ export function IsometricAgent({ agent, isSelected, onSelect, onSpawnEffect }: I
         />
       )}
 
-      {/* Agent sprite */}
+      {/* Agent sprite with procedural animation */}
       {agentTexture && agentTexture !== Texture.WHITE ? (() => {
         // Auto-scale agent sprite if it's too large
         const targetWidth = TILE_HEIGHT * 1.5; // Agents roughly match tile height
-        let scaleY = 1.0;
-        let scaleX = flipX ? -1.0 : 1.0;
+        let baseScaleY = 1.0;
+        let baseScaleX = flipX ? -1.0 : 1.0;
 
         if (agentTexture.height > targetWidth) {
-          scaleY = targetWidth / agentTexture.height;
-          scaleX = (flipX ? -1.0 : 1.0) * scaleY; // Maintain aspect ratio
+          baseScaleY = targetWidth / agentTexture.height;
+          baseScaleX = (flipX ? -1.0 : 1.0) * baseScaleY; // Maintain aspect ratio
         }
+
+        // Procedural animation based on agent state
+        // Use animTime for smooth animation tied to game loop
+
+        // Breathing animation (subtle scale pulse) - faster when working
+        const breathSpeed = agent.status === 'working' ? 3.0 : 1.5;
+        const breathAmount = agent.status === 'working' ? 0.03 : 0.015;
+        const breathScale = 1.0 + Math.sin(animTime * breathSpeed) * breathAmount;
+
+        // Bobbing animation (vertical movement) - only when idle
+        const bobAmount = agent.activity === 'idle' ? 2 : 0;
+        const bobOffset = Math.sin(animTime * 1.2) * bobAmount;
+
+        // Excitement wobble when has attention or producing files
+        const wobbleAmount = agent.needsAttention ? 0.02 : (agent.producedFiles.length > 0 ? 0.01 : 0);
+        const wobble = Math.sin(animTime * 8) * wobbleAmount;
+
+        // Casting sway when writing/thinking
+        const swayAmount = (agent.activity === 'writing' || agent.activity === 'thinking') ? 1.5 : 0;
+        const sway = Math.sin(animTime * 2) * swayAmount;
+
+        const finalScaleX = baseScaleX * breathScale + wobble;
+        const finalScaleY = baseScaleY * breathScale;
 
         return (
           <pixiSprite
             texture={agentTexture}
             anchor={{ x: 0.5, y: 1 }}
-            y={TILE_HEIGHT / 2}
-            scale={{ x: scaleX, y: scaleY }}
+            y={TILE_HEIGHT / 2 + bobOffset}
+            x={sway}
+            scale={{ x: finalScaleX, y: finalScaleY }}
           />
         );
       })() : (
@@ -302,7 +330,7 @@ export function IsometricAgent({ agent, isSelected, onSelect, onSpawnEffect }: I
         <pixiGraphics
           draw={(g: Graphics) => {
             g.clear();
-            const pulse = (Date.now() % 1000) / 1000;
+            const pulse = (animTime % 1) ; // Use animTime for smooth animation
             const alpha = 0.3 + Math.sin(pulse * Math.PI * 2) * 0.2;
             g.circle(0, -30, 35 + pulse * 10);
             g.stroke({ color: 0xef4444, width: 2, alpha });
