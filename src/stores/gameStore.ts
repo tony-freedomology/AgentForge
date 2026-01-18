@@ -80,6 +80,7 @@ interface GameState {
 
   // Actions
   spawnAgent: (provider: AgentProvider, agentClass: AgentClass, name: string, position: AgentPosition, workingDir?: string) => Agent;
+  spawnAgentWithId: (id: string, provider: AgentProvider, agentClass: AgentClass, name: string, position: AgentPosition, workingDir?: string) => Agent;
   removeAgent: (agentId: string) => void;
   selectAgent: (agentId: string, addToSelection?: boolean) => void;
   selectAgents: (agentIds: string[]) => void;
@@ -202,8 +203,8 @@ export const useGameStore = create<GameState>()(
     agents: new Map(),
     selectedAgentIds: new Set(),
     hoveredAgentId: null,
-    hexGrid: generateHexGrid(8),
-    mapSize: 8,
+    hexGrid: generateHexGrid(16),
+    mapSize: 16,
     resources: initialResources,
     selectionBox: { start: null, end: null, isSelecting: false },
     camera: {
@@ -292,6 +293,66 @@ export const useGameStore = create<GameState>()(
       // Show toast notification
       toast.info('Agent Summoned', `${finalName} (${agentClass}) has joined your legion`);
 
+      return newAgent;
+    },
+
+    // Spawn agent with a specific ID (used when syncing from server)
+    spawnAgentWithId: (id, provider, agentClass, name, position, _workingDir) => {
+      // Check if agent already exists
+      const existingAgent = get().agents.get(id);
+      if (existingAgent) {
+        return existingAgent;
+      }
+
+      const finalName = name || getRandomName(agentClass);
+      const now = Date.now();
+      const newAgent: Agent = {
+        id,
+        name: finalName,
+        provider,
+        class: agentClass,
+        status: 'idle', // Server-synced agents start idle
+        position,
+        health: 100,
+        mana: 100,
+        experience: 0,
+        level: 1,
+        taskQueue: [],
+        terminalOutput: [`[${new Date().toLocaleTimeString()}] ${finalName} materialized...`],
+        createdAt: new Date(),
+        lastActiveAt: new Date(),
+        activity: 'idle',
+        activityStartedAt: now,
+        activityDetails: 'Ready for commands',
+        needsAttention: false,
+        contextTokens: 0,
+        contextLimit: getContextLimit(agentClass),
+        usagePercent: 100,
+        completedQuests: [],
+        producedFiles: [],
+        talents: { points: 1, allocated: {} },
+      };
+
+      set((state) => {
+        const newAgents = new Map(state.agents);
+        newAgents.set(id, newAgent);
+
+        // Update hex occupation
+        const hexKey = `${position.q},${position.r}`;
+        const newGrid = new Map(state.hexGrid);
+        const hex = newGrid.get(hexKey);
+        if (hex) {
+          newGrid.set(hexKey, { ...hex, occupied: true, occupiedBy: id });
+        }
+
+        // Update soul count
+        const newResources = { ...state.resources };
+        newResources.souls = { ...newResources.souls, current: newResources.souls.current + 1 };
+
+        return { agents: newAgents, hexGrid: newGrid, resources: newResources };
+      });
+
+      toast.info('Agent Synced', `${finalName} has joined from server`);
       return newAgent;
     },
 

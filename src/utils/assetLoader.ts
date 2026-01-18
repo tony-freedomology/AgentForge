@@ -347,25 +347,30 @@ export const DEFAULT_MANIFEST: AssetManifest = {
  * Agent sprite paths helper
  * Agent sprites are individual images, not spritesheets
  */
+/**
+ * Agent sprite paths helper
+ * Agent sprites are individual images, not spritesheets
+ */
 export function getAgentSpritePath(
-  agentType: 'claude' | 'codex' | 'gemini',
+  agentClass: string,
   animation: 'idle' | 'walk' | 'cast' | 'celebrate',
   direction: 's' | 'sw' | 'w' | 'nw'
 ): string {
-  return `/assets_isometric/agents/${agentType}/${agentType}_${animation}_${direction}.png`;
+  // New flat structure for generated assets
+  return `/assets/sprites/${agentClass}_${animation}_${direction}.png`;
 }
 
 /**
- * Load all agent sprites for a given agent type
+ * Load all agent sprites for a given agent class
  */
-export async function loadAgentSprites(agentType: 'claude' | 'codex' | 'gemini'): Promise<void> {
-  const animations = ['idle', 'walk', 'cast', 'celebrate'] as const;
-  const directions = ['s', 'sw', 'w', 'nw'] as const;
+export async function loadAgentSprites(agentClass: string): Promise<void> {
+  const animations = ['idle', 'walk'] as const; // Only idle/walk supported for now
+  const directions = ['s', 'sw'] as const; // Only generate S and SW for now
 
   for (const animation of animations) {
     for (const direction of directions) {
-      const id = `${agentType}_${animation}_${direction}`;
-      const path = getAgentSpritePath(agentType, animation, direction);
+      const id = `${agentClass}_${animation}_${direction}`;
+      const path = getAgentSpritePath(agentClass, animation, direction);
       await assetLoader.loadTexture(id, path);
     }
   }

@@ -22,7 +22,7 @@ import { toast } from '../../stores/toastStore';
 extend({ Container, Graphics, Text, Sprite });
 
 // Grid configuration
-const GRID_SIZE = 10;
+const GRID_SIZE = 20;
 
 // Zoom configuration
 const MIN_ZOOM = 0.5;
@@ -76,10 +76,13 @@ export function IsometricWorld({ width = 800, height = 600 }: IsometricWorldProp
         await assetLoader.loadManifest(DEFAULT_MANIFEST, (progress) => {
           setLoadingProgress(progress.percent);
         });
-        // Load agent sprites
-        await loadAgentSprites('claude');
-        await loadAgentSprites('codex');
-        await loadAgentSprites('gemini');
+        // Load agent sprites for all classes
+        await loadAgentSprites('mage');
+        await loadAgentSprites('guardian');
+        await loadAgentSprites('architect');
+        await loadAgentSprites('designer');
+        await loadAgentSprites('scout');
+        await loadAgentSprites('engineer');
         setAssetsLoaded(true);
       } catch (error) {
         console.error('Failed to load assets:', error);
@@ -188,6 +191,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
   const selectedAgentIds = useGameStore((state) => state.selectedAgentIds);
   const selectAgent = useGameStore((state) => state.selectAgent);
   const selectAgents = useGameStore((state) => state.selectAgents);
+  const updateAgentPosition = useGameStore((state) => state.updateAgentPosition);
   const deselectAll = useGameStore((state) => state.deselectAll);
 
   // Box selection from context
@@ -200,8 +204,8 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
   const setBoxEnd = selectionBox?.setEnd ?? (() => { });
 
   // Demo agent for when no real agents exist
-  const [demoAgentPosition, setDemoAgentPosition] = useState({ x: 5, y: 5 });
-  const [demoAgentTarget, setDemoAgentTarget] = useState({ x: 5, y: 5 });
+  const [demoAgentPosition, setDemoAgentPosition] = useState({ x: 10, y: 10 });
+  const [demoAgentTarget, setDemoAgentTarget] = useState({ x: 10, y: 10 });
   const [demoDirection, setDemoDirection] = useState<'s' | 'sw' | 'w' | 'nw'>('s');
   const [isDemoMoving, setIsDemoMoving] = useState(false);
   const wasDemoMoving = useRef(false);
@@ -311,8 +315,39 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
       const x = e.clientX - bounds.left;
       const y = e.clientY - bounds.top;
 
-      // Right/middle click for camera pan
-      if (e.button === 1 || e.button === 2) {
+      // Calculate grid position for movement commands
+      const screenX = (x - centerOffsetX - cameraOffset.x) / cameraZoom;
+      const screenY = (y - centerOffsetY - cameraOffset.y) / cameraZoom;
+      const gridPos = screenToGrid(screenX, screenY);
+      const isValidTile = gridPos.x >= 0 && gridPos.x < GRID_SIZE && gridPos.y >= 0 && gridPos.y < GRID_SIZE;
+
+      // Right-click: Move command for selected agents OR camera pan
+      if (e.button === 2) {
+        if (isValidTile && hasRealAgents && selectedAgentIds.size > 0) {
+          // Move selected agents to clicked position
+          // Convert grid position to agent position (subtract offset)
+          const targetQ = gridPos.x - 10;
+          const targetR = gridPos.y - 10;
+
+          selectedAgentIds.forEach((id) => {
+            updateAgentPosition(id, { q: targetQ, r: targetR, y: 0.5 });
+          });
+
+          // Visual feedback - spawn teleport effect at target
+          const targetScreen = gridToScreen(gridPos.x, gridPos.y);
+          spawnEffect(targetScreen.x, targetScreen.y - 30, 'teleport');
+          return;
+        }
+
+        // Fallback: camera pan
+        setIsDragging(true);
+        dragStart.current = { x, y };
+        cameraStart.current = { ...cameraOffset };
+        return;
+      }
+
+      // Middle click: Always camera pan
+      if (e.button === 1) {
         setIsDragging(true);
         dragStart.current = { x, y };
         cameraStart.current = { ...cameraOffset };
@@ -327,11 +362,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
         return;
       }
 
-      const screenX = (x - centerOffsetX - cameraOffset.x) / cameraZoom;
-      const screenY = (y - centerOffsetY - cameraOffset.y) / cameraZoom;
-      const gridPos = screenToGrid(screenX, screenY);
-
-      if (gridPos.x >= 0 && gridPos.x < GRID_SIZE && gridPos.y >= 0 && gridPos.y < GRID_SIZE) {
+      if (isValidTile) {
         setSelectedTile(gridPos);
 
         // In demo mode (no real agents), move demo agent
@@ -363,8 +394,8 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
         // Find all agents within the box
         const selectedIds: string[] = [];
         agentList.forEach((agent) => {
-          const agentGridX = agent.position.q + 5;
-          const agentGridY = agent.position.r + 5;
+          const agentGridX = agent.position.q + 10;
+          const agentGridY = agent.position.r + 10;
           const screenPos = gridToScreen(agentGridX, agentGridY);
 
           // Convert to canvas coordinates
@@ -409,7 +440,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
       canvas.removeEventListener('wheel', handleWheel);
       canvas.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [app, isDragging, cameraOffset, cameraZoom, centerOffsetX, centerOffsetY, hasRealAgents, demoAgentTarget, demoAgentPosition, isBoxSelecting, boxStart, boxEnd, agentList, selectAgents, deselectAll]);
+  }, [app, isDragging, cameraOffset, cameraZoom, centerOffsetX, centerOffsetY, hasRealAgents, demoAgentTarget, demoAgentPosition, isBoxSelecting, boxStart, boxEnd, agentList, selectAgents, deselectAll, updateAgentPosition, selectedAgentIds, spawnEffect]);
 
   // Generate tiles in render order
   const tiles: { x: number; y: number }[] = [];
@@ -422,21 +453,32 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
 
   const portalPosition = { x: Math.floor(GRID_SIZE / 2), y: Math.floor(GRID_SIZE / 2) };
 
-  // Environment props - decorative elements around the map
+  // Environment props - decorative elements around the map (spread across 20x20 grid)
   const environmentProps = [
+    // Corners and edges
     { x: 1, y: 1, prop: 'prop_tree_oak' },
-    { x: 8, y: 1, prop: 'prop_crystal_blue' },
-    { x: 1, y: 8, prop: 'prop_bush_berries' },
-    { x: 8, y: 8, prop: 'prop_crystal_purple' },
-    { x: 0, y: 4, prop: 'prop_bush_berries' },
-    { x: 9, y: 4, prop: 'prop_tree_oak' },
-    { x: 4, y: 0, prop: 'prop_rock_mossy' },
-    { x: 3, y: 8, prop: 'prop_bush_berries' },
-    { x: 6, y: 8, prop: 'prop_crystal_green' },
-    { x: 2, y: 3, prop: 'prop_rock_mossy' },
-    { x: 7, y: 2, prop: 'prop_tree_oak' },
-    { x: 2, y: 7, prop: 'prop_torch_wall' },
-    { x: 7, y: 7, prop: 'prop_rock_mossy' },
+    { x: 18, y: 1, prop: 'prop_crystal_blue' },
+    { x: 1, y: 18, prop: 'prop_bush_berries' },
+    { x: 18, y: 18, prop: 'prop_crystal_purple' },
+    // Edge midpoints
+    { x: 0, y: 10, prop: 'prop_bush_berries' },
+    { x: 19, y: 10, prop: 'prop_tree_oak' },
+    { x: 10, y: 0, prop: 'prop_rock_mossy' },
+    { x: 10, y: 19, prop: 'prop_crystal_green' },
+    // Inner ring (around center portal at 10,10)
+    { x: 6, y: 6, prop: 'prop_tree_oak' },
+    { x: 14, y: 6, prop: 'prop_tree_oak' },
+    { x: 6, y: 14, prop: 'prop_tree_oak' },
+    { x: 14, y: 14, prop: 'prop_tree_oak' },
+    // Scattered decorations
+    { x: 3, y: 5, prop: 'prop_rock_mossy' },
+    { x: 16, y: 4, prop: 'prop_bush_berries' },
+    { x: 4, y: 15, prop: 'prop_torch_wall' },
+    { x: 15, y: 16, prop: 'prop_rock_mossy' },
+    { x: 8, y: 3, prop: 'prop_bush_berries' },
+    { x: 12, y: 17, prop: 'prop_crystal_blue' },
+    { x: 2, y: 12, prop: 'prop_crystal_green' },
+    { x: 17, y: 8, prop: 'prop_bush_berries' },
   ];
 
   // Get tile texture based on position
@@ -477,7 +519,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
       // Get position for effect (use first selected agent or demo agent)
       let effectPos: { x: number; y: number };
       if (selectedAgent) {
-        effectPos = gridToScreen(selectedAgent.position.q + 5, selectedAgent.position.r + 5);
+        effectPos = gridToScreen(selectedAgent.position.q + 10, selectedAgent.position.r + 10);
       } else {
         effectPos = gridToScreen(demoAgentPosition.x, demoAgentPosition.y);
       }

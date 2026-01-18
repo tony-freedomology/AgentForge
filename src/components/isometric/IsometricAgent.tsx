@@ -49,13 +49,6 @@ const ACTIVITY_LABELS: Record<AgentActivity, string> = {
 // Movement configuration
 const MOVE_SPEED = 4; // Grid units per second
 
-// Map agent provider to sprite type
-const PROVIDER_SPRITE_MAP: Record<string, 'claude' | 'codex' | 'gemini'> = {
-  claude: 'claude',
-  codex: 'codex',
-  gemini: 'gemini',
-};
-
 // Activity colors for bubble background
 const ACTIVITY_COLORS: Record<AgentActivity, number> = {
   idle: 0x6b7280,
@@ -83,8 +76,8 @@ type SpriteDirection = 's' | 'sw' | 'w' | 'nw';
 
 export function IsometricAgent({ agent, isSelected, onSelect, onSpawnEffect }: IsometricAgentProps) {
   // Convert hex coordinates to isometric grid position
-  const targetX = agent.position.q + 5; // Center on grid
-  const targetY = agent.position.r + 5;
+  const targetX = agent.position.q + 10; // Center on grid (GRID_SIZE/2)
+  const targetY = agent.position.r + 10;
 
   // Handle agent click
   const handleClick = () => {
@@ -172,7 +165,8 @@ export function IsometricAgent({ agent, isSelected, onSelect, onSpawnEffect }: I
   // Get sprite direction and whether to flip
   const { spriteDirection, flipX } = getSpriteDirectionAndFlip(direction);
   const animation = isMoving || agent.activity === 'writing' ? 'walk' : 'idle';
-  const spriteType = PROVIDER_SPRITE_MAP[agent.provider] || 'claude';
+  // Use the specific agent class for the sprite (mage, guardian, etc.)
+  const spriteType = agent.class;
   const spriteId = `${spriteType}_${animation}_${spriteDirection}`;
   const agentTexture = assetLoader.getTexture(spriteId);
 

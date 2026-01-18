@@ -192,7 +192,9 @@ class AgentBridge {
       const agentClass = this.inferAgentClass(serverAgent.name, serverAgent.workingDir);
       const provider = serverAgent.name.toLowerCase().includes('codex') ? 'codex' : 'claude';
 
-      store.spawnAgent(
+      // Use spawnAgentWithId to preserve the server's ID
+      store.spawnAgentWithId(
+        serverAgent.id,
         provider as AgentProvider,
         agentClass,
         serverAgent.name,

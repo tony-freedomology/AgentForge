@@ -7,7 +7,7 @@ export function Environment() {
 
     // Set texture to repeat
     gridTexture.wrapS = gridTexture.wrapT = THREE.RepeatWrapping;
-    gridTexture.repeat.set(50, 50);
+    gridTexture.repeat.set(100, 100);
     gridTexture.anisotropy = 16;
     gridTexture.colorSpace = THREE.SRGBColorSpace;
 
@@ -17,11 +17,11 @@ export function Environment() {
             <color attach="background" args={['#050510']} />
 
             {/* Fog for depth */}
-            <fog attach="fog" args={['#050510', 20, 60]} />
+            <fog attach="fog" args={['#050510', 40, 120]} />
 
             {/* Infinite Grid Plane */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-                <planeGeometry args={[200, 200]} />
+                <planeGeometry args={[400, 400]} />
                 <meshStandardMaterial
                     map={gridTexture}
                     roughness={0.2}

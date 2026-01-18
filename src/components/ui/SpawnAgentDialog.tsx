@@ -39,10 +39,7 @@ export const SpawnAgentDialog: React.FC<SpawnAgentDialogProps> = ({ onClose }) =
   const [workingDir, setWorkingDir] = useState('~');
 
   const activeId = selectedClass.id;
-  // Use GIF if available for these classes, else PNG
-  const activeSprite = (activeId === 'mage' || activeId === 'guardian')
-    ? `/assets/sprites/${activeId}.gif`
-    : CLASS_SPRITES[activeId];
+  const activeSprite = CLASS_SPRITES[activeId];
 
   const handleSpawn = () => {
     if (selectedClass) {
