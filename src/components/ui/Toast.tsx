@@ -12,45 +12,45 @@ import { X, Info, CheckCircle, AlertTriangle, XCircle, ScrollText, Trophy, Gem }
 // Toast styling configuration
 const TOAST_CONFIG: Record<ToastVariant, { color: string; bgColor: string; borderColor: string; icon: React.ReactNode }> = {
   info: {
-    color: '#3b82f6',
-    bgColor: 'rgba(59, 130, 246, 0.15)',
-    borderColor: 'rgba(59, 130, 246, 0.4)',
+    color: '#38bdf8', // Sky-400
+    bgColor: 'rgba(12, 74, 110, 0.9)', // Sky-950
+    borderColor: 'rgba(56, 189, 248, 0.5)',
     icon: <Info size={20} />,
   },
   success: {
-    color: '#22c55e',
-    bgColor: 'rgba(34, 197, 94, 0.15)',
-    borderColor: 'rgba(34, 197, 94, 0.4)',
+    color: '#34d399', // Emerald-400
+    bgColor: 'rgba(6, 78, 59, 0.9)', // Emerald-950
+    borderColor: 'rgba(52, 211, 153, 0.5)',
     icon: <CheckCircle size={20} />,
   },
   warning: {
-    color: '#f59e0b',
-    bgColor: 'rgba(245, 158, 11, 0.15)',
-    borderColor: 'rgba(245, 158, 11, 0.4)',
+    color: '#fbbf24', // Amber-400
+    bgColor: 'rgba(69, 26, 3, 0.9)', // Amber-950
+    borderColor: 'rgba(251, 191, 36, 0.5)',
     icon: <AlertTriangle size={20} />,
   },
   error: {
-    color: '#ef4444',
-    bgColor: 'rgba(239, 68, 68, 0.15)',
-    borderColor: 'rgba(239, 68, 68, 0.4)',
+    color: '#f87171', // Red-400
+    bgColor: 'rgba(69, 10, 10, 0.9)', // Red-950
+    borderColor: 'rgba(248, 113, 113, 0.5)',
     icon: <XCircle size={20} />,
   },
   quest: {
-    color: '#f59e0b',
-    bgColor: 'rgba(245, 158, 11, 0.2)',
-    borderColor: 'rgba(245, 158, 11, 0.5)',
+    color: '#fbbf24', // Amber-400
+    bgColor: 'rgba(28, 25, 23, 0.95)', // Stone-900
+    borderColor: 'rgba(217, 119, 6, 0.6)', // Amber-600
     icon: <ScrollText size={20} />,
   },
   achievement: {
-    color: '#a855f7',
-    bgColor: 'rgba(168, 85, 247, 0.2)',
-    borderColor: 'rgba(168, 85, 247, 0.5)',
+    color: '#e879f9', // Purple-400
+    bgColor: 'rgba(59, 7, 100, 0.9)', // Purple-950
+    borderColor: 'rgba(232, 121, 249, 0.5)',
     icon: <Trophy size={20} />,
   },
   loot: {
-    color: '#06b6d4',
-    bgColor: 'rgba(6, 182, 212, 0.2)',
-    borderColor: 'rgba(6, 182, 212, 0.5)',
+    color: '#a78bfa', // Purple-400 (Epic)
+    bgColor: 'rgba(46, 16, 101, 0.9)', // Violet-950
+    borderColor: 'rgba(167, 139, 250, 0.5)',
     icon: <Gem size={20} />,
   },
 };

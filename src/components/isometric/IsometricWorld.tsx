@@ -33,10 +33,10 @@ const MOVE_SPEED = 4; // Grid units per second
 
 // Colors for fallback rendering
 const COLORS = {
-  tileFill: 0x1a1a2e,
-  tileStroke: 0x8b5cf6,
-  tileHover: 0x3b82f6,
-  tileHighlight: 0xf59e0b,
+  tileFill: 0x1a472a, // Lush green
+  tileStroke: 0x2d6a4f, // Darker green stroke
+  tileHover: 0x4ade80, // Bright green hover
+  tileHighlight: 0xfacc15, // Golden sunlight highlight
   agentPurple: 0x8b5cf6,
   agentGlow: 0xa855f7,
   portalGold: 0xf59e0b,
@@ -193,9 +193,9 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
   const isBoxSelecting = selectionBox?.isSelecting ?? false;
   const boxStart = selectionBox?.start ?? { x: 0, y: 0 };
   const boxEnd = selectionBox?.end ?? { x: 0, y: 0 };
-  const setIsBoxSelecting = selectionBox?.setIsSelecting ?? (() => {});
-  const setBoxStart = selectionBox?.setStart ?? (() => {});
-  const setBoxEnd = selectionBox?.setEnd ?? (() => {});
+  const setIsBoxSelecting = selectionBox?.setIsSelecting ?? (() => { });
+  const setBoxStart = selectionBox?.setStart ?? (() => { });
+  const setBoxEnd = selectionBox?.setEnd ?? (() => { });
 
   // Demo agent for when no real agents exist
   const [demoAgentPosition, setDemoAgentPosition] = useState({ x: 5, y: 5 });
@@ -422,17 +422,19 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
 
   // Environment props - decorative elements around the map
   const environmentProps = [
-    { x: 1, y: 1, prop: 'crystal_purple' },
-    { x: 8, y: 1, prop: 'crystal_blue' },
-    { x: 1, y: 8, prop: 'crystal_green' },
-    { x: 8, y: 8, prop: 'tree_magical' },
-    { x: 0, y: 4, prop: 'torch_wall' },
-    { x: 9, y: 4, prop: 'torch_wall' },
-    { x: 4, y: 0, prop: 'banner_guild' },
-    { x: 3, y: 8, prop: 'cauldron' },
-    { x: 6, y: 8, prop: 'bookshelf' },
-    { x: 2, y: 3, prop: 'mushroom_cluster' },
-    { x: 7, y: 2, prop: 'chest_closed' },
+    { x: 1, y: 1, prop: 'prop_tree_oak' },
+    { x: 8, y: 1, prop: 'prop_crystal_blue' },
+    { x: 1, y: 8, prop: 'prop_bush_berries' },
+    { x: 8, y: 8, prop: 'prop_crystal_purple' },
+    { x: 0, y: 4, prop: 'prop_bush_berries' },
+    { x: 9, y: 4, prop: 'prop_tree_oak' },
+    { x: 4, y: 0, prop: 'prop_rock_mossy' },
+    { x: 3, y: 8, prop: 'prop_bush_berries' },
+    { x: 6, y: 8, prop: 'prop_crystal_green' },
+    { x: 2, y: 3, prop: 'prop_rock_mossy' },
+    { x: 7, y: 2, prop: 'prop_tree_oak' },
+    { x: 2, y: 7, prop: 'prop_torch_wall' },
+    { x: 7, y: 7, prop: 'prop_rock_mossy' },
   ];
 
   // Get tile texture based on position
@@ -440,10 +442,15 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
     if (isPortal) {
       return assetLoader.getTexture('tile_portal_base') || null;
     }
-    // Vary tiles based on position for visual interest
-    const tileTypes = ['tile_stone_base', 'tile_stone_mossy', 'tile_grass', 'tile_dirt'];
-    const index = (x * 3 + y * 7) % tileTypes.length;
-    return assetLoader.getTexture(tileTypes[index]) || null;
+
+    // Lush green environment logic
+    // Create deterministic but organic looking patches
+    const noise = Math.sin(x * 0.5) * Math.cos(y * 0.5) * 10;
+    const variant = Math.abs(Math.floor(noise * 100)) % 10;
+
+    if (variant > 7) return assetLoader.getTexture('tile_grass_flower') || null;
+    if (variant > 5) return assetLoader.getTexture('tile_grass_dense') || null;
+    return assetLoader.getTexture('tile_grass_base') || null;
   };
 
   // Get demo agent sprite texture based on movement state
@@ -498,12 +505,23 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
         return (
           <pixiContainer key={`tile-${x}-${y}`} x={screenPos.x} y={screenPos.y} zIndex={x + y}>
             {/* Base tile - use texture if available, otherwise fallback to graphics */}
-            {tileTexture && tileTexture !== Texture.WHITE ? (
-              <pixiSprite
-                texture={tileTexture}
-                anchor={{ x: 0.5, y: 0.5 }}
-              />
-            ) : (
+            {tileTexture && tileTexture !== Texture.WHITE ? (() => {
+              // Auto-scale tile if it's too large (e.g. 1024px)
+              // Tiles are 64px wide (TILE_WIDTH)
+              // But usually include some padding/depth, so let's check against target width
+              let scale = 1.0;
+              if (tileTexture.width > TILE_WIDTH * 1.5) {
+                scale = (TILE_WIDTH + 2) / tileTexture.width; // Slight overlap
+              }
+
+              return (
+                <pixiSprite
+                  texture={tileTexture}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                  scale={scale}
+                />
+              );
+            })() : (
               <pixiGraphics
                 draw={(g: Graphics) => {
                   g.clear();
@@ -548,50 +566,57 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
         const propTexture = assetLoader.getTexture(propData.prop);
         const zIndex = propData.x + propData.y + 10;
 
+        // Auto-scale props to fit relative to tile size
+        // Standard prop width should be roughly TILE_WIDTH (64px)
+        // If texture is huge (e.g., 1024px), scale it down significantly
+        let scale = 1.0;
+        let yOffset = TILE_HEIGHT / 2;
+
+        if (propTexture && propTexture !== Texture.WHITE) {
+          const targetWidth = TILE_WIDTH * 1.5; // Allow props to be slightly larger than a tile
+          if (propTexture.width > targetWidth) {
+            scale = targetWidth / propTexture.width;
+          }
+
+          // Tree specific overrides if needed effectively
+          if (propData.prop.includes('tree')) {
+            scale *= 1.5; // Trees can be bigger
+            yOffset = TILE_HEIGHT / 2 + (10 * scale);
+          }
+        }
+
         return (
           <pixiContainer key={`prop-${index}`} x={screenPos.x} y={screenPos.y} zIndex={zIndex}>
             {propTexture && propTexture !== Texture.WHITE ? (
               <pixiSprite
                 texture={propTexture}
                 anchor={{ x: 0.5, y: 1 }}
-                y={TILE_HEIGHT / 2}
+                y={yOffset}
+                scale={scale}
               />
             ) : (
               // Fallback prop graphics
               <pixiGraphics
                 draw={(g: Graphics) => {
                   g.clear();
-                  // Draw a simple prop placeholder
-                  if (propData.prop.includes('crystal')) {
-                    const color = propData.prop.includes('purple') ? 0x8b5cf6 :
-                                  propData.prop.includes('blue') ? 0x3b82f6 : 0x22c55e;
-                    g.moveTo(0, -40);
-                    g.lineTo(-10, -10);
-                    g.lineTo(10, -10);
-                    g.closePath();
-                    g.fill({ color, alpha: 0.8 });
-                    g.stroke({ color: 0xffffff, width: 1, alpha: 0.5 });
-                  } else if (propData.prop.includes('tree')) {
-                    g.circle(0, -35, 25);
-                    g.fill({ color: 0x22c55e, alpha: 0.8 });
-                    g.rect(-5, -15, 10, 20);
+                  // Draw a simple green prop placeholder
+                  if (propData.prop.includes('tree')) {
+                    // Tree trunk
+                    g.rect(-5, -10, 10, 10);
                     g.fill({ color: 0x8b4513 });
-                  } else if (propData.prop.includes('torch')) {
-                    g.rect(-3, -30, 6, 25);
-                    g.fill({ color: 0x8b4513 });
-                    g.circle(0, -35, 8);
-                    g.fill({ color: 0xf59e0b, alpha: 0.9 });
-                  } else if (propData.prop.includes('chest')) {
-                    g.rect(-15, -20, 30, 18);
-                    g.fill({ color: 0x8b4513 });
-                    g.rect(-12, -25, 24, 8);
-                    g.fill({ color: 0xa0522d });
-                    g.rect(-3, -17, 6, 6);
-                    g.fill({ color: 0xf59e0b });
-                  } else {
-                    // Generic prop
-                    g.rect(-12, -25, 24, 20);
-                    g.fill({ color: 0x4a5568, alpha: 0.8 });
+                    // Leaves
+                    g.circle(0, -30, 25);
+                    g.fill({ color: 0x22c55e, alpha: 0.9 });
+                  } else if (propData.prop.includes('bush')) {
+                    g.circle(0, -15, 15);
+                    g.fill({ color: 0x16a34a });
+                    g.circle(-5, -12, 3);
+                    g.fill({ color: 0xef4444 }); // berries
+                  } else if (propData.prop.includes('rock')) {
+                    g.ellipse(0, -5, 15, 10);
+                    g.fill({ color: 0x78716c });
+                    g.ellipse(-5, -8, 5, 3);
+                    g.fill({ color: 0x4ade80, alpha: 0.7 }); // moss
                   }
                 }}
               />
@@ -600,34 +625,61 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
         );
       })}
 
-      {/* Portal effect */}
+      {/* Portal - Full assembly with frame, swirl, and particles */}
       {(() => {
         const screenPos = gridToScreen(portalPosition.x, portalPosition.y);
-        const portalTexture = assetLoader.getTexture('portal_frame');
-        const glowIntensity = 0.5 + Math.sin(portalPulse) * 0.3;
+        const portalFrameTexture = assetLoader.getTexture('portal_frame');
+        const portalSwirlTexture = assetLoader.getTexture('portal_swirl');
+        const portalParticlesTexture = assetLoader.getTexture('portal_particles');
+        const glowIntensity = 0.6 + Math.sin(portalPulse) * 0.3;
+        const swirlRotation = portalPulse * 0.5; // Slow rotation for swirl
 
         return (
           <pixiContainer x={screenPos.x} y={screenPos.y} zIndex={portalPosition.x + portalPosition.y + 50}>
-            {portalTexture && portalTexture !== Texture.WHITE ? (
+            {/* Portal swirl effect (behind frame) */}
+            {portalSwirlTexture && portalSwirlTexture !== Texture.WHITE ? (
               <pixiSprite
-                texture={portalTexture}
-                anchor={{ x: 0.5, y: 1 }}
-                y={TILE_HEIGHT / 2}
+                texture={portalSwirlTexture}
+                anchor={{ x: 0.5, y: 0.5 }}
+                y={-50}
+                scale={0.8}
+                rotation={swirlRotation}
                 alpha={glowIntensity}
+              />
+            ) : null}
+
+            {/* Portal frame */}
+            {portalFrameTexture && portalFrameTexture !== Texture.WHITE ? (
+              <pixiSprite
+                texture={portalFrameTexture}
+                anchor={{ x: 0.5, y: 1 }}
+                y={TILE_HEIGHT / 2 + 10}
+                scale={1.0}
               />
             ) : (
               <pixiGraphics
                 draw={(g: Graphics) => {
                   g.clear();
-                  g.circle(0, -30, 35);
+                  g.circle(0, -50, 35);
                   g.fill({ color: COLORS.portalGold, alpha: glowIntensity * 0.3 });
-                  g.circle(0, -30, 20);
+                  g.circle(0, -50, 20);
                   g.fill({ color: COLORS.portalGold, alpha: glowIntensity });
-                  g.circle(0, -30, 10);
+                  g.circle(0, -50, 10);
                   g.fill({ color: 0xfef3c7, alpha: 0.9 });
                 }}
               />
             )}
+
+            {/* Floating particles */}
+            {portalParticlesTexture && portalParticlesTexture !== Texture.WHITE ? (
+              <pixiSprite
+                texture={portalParticlesTexture}
+                anchor={{ x: 0.5, y: 0.5 }}
+                y={-60 + Math.sin(portalPulse * 2) * 5}
+                scale={0.8}
+                alpha={0.7 + Math.sin(portalPulse * 3) * 0.2}
+              />
+            ) : null}
           </pixiContainer>
         );
       })()}
@@ -647,7 +699,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
       {!hasRealAgents && (() => {
         const screenPos = gridToScreen(demoAgentPosition.x, demoAgentPosition.y);
         const isDemoSelected = selectedTile?.x === Math.floor(demoAgentPosition.x) &&
-                               selectedTile?.y === Math.floor(demoAgentPosition.y);
+          selectedTile?.y === Math.floor(demoAgentPosition.y);
         const agentTexture = getDemoAgentTexture();
 
         return (
@@ -730,168 +782,6 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
           })}
         />
       )}
-
-      {/* Agent Status Panel - UI Overlay */}
-      <pixiContainer
-        x={(-centerOffsetX + 10) / cameraZoom}
-        y={(-centerOffsetY + 50) / cameraZoom}
-        scale={1 / cameraZoom}
-        zIndex={10000}
-      >
-        {/* Panel background */}
-        {(() => {
-          const panelTexture = assetLoader.getTexture('panel_stone');
-          if (panelTexture && panelTexture !== Texture.WHITE) {
-            return (
-              <pixiSprite
-                texture={panelTexture}
-                width={180}
-                height={80}
-                alpha={0.9}
-              />
-            );
-          }
-          return (
-            <pixiGraphics
-              draw={(g: Graphics) => {
-                g.clear();
-                g.roundRect(0, 0, 180, 80, 8);
-                g.fill({ color: 0x1a1a2e, alpha: 0.95 });
-                g.stroke({ color: 0x8b5cf6, width: 2 });
-              }}
-            />
-          );
-        })()}
-
-        {/* Portrait frame */}
-        <pixiContainer x={10} y={10}>
-          {(() => {
-            const frameTexture = assetLoader.getTexture('frame_portrait');
-            const agentIdleTexture = assetLoader.getTexture('claude_idle_s');
-            return (
-              <>
-                {agentIdleTexture && agentIdleTexture !== Texture.WHITE ? (
-                  <pixiSprite
-                    texture={agentIdleTexture}
-                    width={50}
-                    height={50}
-                    anchor={{ x: 0, y: 0 }}
-                  />
-                ) : (
-                  <pixiGraphics
-                    draw={(g: Graphics) => {
-                      g.clear();
-                      g.rect(0, 0, 50, 50);
-                      g.fill({ color: 0x8b5cf6 });
-                      g.circle(25, 25, 18);
-                      g.fill({ color: 0xa855f7 });
-                    }}
-                  />
-                )}
-                {frameTexture && frameTexture !== Texture.WHITE ? (
-                  <pixiSprite
-                    texture={frameTexture}
-                    width={54}
-                    height={54}
-                    x={-2}
-                    y={-2}
-                  />
-                ) : (
-                  <pixiGraphics
-                    draw={(g: Graphics) => {
-                      g.clear();
-                      g.rect(-2, -2, 54, 54);
-                      g.stroke({ color: 0xf59e0b, width: 2 });
-                    }}
-                  />
-                )}
-              </>
-            );
-          })()}
-        </pixiContainer>
-
-        {/* Agent name */}
-        <pixiText
-          text={selectedAgent?.name || (hasRealAgents ? 'Select Agent' : 'Demo Agent')}
-          x={70}
-          y={10}
-          style={new TextStyle({
-            fontFamily: 'monospace',
-            fontSize: 14,
-            fontWeight: 'bold',
-            fill: 0xf59e0b,
-          })}
-        />
-
-        {/* HP bar (Context usage for real agents) */}
-        <pixiContainer x={70} y={30}>
-          <pixiGraphics
-            draw={(g: Graphics) => {
-              g.clear();
-              const hpPercent = selectedAgent
-                ? Math.max(0, 100 - (selectedAgent.contextTokens / selectedAgent.contextLimit) * 100)
-                : 85;
-              // Background
-              g.rect(0, 0, 100, 12);
-              g.fill({ color: 0x1a1a2e });
-              g.stroke({ color: 0x4b5563, width: 1 });
-              // Fill
-              g.rect(1, 1, Math.max(0, (hpPercent / 100) * 98), 10);
-              g.fill({ color: hpPercent > 30 ? 0x22c55e : hpPercent > 10 ? 0xf59e0b : 0xef4444 });
-            }}
-          />
-          <pixiText
-            text="CTX"
-            x={-24}
-            y={-1}
-            style={new TextStyle({
-              fontFamily: 'monospace',
-              fontSize: 10,
-              fill: 0x888888,
-            })}
-          />
-        </pixiContainer>
-
-        {/* XP bar (Usage percent for real agents) */}
-        <pixiContainer x={70} y={48}>
-          <pixiGraphics
-            draw={(g: Graphics) => {
-              g.clear();
-              const xpPercent = selectedAgent?.usagePercent || 60;
-              // Background
-              g.rect(0, 0, 100, 12);
-              g.fill({ color: 0x1a1a2e });
-              g.stroke({ color: 0x4b5563, width: 1 });
-              // Fill
-              g.rect(1, 1, Math.max(0, (xpPercent / 100) * 98), 10);
-              g.fill({ color: 0x8b5cf6 });
-            }}
-          />
-          <pixiText
-            text="USE"
-            x={-24}
-            y={-1}
-            style={new TextStyle({
-              fontFamily: 'monospace',
-              fontSize: 10,
-              fill: 0x888888,
-            })}
-          />
-        </pixiContainer>
-
-        {/* Level badge */}
-        <pixiText
-          text={`Lv ${selectedAgent?.level || 1}`}
-          x={135}
-          y={62}
-          style={new TextStyle({
-            fontFamily: 'monospace',
-            fontSize: 11,
-            fontWeight: 'bold',
-            fill: 0xf59e0b,
-          })}
-        />
-      </pixiContainer>
 
       {/* Particle Effects Layer */}
       <EffectsRenderer />

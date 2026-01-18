@@ -14,6 +14,9 @@ import {
   Users,
   Eye,
   Terminal,
+  Scroll,
+  BookOpen,
+  Hand
 } from 'lucide-react';
 
 const CLASS_ICONS: Record<AgentClass, React.ReactNode> = {
@@ -27,67 +30,67 @@ const CLASS_ICONS: Record<AgentClass, React.ReactNode> = {
 
 const CLASS_DESCRIPTIONS: Record<AgentClass, string> = {
   mage: 'Claude Mage - Versatile spellcaster',
-  engineer: 'Codex Engineer - Code specialist',
+  engineer: 'Codex Engineer - Rune scribe',
   scout: 'Swift explorer agent',
-  guardian: 'Security & review sentinel',
-  architect: 'System design sage',
-  designer: 'Artisan Designer - UI/UX specialist',
+  guardian: 'Sentinel of the realm',
+  architect: 'Grand builder',
+  designer: 'Artisan illusionist',
 };
 
 const COMMANDS: Command[] = [
   {
     id: 'task',
-    name: 'Assign Task',
+    name: 'Issue Decree',
     icon: 'MessageSquare',
     hotkey: 'T',
-    description: 'Give a new task to selected agents',
+    description: 'Command selected units',
     requiresSelection: true,
     action: 'task',
   },
   {
     id: 'stop',
-    name: 'Stop',
+    name: 'Halt',
     icon: 'Square',
     hotkey: 'S',
-    description: 'Stop current task',
+    description: 'Cease all actions',
     requiresSelection: true,
     action: 'stop',
   },
   {
     id: 'focus',
-    name: 'Focus View',
+    name: 'Scry',
     icon: 'Eye',
     hotkey: 'F',
-    description: 'Center camera on selection',
+    description: 'Focus vision on unit',
     requiresSelection: true,
     action: 'focus',
   },
   {
     id: 'terminal',
-    name: 'Terminal',
+    name: 'Chronicle',
     icon: 'Terminal',
     hotkey: 'V',
-    description: 'View agent terminal output',
+    description: 'Read unit history',
     requiresSelection: true,
     action: 'terminal',
   },
   {
     id: 'dismiss',
-    name: 'Dismiss',
+    name: 'Banish',
     icon: 'Trash2',
     hotkey: 'Delete',
-    description: 'Remove agent from the field',
+    description: 'Dismiss unit from realm',
     requiresSelection: true,
     action: 'dismiss',
   },
 ];
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  MessageSquare: <MessageSquare className="w-5 h-5" />,
-  Square: <Square className="w-5 h-5" />,
+  MessageSquare: <Scroll className="w-5 h-5" />,
+  Square: <Hand className="w-5 h-5" />,
   Eye: <Eye className="w-5 h-5" />,
-  Terminal: <Terminal className="w-5 h-5" />,
-  Trash2: <Trash2 className="w-5 h-5" />,
+  Terminal: <BookOpen className="w-5 h-5" />,
+  Trash2: <Zap className="w-5 h-5" />,
 };
 
 interface SpawnMenuProps {
@@ -107,16 +110,16 @@ function SpawnMenu({ onSpawn, onClose }: SpawnMenuProps) {
   ];
 
   return (
-    <div className="absolute bottom-full left-0 mb-2 fantasy-panel rounded-xl p-4 min-w-[300px] overflow-hidden">
+    <div className="absolute bottom-full left-0 mb-2 bg-stone-900/95 border-2 border-amber-900/50 rounded-xl p-4 min-w-[300px] overflow-hidden shadow-2xl">
       {/* Corner accents */}
-      <div className="corner-accent top-left" />
-      <div className="corner-accent top-right" />
-      <div className="corner-accent bottom-left" />
-      <div className="corner-accent bottom-right" />
+      <div className="corner-accent top-left" style={{ borderColor: '#d97706' }} />
+      <div className="corner-accent top-right" style={{ borderColor: '#d97706' }} />
+      <div className="corner-accent bottom-left" style={{ borderColor: '#d97706' }} />
+      <div className="corner-accent bottom-right" style={{ borderColor: '#d97706' }} />
 
-      <div className="text-amber-400 font-bold mb-3 text-sm uppercase tracking-wider flex items-center gap-2 relative z-10">
+      <div className="text-amber-500 font-bold mb-3 text-sm uppercase tracking-wider flex items-center gap-2 relative z-10 font-serif drop-shadow-sm">
         <Zap className="w-4 h-4" />
-        Summon Agent
+        Summon Unit
       </div>
       <div className="space-y-1.5 relative z-10">
         {spawnOptions.map((opt) => {
@@ -126,15 +129,15 @@ function SpawnMenu({ onSpawn, onClose }: SpawnMenuProps) {
               key={`${opt.provider}-${opt.class}`}
               onClick={() => canAfford && onSpawn(opt.provider, opt.class)}
               disabled={!canAfford}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all ${canAfford
-                ? 'hover:bg-amber-500/10 hover:border-amber-500/30 border border-transparent text-white'
-                : 'opacity-40 cursor-not-allowed text-gray-500'
+              className={`w-full flex items-center gap-3 p-2.5 rounded-lg transition-all border ${canAfford
+                ? 'hover:bg-amber-900/20 hover:border-amber-600/50 border-transparent text-amber-50'
+                : 'opacity-40 cursor-not-allowed text-stone-500 border-transparent'
                 }`}
             >
               <div className="text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]">{CLASS_ICONS[opt.class]}</div>
               <div className="flex-1 text-left">
-                <div className="font-semibold text-sm">{opt.name}</div>
-                <div className="text-xs text-gray-400">{CLASS_DESCRIPTIONS[opt.class]}</div>
+                <div className="font-semibold text-sm font-serif tracking-wide">{opt.name}</div>
+                <div className="text-xs text-stone-400 italic">{CLASS_DESCRIPTIONS[opt.class]}</div>
               </div>
               <div className="text-amber-400 text-sm flex items-center gap-1 font-bold">
                 <span>{opt.cost}</span>
@@ -146,9 +149,9 @@ function SpawnMenu({ onSpawn, onClose }: SpawnMenuProps) {
       </div>
       <button
         onClick={onClose}
-        className="mt-3 w-full text-center text-xs text-gray-500 hover:text-amber-400 transition-colors relative z-10"
+        className="mt-3 w-full text-center text-xs text-stone-500 hover:text-amber-400 transition-colors relative z-10 font-serif"
       >
-        Cancel (Esc)
+        Withdraw (Esc)
       </button>
     </div>
   );
@@ -171,25 +174,25 @@ function TaskDialog({ agents, onSubmit, onClose }: TaskDialogProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="fantasy-panel rounded-xl p-5 w-[520px] max-w-[90vw] overflow-hidden">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-stone-900/95 border-2 border-amber-900/60 rounded-xl p-5 w-[520px] max-w-[90vw] overflow-hidden shadow-2xl relative">
         {/* Corner accents */}
-        <div className="corner-accent top-left" />
-        <div className="corner-accent top-right" />
-        <div className="corner-accent bottom-left" />
-        <div className="corner-accent bottom-right" />
+        <div className="corner-accent top-left" style={{ borderColor: '#d97706' }} />
+        <div className="corner-accent top-right" style={{ borderColor: '#d97706' }} />
+        <div className="corner-accent bottom-left" style={{ borderColor: '#d97706' }} />
+        <div className="corner-accent bottom-right" style={{ borderColor: '#d97706' }} />
 
         <div className="flex items-center gap-2.5 mb-4 relative z-10">
-          <Zap className="w-5 h-5 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
-          <span className="text-amber-400 font-bold uppercase tracking-wider">
-            Assign Task
+          <Scroll className="w-5 h-5 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
+          <span className="text-amber-400 font-bold uppercase tracking-wider font-serif">
+            Issue Decree
           </span>
         </div>
 
-        <div className="mb-4 flex items-center gap-2 text-sm text-gray-400 relative z-10">
+        <div className="mb-4 flex items-center gap-2 text-sm text-stone-400 relative z-10">
           <Users className="w-4 h-4" />
-          <span>
-            Commanding: <span className="text-amber-300">{agents.map((a) => a.name).join(', ')}</span>
+          <span className="font-serif">
+            To: <span className="text-amber-200">{agents.map((a) => a.name).join(', ')}</span>
           </span>
         </div>
 
@@ -197,8 +200,8 @@ function TaskDialog({ agents, onSubmit, onClose }: TaskDialogProps) {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Enter your command for the agents..."
-            className="w-full h-32 bg-gray-950/60 border border-gray-700/60 rounded-lg p-3.5 text-white placeholder-gray-500 resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
+            placeholder="Inscribe your command here..."
+            className="w-full h-32 bg-black/40 border border-stone-700/60 rounded-lg p-3.5 text-amber-50 placeholder-stone-600 resize-none focus:outline-none focus:border-amber-500/50 transition-colors font-serif"
             autoFocus
           />
 
@@ -206,16 +209,16 @@ function TaskDialog({ agents, onSubmit, onClose }: TaskDialogProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-400 hover:text-white transition-colors font-medium"
+              className="px-4 py-2 text-stone-400 hover:text-amber-200 transition-colors font-medium font-serif"
             >
-              Cancel
+              Withdraw
             </button>
             <button
               type="submit"
               disabled={!prompt.trim()}
-              className="arcane-button rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-amber-700 hover:bg-amber-600 text-white rounded-lg disabled:opacity-30 disabled:cursor-not-allowed font-bold uppercase tracking-wide shadow-lg border border-amber-500/30"
             >
-              ⚡ Execute Command
+              ⚡ Cast Spell
             </button>
           </div>
         </form>
@@ -231,20 +234,20 @@ interface TerminalViewProps {
 
 function TerminalView({ agent, onClose }: TerminalViewProps) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 border-2 border-amber-700/50 rounded-lg w-[700px] max-w-[90vw] max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between p-3 border-b border-gray-700">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-stone-900 border-2 border-amber-700/50 rounded-lg w-[700px] max-w-[90vw] max-h-[80vh] flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between p-3 border-b border-stone-800 bg-stone-950/50">
           <div className="flex items-center gap-2">
-            <Terminal className="w-5 h-5 text-amber-400" />
-            <span className="text-amber-400 font-bold">
-              {agent.name}'s Terminal
+            <BookOpen className="w-5 h-5 text-amber-400" />
+            <span className="text-amber-400 font-bold font-serif tracking-wide">
+              {agent.name}'s Chronicle
             </span>
             <span
-              className={`px-2 py-0.5 rounded text-xs ${agent.status === 'working'
-                ? 'bg-blue-600'
+              className={`px-2 py-0.5 rounded text-xs uppercase font-bold tracking-wider ${agent.status === 'working'
+                ? 'bg-amber-900/50 text-amber-200 border border-amber-700'
                 : agent.status === 'error'
-                  ? 'bg-red-600'
-                  : 'bg-green-600'
+                  ? 'bg-red-900/50 text-red-200 border border-red-700'
+                  : 'bg-emerald-900/50 text-emerald-200 border border-emerald-700'
                 }`}
             >
               {agent.status}
@@ -252,20 +255,21 @@ function TerminalView({ agent, onClose }: TerminalViewProps) {
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="text-stone-500 hover:text-amber-200"
           >
             ×
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto p-3 font-mono text-sm bg-black">
+        <div className="flex-1 overflow-auto p-4 font-mono text-sm bg-black/90 text-stone-300">
           {agent.terminalOutput.map((line, i) => (
-            <div key={i} className="text-green-400 whitespace-pre-wrap">
-              {line}
+            <div key={i} className="whitespace-pre-wrap mb-1">
+              <span className="text-stone-600 mr-2 opacity-50">Build {i + 100} ::</span>
+              <span className={line.startsWith('>') ? 'text-amber-400 font-bold' : 'text-stone-300'}>{line}</span>
             </div>
           ))}
           {agent.terminalOutput.length === 0 && (
-            <div className="text-gray-500 italic">No output yet...</div>
+            <div className="text-stone-600 italic font-serif">The pages are blank...</div>
           )}
         </div>
       </div>
@@ -350,7 +354,7 @@ export function CommandPanel() {
         case 'stop':
           selectedAgents.forEach((agent) => {
             updateAgentStatus(agent.id, 'idle');
-            addTerminalOutput(agent.id, `[${new Date().toLocaleTimeString()}] Task cancelled by commander`);
+            addTerminalOutput(agent.id, `[${new Date().toLocaleTimeString()}] Decree halted by commander`);
           });
           break;
         case 'focus':
@@ -376,7 +380,7 @@ export function CommandPanel() {
       selectedAgents.forEach((agent) => {
         addAgentTask(agent.id, { prompt });
         updateAgentStatus(agent.id, 'working');
-        addTerminalOutput(agent.id, `[${new Date().toLocaleTimeString()}] New task received: ${prompt}`);
+        addTerminalOutput(agent.id, `[${new Date().toLocaleTimeString()}] New decree received: ${prompt}`);
       });
       setShowTaskDialog(false);
     },
@@ -390,41 +394,41 @@ export function CommandPanel() {
       <div className="absolute bottom-4 right-4 flex gap-3">
         {/* Selected agent info */}
         {hasSelection && (
-          <div className="fantasy-panel rounded-xl p-3.5 min-w-[220px] overflow-hidden">
-            <div className="corner-accent top-left" />
-            <div className="corner-accent top-right" />
-            <div className="corner-accent bottom-left" />
-            <div className="corner-accent bottom-right" />
+          <div className="bg-stone-900/90 border-2 border-amber-900/50 rounded-xl p-3.5 min-w-[220px] overflow-hidden shadow-xl backdrop-blur-sm">
+            <div className="corner-accent top-left" style={{ borderColor: '#d97706', opacity: 0.5 }} />
+            <div className="corner-accent top-right" style={{ borderColor: '#d97706', opacity: 0.5 }} />
+            <div className="corner-accent bottom-left" style={{ borderColor: '#d97706', opacity: 0.5 }} />
+            <div className="corner-accent bottom-right" style={{ borderColor: '#d97706', opacity: 0.5 }} />
 
-            <div className="text-cyan-400 font-bold text-sm uppercase tracking-wider mb-2.5 relative z-10 flex items-center gap-2">
+            <div className="text-amber-500 font-bold text-sm uppercase tracking-wider mb-2.5 relative z-10 flex items-center gap-2 font-serif drop-shadow-sm">
               <span className="animate-pulse">●</span> Selected ({selectedAgents.length})
             </div>
-            <div className="space-y-2.5 max-h-[150px] overflow-auto relative z-10">
+            <div className="space-y-2.5 max-h-[150px] overflow-auto relative z-10 custom-scrollbar">
               {selectedAgents.slice(0, 5).map((agent) => (
                 <div key={agent.id} className="flex items-center gap-2.5">
-                  <div className="text-cyan-400 drop-shadow-[0_0_4px_rgba(6,182,212,0.3)]">{CLASS_ICONS[agent.class]}</div>
+                  <div className="text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.3)]">{CLASS_ICONS[agent.class]}</div>
                   <div className="flex-1">
-                    <div className="text-white text-sm font-medium">{agent.name}</div>
-                    <div className="text-xs text-gray-400 capitalize">{agent.status}</div>
+                    <div className="text-stone-200 text-sm font-medium font-serif tracking-wide">{agent.name}</div>
+                    <div className="text-xs text-stone-500 capitalize">{agent.status}</div>
                   </div>
                   <div className="text-right">
-                    <div className="w-16 h-1.5 bg-gray-950/60 rounded-full overflow-hidden shadow-inner">
+                    <div className="w-16 h-1.5 bg-black/60 rounded-full overflow-hidden shadow-inner border border-stone-800">
                       <div
-                        className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-                        style={{ width: `${agent.health}%`, boxShadow: '0 0 6px rgba(6, 182, 212, 0.5)' }}
+                        className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full"
+                        style={{ width: `${agent.health}%`, boxShadow: '0 0 6px rgba(16, 185, 129, 0.4)' }}
                       />
                     </div>
-                    <div className="w-16 h-1.5 bg-gray-950/60 rounded-full overflow-hidden mt-1 shadow-inner">
+                    <div className="w-16 h-1.5 bg-black/60 rounded-full overflow-hidden mt-1 shadow-inner border border-stone-800">
                       <div
-                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-                        style={{ width: `${agent.mana}%`, boxShadow: '0 0 6px rgba(168, 85, 247, 0.5)' }}
+                        className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 rounded-full"
+                        style={{ width: `${agent.mana}%`, boxShadow: '0 0 6px rgba(6, 182, 212, 0.4)' }}
                       />
                     </div>
                   </div>
                 </div>
               ))}
               {selectedAgents.length > 5 && (
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-stone-500 italic">
                   +{selectedAgents.length - 5} more
                 </div>
               )}
@@ -433,21 +437,21 @@ export function CommandPanel() {
         )}
 
         {/* Command buttons */}
-        <div className="fantasy-panel rounded-xl p-2.5 overflow-hidden">
-          <div className="corner-accent top-left" />
-          <div className="corner-accent top-right" />
-          <div className="corner-accent bottom-left" />
-          <div className="corner-accent bottom-right" />
+        <div className="bg-stone-900/90 border-2 border-amber-900/50 rounded-xl p-2.5 overflow-hidden shadow-xl backdrop-blur-sm">
+          <div className="corner-accent top-left" style={{ borderColor: '#d97706', opacity: 0.5 }} />
+          <div className="corner-accent top-right" style={{ borderColor: '#d97706', opacity: 0.5 }} />
+          <div className="corner-accent bottom-left" style={{ borderColor: '#d97706', opacity: 0.5 }} />
+          <div className="corner-accent bottom-right" style={{ borderColor: '#d97706', opacity: 0.5 }} />
 
           <div className="grid grid-cols-3 gap-1.5 relative z-10">
             {/* Spawn button */}
             <div className="relative">
               <button
                 onClick={() => setShowSpawnMenu(!showSpawnMenu)}
-                className="w-14 h-14 bg-gradient-to-b from-cyan-900/40 to-blue-900/40 hover:from-cyan-800/50 hover:to-blue-800/50 border border-cyan-500/40 rounded-lg flex flex-col items-center justify-center text-cyan-400 transition-all hover:shadow-[0_0_12px_rgba(6,182,212,0.25)]"
-                title="Summon Agent (N)"
+                className="w-14 h-14 bg-gradient-to-b from-amber-900/40 to-orange-900/40 hover:from-amber-800/50 hover:to-orange-800/50 border border-amber-500/40 rounded-lg flex flex-col items-center justify-center text-amber-400 transition-all hover:shadow-[0_0_12px_rgba(245,158,11,0.25)]"
+                title="Summon Unit (N)"
               >
-                <Zap className="w-5 h-5 drop-shadow-[0_0_4px_rgba(6,182,212,0.5)]" />
+                <Zap className="w-5 h-5 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]" />
                 <span className="text-[10px] mt-0.5 font-bold">N</span>
               </button>
               {showSpawnMenu && (
@@ -465,8 +469,8 @@ export function CommandPanel() {
                 onClick={() => handleCommand(cmd)}
                 disabled={cmd.requiresSelection && !hasSelection}
                 className={`w-14 h-14 border rounded-lg flex flex-col items-center justify-center transition-all ${cmd.requiresSelection && !hasSelection
-                  ? 'bg-gray-950/40 border-gray-800/30 text-gray-700 cursor-not-allowed'
-                  : 'bg-gray-900/40 hover:bg-cyan-900/30 border-gray-700/40 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 hover:shadow-[0_0_8px_rgba(6,182,212,0.15)]'
+                  ? 'bg-black/40 border-stone-800/30 text-stone-700 cursor-not-allowed'
+                  : 'bg-black/20 hover:bg-amber-900/30 border-stone-700/40 text-stone-400 hover:text-amber-400 hover:border-amber-500/30 hover:shadow-[0_0_8px_rgba(245,158,11,0.15)]'
                   }`}
                 title={`${cmd.description} (${cmd.hotkey})`}
               >

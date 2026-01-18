@@ -199,14 +199,26 @@ export function IsometricAgent({ agent, isSelected, onSelect, onSpawnEffect }: I
       )}
 
       {/* Agent sprite */}
-      {agentTexture && agentTexture !== Texture.WHITE ? (
-        <pixiSprite
-          texture={agentTexture}
-          anchor={{ x: 0.5, y: 1 }}
-          y={TILE_HEIGHT / 2}
-          scale={{ x: flipX ? -1 : 1, y: 1 }}
-        />
-      ) : (
+      {agentTexture && agentTexture !== Texture.WHITE ? (() => {
+        // Auto-scale agent sprite if it's too large
+        const targetWidth = TILE_HEIGHT * 1.5; // Agents roughly match tile height
+        let scaleY = 1.0;
+        let scaleX = flipX ? -1.0 : 1.0;
+
+        if (agentTexture.height > targetWidth) {
+          scaleY = targetWidth / agentTexture.height;
+          scaleX = (flipX ? -1.0 : 1.0) * scaleY; // Maintain aspect ratio
+        }
+
+        return (
+          <pixiSprite
+            texture={agentTexture}
+            anchor={{ x: 0.5, y: 1 }}
+            y={TILE_HEIGHT / 2}
+            scale={{ x: scaleX, y: scaleY }}
+          />
+        );
+      })() : (
         <pixiGraphics
           draw={(g: Graphics) => {
             g.clear();

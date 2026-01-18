@@ -30,18 +30,18 @@ function StatusBar({
   const percent = Math.round((value / max) * 100);
 
   return (
-    <div className="relative h-3 bg-black/60 rounded-sm overflow-hidden">
+    <div className="relative h-3 bg-stone-950/80 border border-stone-800 rounded-sm overflow-hidden">
       <div
         className="absolute inset-y-0 left-0 transition-all duration-300"
         style={{
           width: `${percent}%`,
-          background: `linear-gradient(90deg, ${color}90, ${color})`,
-          boxShadow: `0 0 8px ${color}50`,
+          background: `linear-gradient(180deg, ${color} 0%, ${color}cc 100%)`,
+          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.2)`,
         }}
       />
-      <div className="absolute inset-0 flex items-center justify-between px-1.5 text-[9px] font-mono">
-        <span className="text-white/70 uppercase tracking-wider">{label}</span>
-        {showPercent && <span className="text-white/90 font-bold">{percent}%</span>}
+      <div className="absolute inset-0 flex items-center justify-between px-1.5 text-[9px] font-mono z-10">
+        <span className="text-stone-200 uppercase tracking-wider font-bold drop-shadow-md">{label}</span>
+        {showPercent && <span className="text-white font-bold drop-shadow-md">{percent}%</span>}
       </div>
     </div>
   );
@@ -69,24 +69,24 @@ function ActivityBar({ agent }: { agent: Agent }) {
 
   if (agent.activity === 'idle' && !agent.needsAttention) {
     return (
-      <div className="h-4 bg-black/40 rounded-sm flex items-center px-2 text-[10px] text-gray-500">
-        <span>Awaiting orders...</span>
+      <div className="h-4 bg-black/40 border border-stone-800/50 rounded-sm flex items-center px-2 text-[10px] text-stone-500 font-serif italic">
+        <span>Awaiting command...</span>
       </div>
     );
   }
 
   return (
     <div
-      className="h-5 rounded-sm flex items-center gap-2 px-2 text-[10px] font-medium relative overflow-hidden"
+      className="h-5 rounded-sm flex items-center gap-2 px-2 text-[10px] font-medium relative overflow-hidden border border-stone-700/50"
       style={{
-        background: `linear-gradient(90deg, ${activityInfo.color}30, ${activityInfo.color}10)`,
+        background: `linear-gradient(90deg, ${activityInfo.color}20, ${activityInfo.color}05)`,
         borderLeft: `2px solid ${activityInfo.color}`,
       }}
     >
       {/* Animated progress bar for working states */}
       {agent.status === 'working' && (
         <div
-          className="absolute inset-0 opacity-30"
+          className="absolute inset-0 opacity-20"
           style={{
             background: `linear-gradient(90deg, transparent, ${activityInfo.color}50, transparent)`,
             animation: 'shimmer 2s infinite',
@@ -95,10 +95,10 @@ function ActivityBar({ agent }: { agent: Agent }) {
       )}
 
       <span className="relative z-10">{activityInfo.icon}</span>
-      <span className="relative z-10 flex-1 truncate" style={{ color: activityInfo.color }}>
+      <span className="relative z-10 flex-1 truncate font-serif" style={{ color: activityInfo.color }}>
         {agent.activityDetails || activityInfo.label}
       </span>
-      <span className="relative z-10 text-white/50 font-mono">{formatTime(elapsed)}</span>
+      <span className="relative z-10 text-stone-400 font-mono">{formatTime(elapsed)}</span>
     </div>
   );
 }
@@ -177,12 +177,13 @@ function AgentFrame({
     }
     if (isSelected) {
       return {
-        borderColor: classColor,
-        boxShadow: `0 0 15px ${classColor}40`,
+        borderColor: '#f59e0b', // Gold border for selection
+        boxShadow: `0 0 15px rgba(245, 158, 11, 0.4)`,
+        backgroundColor: 'rgba(28, 25, 23, 0.95)', // Darker stone when selected
       };
     }
     return {
-      borderColor: 'rgba(255,255,255,0.1)',
+      borderColor: 'rgba(120, 113, 108, 0.3)', // Stone border
       boxShadow: 'none',
     };
   };
@@ -202,8 +203,8 @@ function AgentFrame({
       onClick={() => selectAgent(agent.id)}
       className={`
         relative p-3 rounded-lg cursor-pointer transition-all duration-200
-        bg-gray-900/90 border-2 backdrop-blur-sm
-        hover:bg-gray-800/90 hover:scale-[1.02]
+        bg-stone-900/90 border-2 backdrop-blur-sm
+        hover:bg-stone-800/90 hover:scale-[1.02] hover:border-stone-500
         ${agent.needsAttention ? 'animate-attention' : ''}
         ${isSpawning ? 'animate-spawn-emerge' : ''}
       `}
@@ -221,10 +222,10 @@ function AgentFrame({
             style={{ borderColor: classColor }}
           />
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-display font-black text-lg uppercase tracking-wider animate-[level-up-text_1.5s_ease-out]"
-            style={{ color: classColor, textShadow: `0 0 20px ${classColor}` }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-display font-black text-lg uppercase tracking-wider animate-[level-up-text_1.5s_ease-out] drop-shadow-lg"
+            style={{ color: '#fbbf24', textShadow: `0 0 20px #fbbf24` }}
           >
-            Level Up!
+            Ascension!
           </div>
         </div>
       )}
@@ -232,7 +233,7 @@ function AgentFrame({
       {/* Attention indicator */}
       {agent.needsAttention && (
         <div
-          className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-sm animate-bounce"
+          className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-sm animate-bounce border-2 border-black"
           style={{
             background: agent.attentionReason === 'error' ? '#ef4444' : '#eab308',
             boxShadow: `0 0 10px ${agent.attentionReason === 'error' ? '#ef4444' : '#eab308'}`,
@@ -246,22 +247,22 @@ function AgentFrame({
       <div className="flex items-center gap-3 mb-2">
         {/* Portrait */}
         <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center text-xl relative"
+          className="w-10 h-10 rounded-lg flex items-center justify-center text-xl relative bg-black/40"
           style={{
-            background: `linear-gradient(135deg, ${classColor}40, ${classColor}20)`,
             border: `1px solid ${classColor}60`,
+            boxShadow: `inset 0 0 10px ${classColor}20`,
           }}
         >
           {classIcon}
           {/* Status dot */}
           <div
-            className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-gray-900"
+            className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-stone-900"
             style={{ background: statusColors[agent.status] || '#6b7280' }}
           />
           {/* Loot indicator */}
           {agent.producedFiles.length > 0 && (
             <div
-              className="absolute -top-1 -left-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+              className="absolute -top-1 -left-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold border border-amber-900"
               style={{
                 background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 boxShadow: '0 0 6px rgba(245,158,11,0.5)',
@@ -277,18 +278,19 @@ function AgentFrame({
         {/* Name and status */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-white truncate">{agent.name}</span>
+            <span className="font-bold text-stone-200 truncate font-serif tracking-wide">{agent.name}</span>
             <span
               className="text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider"
               style={{
                 background: `${statusColors[agent.status]}20`,
                 color: statusColors[agent.status],
+                border: `1px solid ${statusColors[agent.status]}40`
               }}
             >
               {agent.status}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-[10px] text-gray-500">
+          <div className="flex items-center gap-2 text-[10px] text-stone-500">
             <span className="truncate">{classConfig?.title || agent.class} • Lv.{agent.level}</span>
             {/* Talent indicator */}
             {(agent.talents.points > 0 || Object.keys(agent.talents.allocated).length > 0) && (
@@ -302,7 +304,7 @@ function AgentFrame({
                   transition-all duration-200 hover:scale-105
                   ${agent.talents.points > 0
                     ? 'bg-amber-500/30 border border-amber-500/50 text-amber-400 animate-pulse'
-                    : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white'
+                    : 'bg-white/5 border border-white/10 text-stone-400 hover:text-white'
                   }
                 `}
                 title={`${agent.talents.points} talent points available`}
@@ -317,12 +319,12 @@ function AgentFrame({
 
       {/* Resource bars */}
       <div className="space-y-1.5">
-        {/* Health = API Usage */}
+        {/* Health = API Usage = Energy */}
         <StatusBar
           value={agent.usagePercent}
           max={100}
           color="#22c55e"
-          label="Usage"
+          label="Energy"
         />
 
         {/* Mana = Context */}
@@ -330,7 +332,7 @@ function AgentFrame({
           value={contextPercent}
           max={100}
           color="#3b82f6"
-          label="Context"
+          label="Mana"
         />
 
         {/* Activity/Cast bar */}
@@ -363,22 +365,22 @@ export function PartyFrames() {
   const attentionCount = agentList.filter((a) => a.needsAttention).length;
 
   return (
-    <div className="fixed top-20 left-4 w-72 z-40">
+    <div className="fixed top-24 left-4 w-72 z-40">
       {/* Header */}
       <div className="flex items-center justify-between mb-2 px-1">
-        <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">
-          Party ({agentList.length})
+        <span className="text-xs font-bold text-amber-400 uppercase tracking-widest font-serif drop-shadow-sm">
+          Warband ({agentList.length})
         </span>
         {attentionCount > 0 && (
-          <span className="text-xs font-bold text-yellow-400 animate-pulse flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-yellow-400" />
-            {attentionCount} need attention
+          <span className="text-xs font-bold text-red-400 animate-pulse flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-red-400" />
+            {attentionCount} need aid
           </span>
         )}
       </div>
 
       {/* Agent frames */}
-      <div className="space-y-2 max-h-[calc(100vh-160px)] overflow-y-auto pr-1 scrollbar-thin">
+      <div className="space-y-2 max-h-[calc(100vh-180px)] overflow-y-auto pr-1 scrollbar-thin">
         {sortedAgents.map((agent) => (
           <AgentFrame
             key={agent.id}

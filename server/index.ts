@@ -15,47 +15,56 @@ import * as os from 'os';
 const PORT = 3001;
 
 // Agent class configurations - maps class to CLI command
-// Commands are simple: claude, codex, gemini
+// Use full paths with appropriate flags to avoid shell function issues
 interface AgentClassConfig {
   id: string;
-  cli: 'claude' | 'codex' | 'gemini';
+  cli: string; // Full command with path and flags
   description: string;
 }
+
+// Get CLI binary paths from npmglobal or use fallback
+const NPM_GLOBAL_BIN = path.join(os.homedir(), 'npmglobal', 'bin');
+const CLI_COMMANDS = {
+  // Claude Code needs --dangerously-skip-permissions to skip confirmation prompts
+  claude: `${path.join(NPM_GLOBAL_BIN, 'claude')} --dangerously-skip-permissions`,
+  codex: path.join(NPM_GLOBAL_BIN, 'codex'),
+  gemini: path.join(NPM_GLOBAL_BIN, 'gemini'),
+};
 
 const AGENT_CLASSES: Record<string, AgentClassConfig> = {
   // Claude-based classes
   mage: {
     id: 'mage',
-    cli: 'claude',
+    cli: CLI_COMMANDS.claude,
     description: 'Claude Opus 4.5 - Powerful, versatile AI mage',
   },
   architect: {
     id: 'architect',
-    cli: 'claude',
+    cli: CLI_COMMANDS.claude,
     description: 'Claude Opus 4.5 - System design specialist',
   },
   scout: {
     id: 'scout',
-    cli: 'claude',
+    cli: CLI_COMMANDS.claude,
     description: 'Claude - Fast exploration agent',
   },
   engineer: {
     id: 'engineer',
-    cli: 'claude',
+    cli: CLI_COMMANDS.claude,
     description: 'Claude - Code specialist',
   },
 
   // Codex-based classes
   guardian: {
     id: 'guardian',
-    cli: 'codex',
+    cli: CLI_COMMANDS.codex,
     description: 'Codex - Security/review specialist',
   },
 
   // Gemini-based classes
   designer: {
     id: 'designer',
-    cli: 'gemini',
+    cli: CLI_COMMANDS.gemini,
     description: 'Gemini - UI/UX specialist',
   },
 };
@@ -154,7 +163,10 @@ async function spawnAgent(
   console.log(`[AgentForge] ${classConfig.description}`);
 
   // Spawn CLI in a PTY
-  const shell = os.platform() === 'win32' ? 'powershell.exe' : 'bash';
+  // Use plain bash/zsh and add npmglobal to PATH for CLI commands
+  const shell = os.platform() === 'win32' ? 'powershell.exe' : '/bin/zsh';
+  const npmGlobalBin = path.join(os.homedir(), 'npmglobal', 'bin');
+  const currentPath = process.env.PATH || '';
   const ptyProcess = pty.spawn(shell, [], {
     name: 'xterm-256color',
     cols: 120,
@@ -164,6 +176,7 @@ async function spawnAgent(
       ...process.env,
       TERM: 'xterm-256color',
       COLORTERM: 'truecolor',
+      PATH: `${npmGlobalBin}:${currentPath}`,
     },
   });
 
@@ -186,6 +199,10 @@ async function spawnAgent(
 
   // Handle PTY output
   ptyProcess.onData((data) => {
+    // Log output for debugging (truncate if too long)
+    const preview = data.length > 100 ? data.substring(0, 100) + '...' : data;
+    console.log(`[AgentForge] Output from "${name}":`, preview.replace(/\n/g, '\\n'));
+
     broadcast({
       type: 'agent:output',
       agentId: id,
@@ -217,17 +234,20 @@ async function spawnAgent(
 
   agents.set(id, agent);
 
-  // Start the appropriate CLI after a brief delay to let shell initialize
+  // Start the appropriate CLI after a brief delay to let login shell initialize
+  // Login shell needs more time to source config files
   setTimeout(() => {
+    console.log(`[AgentForge] Starting CLI: ${cliCommand}`);
     ptyProcess.write(`${cliCommand}\r`);
 
     // If there's an initial prompt, send it after CLI starts
     if (initialPrompt) {
       setTimeout(() => {
+        console.log(`[AgentForge] Sending initial prompt to "${name}"`);
         ptyProcess.write(initialPrompt + '\r');
-      }, 2000);
+      }, 3000);
     }
-  }, 500);
+  }, 1000);
 
   return agent;
 }
