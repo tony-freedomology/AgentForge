@@ -1,10 +1,11 @@
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn, SlideInLeft } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, AgentColors } from '../../constants/theme';
+import { EmptyStates } from '../../constants/assets';
 import { useChronicleStore } from '../../stores/chronicleStore';
 import { ChronicleEntry, ChronicleEntryType } from '../../shared/types/chronicle';
 import { AGENT_CLASSES } from '../../shared/types/agent';
@@ -77,7 +78,11 @@ export default function FeedScreen() {
   const ListEmpty = useCallback(
     () => (
       <View style={styles.emptyContainer}>
-        <Ionicons name="book-outline" size={64} color={Colors.textMuted} />
+        <Image
+          source={EmptyStates.chronicle}
+          style={styles.emptyImage}
+          resizeMode="contain"
+        />
         <Text style={styles.emptyTitle}>The Chronicle is Empty</Text>
         <Text style={styles.emptyText}>
           Activity from your agents will appear here
@@ -279,11 +284,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.xxl * 2,
   },
+  emptyImage: {
+    width: 150,
+    height: 150,
+    marginBottom: Spacing.md,
+  },
   emptyTitle: {
     fontSize: FontSize.xl,
     fontWeight: '700',
     color: Colors.text,
-    marginTop: Spacing.lg,
   },
   emptyText: {
     fontSize: FontSize.md,

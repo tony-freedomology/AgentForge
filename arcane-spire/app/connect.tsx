@@ -9,11 +9,13 @@ import {
   ScrollView,
   Clipboard,
   Alert,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize } from '../constants/theme';
+import { Onboarding as OnboardingAssets } from '../constants/assets';
 import { useConnectionStore } from '../stores/connectionStore';
 import { useSpireConnection } from '../hooks/useSpireConnection';
 import { FantasyCard } from '../components/ui/FantasyCard';
@@ -449,6 +451,11 @@ export default function ConnectScreen() {
   if (step === 'connecting') {
     return (
       <SafeAreaView style={styles.centerContainer}>
+        <Image
+          source={OnboardingAssets.statusConnecting}
+          style={styles.statusImage}
+          resizeMode="contain"
+        />
         <LoadingRune size="lg" label="Establishing arcane link..." />
         <Text style={styles.connectingUrl}>{connectionUrl}</Text>
       </SafeAreaView>
@@ -460,7 +467,11 @@ export default function ConnectScreen() {
     return (
       <SafeAreaView style={styles.centerContainer}>
         <View style={styles.errorContent}>
-          <Text style={styles.errorIcon}>🔮 ❌</Text>
+          <Image
+            source={OnboardingAssets.statusError}
+            style={styles.statusImage}
+            resizeMode="contain"
+          />
           <Text style={styles.errorTitle}>Connection Failed</Text>
           <Text style={styles.errorText}>
             Could not reach the daemon at:
@@ -486,7 +497,11 @@ export default function ConnectScreen() {
   return (
     <SafeAreaView style={styles.centerContainer}>
       <View style={styles.successContent}>
-        <Text style={styles.successIcon}>🏰 ✨ 🏰</Text>
+        <Image
+          source={OnboardingAssets.statusConnected}
+          style={styles.statusImageLarge}
+          resizeMode="contain"
+        />
         <Text style={styles.successTitle}>YOUR SPIRE IS CONNECTED!</Text>
         <Text style={styles.successText}>
           {currentConnection?.name || 'Your Forge'}
@@ -765,13 +780,21 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
 
+  // Status images
+  statusImage: {
+    width: 100,
+    height: 100,
+    marginBottom: Spacing.lg,
+  },
+  statusImageLarge: {
+    width: 150,
+    height: 150,
+    marginBottom: Spacing.lg,
+  },
+
   // Error
   errorContent: {
     alignItems: 'center',
-  },
-  errorIcon: {
-    fontSize: 48,
-    marginBottom: Spacing.lg,
   },
   errorTitle: {
     fontSize: FontSize.xl,

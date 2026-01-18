@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, Image, ImageSourcePropType } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize } from '../../constants/theme';
 import { StatusColors } from '../../constants/theme';
+import { Icons } from '../../constants/assets';
 import { usePulseAnimation } from '../../hooks/useAnimatedValue';
 import { AgentStatus, AgentActivity } from '../../shared/types/agent';
 
@@ -15,13 +15,13 @@ interface StatusBadgeProps {
   style?: ViewStyle;
 }
 
-const STATUS_CONFIG: Record<AgentStatus, { icon: string; label: string; pulsing: boolean }> = {
-  spawning: { icon: 'sparkles', label: 'Spawning', pulsing: true },
-  channeling: { icon: 'flash', label: 'Channeling', pulsing: false },
-  dormant: { icon: 'moon', label: 'Dormant', pulsing: false },
-  awaiting: { icon: 'help-circle', label: 'Awaiting', pulsing: true },
-  complete: { icon: 'checkmark-circle', label: 'Complete', pulsing: true },
-  error: { icon: 'warning', label: 'Error', pulsing: true },
+const STATUS_CONFIG: Record<AgentStatus, { icon: ImageSourcePropType; label: string; pulsing: boolean }> = {
+  spawning: { icon: Icons.status.spawning, label: 'Spawning', pulsing: true },
+  channeling: { icon: Icons.status.working, label: 'Channeling', pulsing: false },
+  dormant: { icon: Icons.status.idle, label: 'Dormant', pulsing: false },
+  awaiting: { icon: Icons.status.waiting, label: 'Awaiting', pulsing: true },
+  complete: { icon: Icons.status.complete, label: 'Complete', pulsing: true },
+  error: { icon: Icons.status.error, label: 'Error', pulsing: true },
 };
 
 const SIZE_CONFIG = {
@@ -56,10 +56,10 @@ export function StatusBadge({
         pulseStyle,
       ]}
     >
-      <Ionicons
-        name={config.icon as any}
-        size={sizeConfig.iconSize}
-        color={color}
+      <Image
+        source={config.icon}
+        style={{ width: sizeConfig.iconSize, height: sizeConfig.iconSize }}
+        resizeMode="contain"
       />
       {showLabel && (
         <Text
@@ -86,17 +86,17 @@ interface ActivityBadgeProps {
   style?: ViewStyle;
 }
 
-const ACTIVITY_ICONS: Record<AgentActivity, string> = {
-  idle: 'moon-outline',
-  thinking: 'bulb-outline',
-  researching: 'search-outline',
-  reading: 'book-outline',
-  writing: 'pencil-outline',
-  testing: 'flask-outline',
-  building: 'hammer-outline',
-  git: 'git-branch-outline',
-  waiting: 'chatbubble-ellipses-outline',
-  error: 'alert-circle-outline',
+const ACTIVITY_ICONS: Record<AgentActivity, ImageSourcePropType> = {
+  idle: Icons.activity.idle,
+  thinking: Icons.activity.thinking,
+  researching: Icons.activity.researching,
+  reading: Icons.activity.reading,
+  writing: Icons.activity.writing,
+  testing: Icons.activity.testing,
+  building: Icons.activity.building,
+  git: Icons.activity.git,
+  waiting: Icons.activity.waiting,
+  error: Icons.activity.error,
 };
 
 export function ActivityBadge({ activity, size = 'sm', style }: ActivityBadgeProps) {
@@ -104,10 +104,10 @@ export function ActivityBadge({ activity, size = 'sm', style }: ActivityBadgePro
 
   return (
     <View style={[styles.activityBadge, style]}>
-      <Ionicons
-        name={ACTIVITY_ICONS[activity] as any}
-        size={iconSize}
-        color={Colors.textSecondary}
+      <Image
+        source={ACTIVITY_ICONS[activity]}
+        style={{ width: iconSize, height: iconSize }}
+        resizeMode="contain"
       />
     </View>
   );

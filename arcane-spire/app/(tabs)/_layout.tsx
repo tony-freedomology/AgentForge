@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
-import { View, StyleSheet, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, StyleSheet, Platform, Image, ImageSourcePropType } from 'react-native';
 import { Colors, Spacing, FontSize } from '../../constants/theme';
+import { Icons } from '../../constants/assets';
 import { useAgentStore } from '../../stores/agentStore';
 import { useQuestStore } from '../../stores/questStore';
 import { useChronicleStore } from '../../stores/chronicleStore';
@@ -28,10 +28,9 @@ export default function TabLayout() {
         name="spire"
         options={{
           title: 'Spire',
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ size, focused }) => (
             <TabIcon
-              name={focused ? 'business' : 'business-outline'}
-              color={color}
+              source={focused ? Icons.tabs.spireActive : Icons.tabs.spire}
               size={size}
               badge={agentsNeedingAttention}
             />
@@ -42,10 +41,9 @@ export default function TabLayout() {
         name="feed"
         options={{
           title: 'Chronicle',
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ size, focused }) => (
             <TabIcon
-              name={focused ? 'document-text' : 'document-text-outline'}
-              color={color}
+              source={focused ? Icons.tabs.chronicleActive : Icons.tabs.chronicle}
               size={size}
               badge={unreadChronicle}
             />
@@ -56,10 +54,9 @@ export default function TabLayout() {
         name="quests"
         options={{
           title: 'Quests',
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ size, focused }) => (
             <TabIcon
-              name={focused ? 'map' : 'map-outline'}
-              color={color}
+              source={focused ? Icons.tabs.questsActive : Icons.tabs.quests}
               size={size}
               badge={pendingQuests}
             />
@@ -70,10 +67,9 @@ export default function TabLayout() {
         name="grimoire"
         options={{
           title: 'Grimoire',
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ size, focused }) => (
             <TabIcon
-              name={focused ? 'book' : 'book-outline'}
-              color={color}
+              source={focused ? Icons.tabs.grimoireActive : Icons.tabs.grimoire}
               size={size}
             />
           ),
@@ -85,16 +81,19 @@ export default function TabLayout() {
 
 // Tab icon with optional badge
 interface TabIconProps {
-  name: string;
-  color: string;
+  source: ImageSourcePropType;
   size: number;
   badge?: number;
 }
 
-function TabIcon({ name, color, size, badge }: TabIconProps) {
+function TabIcon({ source, size, badge }: TabIconProps) {
   return (
     <View style={styles.iconContainer}>
-      <Ionicons name={name as any} size={size} color={color} />
+      <Image
+        source={source}
+        style={{ width: size, height: size }}
+        resizeMode="contain"
+      />
       {badge !== undefined && badge > 0 && (
         <CountBadge count={badge} style={styles.badge} />
       )}
