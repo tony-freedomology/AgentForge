@@ -10,6 +10,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { extend, useTick } from '@pixi/react';
 import { Graphics, Ticker } from 'pixi.js';
+import { soundManager } from '../../services/soundManager';
 
 extend({ Graphics });
 
@@ -151,6 +152,24 @@ export function useParticleEffects() {
   ) => {
     const id = nextId.current++;
     setEffects((prev) => [...prev, { id, x, y, type, color }]);
+
+    // Trigger corresponding sound effect
+    switch (type) {
+      case 'spawn':
+        soundManager.play('agent_spawn');
+        break;
+      case 'levelup':
+        soundManager.play('agent_level_up');
+        break;
+      case 'teleport':
+        // Subtle sound for teleport/arrival
+        soundManager.play('ui_success', { volume: 0.3 });
+        break;
+      case 'magic':
+        soundManager.play('talent_allocate', { volume: 0.5 });
+        break;
+    }
+
     return id;
   };
 

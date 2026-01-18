@@ -13,6 +13,7 @@ import { extend, useTick } from '@pixi/react';
 import { Graphics, Text, TextStyle, Ticker, Sprite, Texture } from 'pixi.js';
 import { gridToScreen, TILE_HEIGHT } from '../../utils/isoCoords';
 import { assetLoader } from '../../utils/assetLoader';
+import { soundManager } from '../../services/soundManager';
 import type { Agent, AgentActivity } from '../../types/agent';
 import { ACTIVITY_ICONS } from '../../types/agent';
 
@@ -61,7 +62,30 @@ export function IsometricAgent({ agent, isSelected, onSelect, onSpawnEffect }: I
   // Handle agent click
   const handleClick = () => {
     onSelect(agent.id);
+    soundManager.play('agent_select');
   };
+
+  // Play attention sound periodically when agent needs attention
+  const lastAttentionSound = useRef(0);
+  useEffect(() => {
+    if (!agent.needsAttention) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      if (now - lastAttentionSound.current > 5000) { // Every 5 seconds
+        soundManager.play('agent_attention', { volume: 0.6 });
+        lastAttentionSound.current = now;
+      }
+    }, 1000);
+
+    // Play immediately on first attention
+    if (lastAttentionSound.current === 0) {
+      soundManager.play('agent_attention');
+      lastAttentionSound.current = Date.now();
+    }
+
+    return () => clearInterval(interval);
+  }, [agent.needsAttention]);
 
   const [currentPosition, setCurrentPosition] = useState({ x: targetX, y: targetY });
   const [direction, setDirection] = useState<Direction>('s');
