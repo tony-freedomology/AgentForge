@@ -119,6 +119,10 @@ export interface Agent {
   lastActiveAt: Date;
   controlGroup?: number; // 1-9 for Ctrl+# selection
 
+  // Server-provided metadata
+  workingDir?: string;   // Working directory for the agent
+  gitBranch?: string;    // Current git branch if in a repo
+
   // Activity tracking (Phase 1)
   activity: AgentActivity;
   activityStartedAt: number;

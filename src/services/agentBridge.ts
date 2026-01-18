@@ -6,9 +6,30 @@
  */
 
 import { useGameStore } from '../stores/gameStore';
-import type { AgentClass, AgentProvider } from '../types/agent';
+import type { AgentClass, AgentProvider, AgentStatus } from '../types/agent';
+import { toast } from '../stores/toastStore';
 
-const WS_URL = 'ws://localhost:3001';
+// Use environment variable or fallback to localhost
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
+
+// Type definitions for server messages
+interface ServerAgent {
+  id: string;
+  name: string;
+  workingDir: string;
+  gitBranch?: string;
+  status?: AgentStatus;
+}
+
+interface ServerMessage {
+  type: 'init' | 'agent:spawned' | 'agent:output' | 'agent:status' | 'agent:exit' | 'error';
+  agents?: ServerAgent[];
+  agent?: ServerAgent;
+  agentId?: string;
+  data?: string;
+  status?: AgentStatus;
+  message?: string;
+}
 
 // Terminal output parser - strips ANSI codes for clean display
 function stripAnsi(str: string): string {
@@ -80,15 +101,20 @@ class AgentBridge {
   private attemptReconnect() {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error('[AgentBridge] Max reconnection attempts reached');
+      toast.error('Connection Failed', 'Could not connect to AgentForge server after multiple attempts');
       return;
     }
 
     this.reconnectAttempts++;
-    console.log(`[AgentBridge] Reconnecting in ${this.reconnectDelay}ms (attempt ${this.reconnectAttempts})`);
+    // Exponential backoff: 2s, 4s, 8s, 16s, 32s
+    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+    console.log(`[AgentBridge] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
 
     setTimeout(() => {
-      this.connect().catch(() => {});
-    }, this.reconnectDelay);
+      this.connect().catch((error) => {
+        console.error('[AgentBridge] Reconnection failed:', error);
+      });
+    }, delay);
   }
 
   private send(message: object) {
@@ -99,52 +125,62 @@ class AgentBridge {
     }
   }
 
-  private handleMessage(msg: any) {
+  private handleMessage(msg: ServerMessage) {
     const store = useGameStore.getState();
 
     switch (msg.type) {
       case 'init':
-        console.log('[AgentBridge] Received init with', msg.agents.length, 'agents');
-        // Sync existing agents from server
-        msg.agents.forEach((agent: any) => {
-          this.syncAgentToStore(agent);
-        });
+        if (msg.agents) {
+          console.log('[AgentBridge] Received init with', msg.agents.length, 'agents');
+          msg.agents.forEach((agent) => {
+            this.syncAgentToStore(agent);
+          });
+        }
         break;
 
       case 'agent:spawned':
-        console.log('[AgentBridge] Agent spawned:', msg.agent.name);
-        this.syncAgentToStore(msg.agent);
+        if (msg.agent) {
+          console.log('[AgentBridge] Agent spawned:', msg.agent.name);
+          this.syncAgentToStore(msg.agent);
+        }
         break;
 
       case 'agent:output':
-        // Add terminal output to the agent
-        const lines = msg.data.split('\n');
-        lines.forEach((line: string) => {
-          if (line.trim()) {
-            store.addTerminalOutput(msg.agentId, stripAnsi(line));
-          }
-        });
+        if (msg.agentId && msg.data) {
+          // Add terminal output to the agent
+          const lines = msg.data.split('\n');
+          lines.forEach((line: string) => {
+            if (line.trim() && msg.agentId) {
+              store.addTerminalOutput(msg.agentId, stripAnsi(line));
+            }
+          });
+        }
         break;
 
       case 'agent:status':
-        store.updateAgentStatus(msg.agentId, msg.status);
+        if (msg.agentId && msg.status) {
+          store.updateAgentStatus(msg.agentId, msg.status);
+        }
         break;
 
       case 'agent:exit':
-        console.log('[AgentBridge] Agent exited:', msg.agentId);
-        store.removeAgent(msg.agentId);
+        if (msg.agentId) {
+          console.log('[AgentBridge] Agent exited:', msg.agentId);
+          store.removeAgent(msg.agentId);
+        }
         break;
 
       case 'error':
         console.error('[AgentBridge] Server error:', msg.message);
+        toast.error('Server Error', msg.message || 'An unknown error occurred');
         break;
 
       default:
-        console.log('[AgentBridge] Unknown message:', msg.type);
+        console.log('[AgentBridge] Unknown message type');
     }
   }
 
-  private syncAgentToStore(serverAgent: any) {
+  private syncAgentToStore(serverAgent: ServerAgent) {
     const store = useGameStore.getState();
     const existingAgent = store.agents.get(serverAgent.id);
 
@@ -265,6 +301,8 @@ class AgentBridge {
       this.ws = null;
     }
     this.connected = false;
+    this.messageQueue = []; // Clear pending messages
+    this.reconnectAttempts = 0; // Reset reconnection counter
   }
 }
 

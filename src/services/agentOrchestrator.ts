@@ -167,22 +167,32 @@ export class AgentOrchestrator {
         task,
         (line) => store.addTerminalOutput(agentId, line),
         () => {
-          store.updateAgentStatus(agentId, 'completed');
+          const currentStore = useGameStore.getState();
+          currentStore.updateAgentStatus(agentId, 'completed');
           this.activeTasks.delete(agentId);
 
-          // Check for queued tasks
-          const updatedAgent = store.agents.get(agentId);
+          // Check for queued tasks - fetch fresh state after delay
+          const updatedAgent = currentStore.agents.get(agentId);
           if (updatedAgent && updatedAgent.taskQueue.length > 0) {
             // Process next task after a short delay
             setTimeout(() => {
-              const nextTask = updatedAgent.taskQueue[0];
-              // Remove from queue (this is simplified)
-              this.executeTask(agentId, nextTask);
+              // Re-fetch state to get current queue
+              const freshStore = useGameStore.getState();
+              const freshAgent = freshStore.agents.get(agentId);
+              if (freshAgent && freshAgent.taskQueue.length > 0) {
+                const nextTask = freshAgent.taskQueue[0];
+                this.executeTask(agentId, nextTask);
+              }
             }, 500);
           } else {
             // Return to idle after completion
             setTimeout(() => {
-              store.updateAgentStatus(agentId, 'idle');
+              // Re-fetch state to check agent still exists
+              const freshStore = useGameStore.getState();
+              const freshAgent = freshStore.agents.get(agentId);
+              if (freshAgent && freshAgent.status === 'completed') {
+                freshStore.updateAgentStatus(agentId, 'idle');
+              }
             }, 2000);
           }
         },

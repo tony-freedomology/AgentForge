@@ -20,7 +20,7 @@ interface ResourceDisplayProps {
 }
 
 function ResourceDisplay({ icon, current, max, color }: ResourceDisplayProps) {
-  const percentage = (current / max) * 100;
+  const percentage = max > 0 ? (current / max) * 100 : 0;
   const isLow = percentage < 20;
 
   return (
@@ -172,7 +172,7 @@ export function ResourceBar({ useIsometric = true, onToggleView }: ResourceBarPr
             {errorCount > 0 && (
               <div className="flex items-center gap-1.5 text-red-500">
                 <div className="w-2 h-2 rounded-full bg-red-500 status-glow-error animate-bounce" />
-                <span className="tracking-wide font-serif">{errorCount} distrupted</span>
+                <span className="tracking-wide font-serif">{errorCount} disrupted</span>
               </div>
             )}
           </div>

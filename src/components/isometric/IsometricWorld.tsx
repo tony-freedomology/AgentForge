@@ -16,6 +16,7 @@ import { assetLoader, DEFAULT_MANIFEST, loadAgentSprites } from '../../utils/ass
 import { useParticleEffects } from './ParticleEffects';
 import { IsometricAgent } from './IsometricAgent';
 import { useGameStore } from '../../stores/gameStore';
+import { toast } from '../../stores/toastStore';
 
 // Register PixiJS components for JSX use
 extend({ Container, Graphics, Text, Sprite });
@@ -82,6 +83,7 @@ export function IsometricWorld({ width = 800, height = 600 }: IsometricWorldProp
         setAssetsLoaded(true);
       } catch (error) {
         console.error('Failed to load assets:', error);
+        toast.warning('Asset Loading Issue', 'Some assets failed to load. Using fallback graphics.');
         // Continue anyway with fallback graphics
         setAssetsLoaded(true);
       }

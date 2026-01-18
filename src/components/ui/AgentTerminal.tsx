@@ -351,15 +351,15 @@ export function AgentTerminal() {
             </div>
 
             {/* Git info if available */}
-            {(selectedAgent as any).gitBranch && (
+            {selectedAgent.gitBranch && (
               <div className="flex items-center gap-4 mt-2 text-xs">
                 <div className="flex items-center gap-1.5 text-stone-500">
                   <Folder size={12} />
-                  <span className="font-mono truncate max-w-[150px]">{(selectedAgent as any).workingDir}</span>
+                  <span className="font-mono truncate max-w-[150px]">{selectedAgent.workingDir || '~'}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <GitBranch size={12} className="text-emerald-500" />
-                  <span className="text-emerald-400 font-mono font-semibold">{(selectedAgent as any).gitBranch}</span>
+                  <span className="text-emerald-400 font-mono font-semibold">{selectedAgent.gitBranch}</span>
                 </div>
               </div>
             )}

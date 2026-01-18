@@ -265,8 +265,12 @@ export const useGameStore = create<GameState>()(
 
       // Transition to idle after spawn animation
       setTimeout(() => {
-        get().updateAgentStatus(id, 'idle');
-        get().updateAgentActivity(id, 'idle', 'Ready for commands');
+        // Check if agent still exists before updating
+        const agent = get().agents.get(id);
+        if (agent && agent.status === 'spawning') {
+          get().updateAgentStatus(id, 'idle');
+          get().updateAgentActivity(id, 'idle', 'Ready for commands');
+        }
       }, 2000);
 
       // Show toast notification
@@ -613,7 +617,11 @@ export const useGameStore = create<GameState>()(
               // Clear progress when complete
               if (current >= total) {
                 setTimeout(() => {
-                  get().updateAgentProgress(agentId, undefined);
+                  // Check if agent still exists before clearing
+                  const agent = get().agents.get(agentId);
+                  if (agent) {
+                    get().updateAgentProgress(agentId, undefined);
+                  }
                 }, 2000);
               }
               return;
