@@ -39,12 +39,19 @@ except ImportError:
     HAS_REMBG = False
     print("⚠ rembg not available, using chroma key removal")
 
-# API Configuration
-API_KEY = "AIzaSyBLWDR40WPHP8zuZbukdjn-oF9Nncy_avE"
+# API Configuration - load from environment
+API_KEY = os.getenv("GEMINI_API_KEY")
+if not API_KEY:
+    print("ERROR: GEMINI_API_KEY environment variable not set")
+    print("Set it with: export GEMINI_API_KEY='your-key-here'")
+    sys.exit(1)
+
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key={API_KEY}"
 
-# Output base directory
-OUTPUT_BASE = Path("public/assets_isometric")
+# Output base directory - relative to script location for consistency
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+OUTPUT_BASE = PROJECT_ROOT / "public" / "assets_isometric"
 
 # Color palette for reference
 COLORS = {
@@ -189,31 +196,63 @@ MINIMAP = [
 ]
 
 
-def remove_background_chroma(img: Image.Image, tolerance: int = 60) -> Image.Image:
-    """Remove green background using chroma key"""
+def remove_background_chroma(img: Image.Image, green_threshold: int = 180, other_threshold: int = 120) -> Image.Image:
+    """Remove green-screen style background using chroma key.
+
+    Targets opaque pixels where green channel is high and red/blue are low.
+    Preserves existing transparency (pixels with alpha=0 are skipped).
+
+    Note: This is a slow fallback for when rembg is unavailable.
+    Acceptable for small icons (128x128) but not recommended for large images.
+
+    Args:
+        img: PIL Image to process
+        green_threshold: Min green value (inclusive) to treat as background
+        other_threshold: Max red/blue values (inclusive) to treat as background
+
+    Returns:
+        RGBA image with green background pixels made transparent
+    """
+    if img is None:
+        return img
+
     img = img.convert("RGBA")
-    data = img.getdata()
-    new_data = []
+    pixels = img.load()
+    width, height = img.size
 
-    for item in data:
-        r, g, b, a = item
-        # Check if pixel is close to bright green (#00FF00)
-        if g > 200 and r < 100 + tolerance and b < 100 + tolerance:
-            new_data.append((0, 0, 0, 0))
-        else:
-            new_data.append(item)
+    for y in range(height):
+        for x in range(width):
+            r, g, b, a = pixels[x, y]
+            # Skip already transparent pixels to preserve existing alpha
+            if a == 0:
+                continue
+            # Remove green-screen background
+            if g >= green_threshold and r <= other_threshold and b <= other_threshold:
+                pixels[x, y] = (0, 0, 0, 0)
 
-    img.putdata(new_data)
     return img
 
 
 def remove_background(img: Image.Image) -> Image.Image:
-    """Remove background using AI (rembg) or chroma key fallback"""
+    """Remove background - uses AI (rembg) if available, falls back to chroma key.
+
+    Returns:
+        RGBA image with background removed
+    """
+    if img is None:
+        return img
+
     if HAS_REMBG:
         try:
-            return rembg_remove(img)
+            result = rembg_remove(img)
+            # Handle case where rembg returns bytes instead of Image
+            if isinstance(result, bytes):
+                result = Image.open(BytesIO(result))
+            # Fully load the image data before conversion (avoid lazy loading issues)
+            result.load()
+            return result.convert("RGBA")
         except Exception as e:
-            print(f"    ⚠ rembg failed: {e}, using chroma key")
+            print(f"    Warning: rembg failed ({e}), using chroma key fallback")
             return remove_background_chroma(img)
     else:
         return remove_background_chroma(img)

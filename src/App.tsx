@@ -182,6 +182,14 @@ function WelcomeOverlay({ onStart }: { onStart: () => void }) {
   );
 }
 
+// SSR-safe window dimensions helper
+const getWindowDimensions = () => {
+  if (typeof window === 'undefined') {
+    return { width: 1920, height: 1080 }; // SSR fallback
+  }
+  return { width: window.innerWidth, height: window.innerHeight };
+};
+
 function App() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
@@ -189,9 +197,28 @@ function App() {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   const [useIsometric, setUseIsometric] = useState(true); // Phase 0: Default to isometric for testing
+  const [dimensions, setDimensions] = useState(getWindowDimensions);
 
   // Initialize keyboard shortcuts
   useKeyboardShortcuts();
+
+  // Handle window resize for isometric canvas
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleResize = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    // Set initial dimensions (in case SSR fallback was used)
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Connect to backend server
   useEffect(() => {
@@ -271,7 +298,7 @@ function App() {
       {/* 3D Canvas or Isometric World */}
       {useIsometric ? (
         <div className="w-full h-full">
-          <IsometricWorld width={window.innerWidth} height={window.innerHeight} />
+          <IsometricWorld width={dimensions.width} height={dimensions.height} />
         </div>
       ) : (
         <Canvas
