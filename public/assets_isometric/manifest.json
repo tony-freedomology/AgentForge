@@ -122,6 +122,35 @@
       "icon_level_up",
       "icon_talent_point",
       "icon_xp"
+    ],
+    "talents": [
+      "talent_frame_locked",
+      "talent_frame_available",
+      "talent_frame_learned",
+      "talent_frame_maxed"
+    ],
+    "panels": [
+      "panel_talent_tree",
+      "panel_quest_scroll",
+      "panel_loot",
+      "panel_minimap_frame"
+    ],
+    "activities": [
+      "activity_thinking",
+      "activity_researching",
+      "activity_reading",
+      "activity_writing",
+      "activity_testing",
+      "activity_building",
+      "activity_git",
+      "activity_waiting",
+      "activity_error"
+    ],
+    "decorations": [
+      "corner_ornament_gold",
+      "divider_horizontal",
+      "glow_purple",
+      "glow_gold"
     ]
   },
   "effects": [
