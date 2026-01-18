@@ -7,6 +7,8 @@ import {
   FlatList,
   Pressable,
   ViewToken,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +17,8 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
+  withRepeat,
+  withSequence,
   interpolate,
   Extrapolation,
   FadeIn,
@@ -24,6 +28,7 @@ import { Colors, Spacing, BorderRadius, FontSize } from '../constants/theme';
 import { usePrefsStore } from '../stores/prefsStore';
 import { FantasyButton } from '../components/ui/FantasyButton';
 import { AgentSprite } from '../components/ui/PixelAsset';
+import { Onboarding as OnboardingAssets, Backgrounds, AgentSprites } from '../constants/assets';
 import { soundService } from '../services/sound';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -32,9 +37,10 @@ interface OnboardingSlide {
   id: string;
   title: string;
   description: string;
-  agentClass?: 'mage' | 'architect' | 'engineer' | 'scout' | 'guardian' | 'artisan';
-  emoji?: string;
+  image?: ImageSourcePropType;
+  agentShowcase?: boolean;
   features?: string[];
+  accentColor?: string;
 }
 
 const ONBOARDING_SLIDES: OnboardingSlide[] = [
@@ -42,41 +48,102 @@ const ONBOARDING_SLIDES: OnboardingSlide[] = [
     id: 'welcome',
     title: 'Welcome to the Arcane Spire',
     description:
-      'Your mobile command center for AI coding agents. Summon powerful agents, assign quests, and watch your projects come to life.',
-    emoji: '🏰',
+      'Your mobile command center for AI coding agents. Summon powerful champions and watch your projects come to life.',
+    image: OnboardingAssets.welcome,
+    accentColor: Colors.arcane.purple,
   },
   {
     id: 'agents',
     title: 'Summon Your Champions',
     description:
       'Each agent class has unique abilities. From the versatile Mage to the methodical Architect, assemble your perfect party.',
-    agentClass: 'mage',
-    features: ['Mage - Versatile caster', 'Architect - System designer', 'Engineer - Builder'],
+    agentShowcase: true,
+    features: ['Mage - Complex reasoning', 'Architect - System design', 'Engineer - Fast building'],
+    accentColor: Colors.holy.gold,
   },
   {
     id: 'quests',
-    title: 'Assign Quests',
+    title: 'Assign Epic Quests',
     description:
-      'Send your agents on coding quests. They\'ll work autonomously, earning XP and leveling up as they complete tasks.',
-    emoji: '📜',
-    features: ['Auto-complete tasks', 'Earn XP rewards', 'Collect loot (artifacts)'],
+      'Send your agents on coding adventures. They work autonomously, earning XP and leveling up as they conquer tasks.',
+    image: OnboardingAssets.daemon,
+    features: ['Complete tasks autonomously', 'Earn XP rewards', 'Collect artifact loot'],
+    accentColor: Colors.fel.green,
   },
   {
     id: 'connect',
     title: 'Connect Your Forge',
     description:
-      'Link your mobile device to your development machine. Monitor progress, review changes, and command your agents from anywhere.',
-    emoji: '🔗',
-    features: ['WebSocket connection', 'Real-time updates', 'Remote control'],
+      'Link to your development machine via Tailscale. Monitor progress and command your agents from anywhere.',
+    image: OnboardingAssets.connect,
+    features: ['Secure connection', 'Real-time updates', 'Remote control'],
+    accentColor: Colors.frost.blue,
   },
   {
     id: 'ready',
-    title: 'Ready to Begin',
+    title: 'Your Adventure Awaits',
     description:
-      'Your Spire awaits. Connect to your Forge and summon your first agent to start your journey.',
-    emoji: '✨',
+      'The Spire stands ready. Connect your Forge and summon your first agent to begin your journey!',
+    image: OnboardingAssets.success,
+    accentColor: Colors.holy.gold,
   },
 ];
+
+// Animated agent showcase component
+function AgentShowcase() {
+  const floatAnim = useSharedValue(0);
+
+  React.useEffect(() => {
+    floatAnim.value = withRepeat(
+      withSequence(
+        withTiming(-8, { duration: 1500 }),
+        withTiming(0, { duration: 1500 })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: floatAnim.value }],
+  }));
+
+  return (
+    <View style={styles.agentShowcaseContainer}>
+      {/* Background glow */}
+      <View style={styles.showcaseGlow} />
+
+      {/* Agent sprites in a row */}
+      <Animated.View style={[styles.agentRow, animatedStyle]}>
+        <View style={styles.agentSlot}>
+          <AgentSprite agentClass="mage" size="lg" animated />
+          <Text style={styles.agentLabel}>Mage</Text>
+        </View>
+        <View style={[styles.agentSlot, styles.agentCenter]}>
+          <AgentSprite agentClass="architect" size="xl" animated />
+          <Text style={styles.agentLabel}>Architect</Text>
+        </View>
+        <View style={styles.agentSlot}>
+          <AgentSprite agentClass="engineer" size="lg" animated />
+          <Text style={styles.agentLabel}>Engineer</Text>
+        </View>
+      </Animated.View>
+
+      {/* Secondary row */}
+      <View style={styles.agentRowSecondary}>
+        <View style={styles.agentSlotSmall}>
+          <AgentSprite agentClass="scout" size="md" animated />
+        </View>
+        <View style={styles.agentSlotSmall}>
+          <AgentSprite agentClass="guardian" size="md" animated />
+        </View>
+        <View style={styles.agentSlotSmall}>
+          <AgentSprite agentClass="artisan" size="md" animated />
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -101,6 +168,7 @@ export default function OnboardingScreen() {
       });
     } else {
       // Complete onboarding
+      soundService.play('spawn');
       completeOnboarding();
       router.replace('/(tabs)/spire');
     }
@@ -122,28 +190,40 @@ export default function OnboardingScreen() {
     <View style={styles.slide}>
       {/* Visual */}
       <View style={styles.visualContainer}>
-        {item.agentClass ? (
-          <View style={styles.agentShowcase}>
-            <AgentSprite agentClass={item.agentClass} size="xl" animated />
+        {item.agentShowcase ? (
+          <AgentShowcase />
+        ) : item.image ? (
+          <View style={styles.imageContainer}>
+            <Image
+              source={item.image}
+              style={styles.slideImage}
+              resizeMode="contain"
+            />
+            {/* Decorative border */}
+            <View style={[styles.imageBorder, { borderColor: item.accentColor }]} />
           </View>
-        ) : (
-          <Text style={styles.visualEmoji}>{item.emoji}</Text>
-        )}
+        ) : null}
       </View>
 
       {/* Content */}
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>{item.title}</Text>
+        <Text style={[styles.title, { color: item.accentColor || Colors.text }]}>
+          {item.title}
+        </Text>
         <Text style={styles.description}>{item.description}</Text>
 
         {/* Features list */}
         {item.features && (
           <View style={styles.featuresList}>
             {item.features.map((feature, idx) => (
-              <View key={idx} style={styles.featureItem}>
-                <Text style={styles.featureBullet}>✦</Text>
+              <Animated.View
+                key={idx}
+                style={styles.featureItem}
+                entering={FadeIn.delay(idx * 100)}
+              >
+                <View style={[styles.featureBullet, { backgroundColor: item.accentColor }]} />
                 <Text style={styles.featureText}>{feature}</Text>
-              </View>
+              </Animated.View>
             ))}
           </View>
         )}
@@ -152,13 +232,20 @@ export default function OnboardingScreen() {
   );
 
   const isLastSlide = currentIndex === ONBOARDING_SLIDES.length - 1;
+  const currentSlide = ONBOARDING_SLIDES[currentIndex];
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Background decoration */}
+      <View style={styles.bgDecoration}>
+        <View style={[styles.bgOrb, styles.bgOrb1]} />
+        <View style={[styles.bgOrb, styles.bgOrb2]} />
+      </View>
+
       {/* Skip button */}
       {!isLastSlide && (
         <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.skipContainer}>
-          <Pressable onPress={handleSkip}>
+          <Pressable onPress={handleSkip} hitSlop={20}>
             <Text style={styles.skipText}>Skip</Text>
           </Pressable>
         </Animated.View>
@@ -183,7 +270,7 @@ export default function OnboardingScreen() {
 
       {/* Pagination dots */}
       <View style={styles.pagination}>
-        {ONBOARDING_SLIDES.map((_, index) => {
+        {ONBOARDING_SLIDES.map((slide, index) => {
           const dotStyle = useAnimatedStyle(() => {
             const inputRange = [
               (index - 1) * SCREEN_WIDTH,
@@ -191,10 +278,10 @@ export default function OnboardingScreen() {
               (index + 1) * SCREEN_WIDTH,
             ];
 
-            const scale = interpolate(
+            const width = interpolate(
               scrollX.value,
               inputRange,
-              [0.8, 1.2, 0.8],
+              [10, 28, 10],
               Extrapolation.CLAMP
             );
 
@@ -206,25 +293,22 @@ export default function OnboardingScreen() {
             );
 
             return {
-              transform: [{ scale }],
+              width,
               opacity,
+              backgroundColor: index === currentIndex ? slide.accentColor : Colors.stone.dark,
             };
           });
 
           return (
             <Animated.View
               key={index}
-              style={[
-                styles.dot,
-                index === currentIndex && styles.dotActive,
-                dotStyle,
-              ]}
+              style={[styles.dot, dotStyle]}
             />
           );
         })}
       </View>
 
-      {/* Action buttons */}
+      {/* Action button */}
       <View style={styles.footer}>
         <FantasyButton
           variant={isLastSlide ? 'summon' : 'primary'}
@@ -232,7 +316,7 @@ export default function OnboardingScreen() {
           fullWidth
           onPress={handleNext}
         >
-          {isLastSlide ? "🏰 Enter the Spire 🏰" : 'Continue'}
+          {isLastSlide ? "Enter the Spire" : 'Continue'}
         </FantasyButton>
       </View>
     </SafeAreaView>
@@ -243,6 +327,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  bgDecoration: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+  bgOrb: {
+    position: 'absolute',
+    borderRadius: 999,
+    opacity: 0.1,
+  },
+  bgOrb1: {
+    width: 300,
+    height: 300,
+    backgroundColor: Colors.arcane.purple,
+    top: -50,
+    right: -100,
+  },
+  bgOrb2: {
+    width: 200,
+    height: 200,
+    backgroundColor: Colors.frost.blue,
+    bottom: 100,
+    left: -50,
   },
   skipContainer: {
     position: 'absolute',
@@ -258,60 +365,108 @@ const styles = StyleSheet.create({
   slide: {
     width: SCREEN_WIDTH,
     flex: 1,
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xxl,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
   },
   visualContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    maxHeight: SCREEN_HEIGHT * 0.35,
+    maxHeight: SCREEN_HEIGHT * 0.4,
   },
-  visualEmoji: {
-    fontSize: 120,
-  },
-  agentShowcase: {
-    width: 150,
-    height: 150,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.shadow.darker,
+  imageContainer: {
+    width: SCREEN_WIDTH - Spacing.lg * 2,
+    height: SCREEN_HEIGHT * 0.35,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  slideImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imageBorder: {
+    ...StyleSheet.absoluteFillObject,
     borderWidth: 3,
-    borderColor: Colors.arcane.purple,
+    borderRadius: BorderRadius.lg,
+    opacity: 0.3,
+  },
+  agentShowcaseContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.lg,
+  },
+  showcaseGlow: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: Colors.arcane.purple,
+    opacity: 0.15,
+  },
+  agentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    gap: Spacing.md,
+  },
+  agentRowSecondary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xl,
+    marginTop: Spacing.md,
+    opacity: 0.7,
+  },
+  agentSlot: {
+    alignItems: 'center',
+  },
+  agentSlotSmall: {
+    alignItems: 'center',
+  },
+  agentCenter: {
+    marginBottom: Spacing.sm,
+  },
+  agentLabel: {
+    fontSize: FontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
   contentContainer: {
     flex: 1,
-    paddingTop: Spacing.xl,
+    paddingTop: Spacing.lg,
   },
   title: {
     fontSize: FontSize.xxl,
     fontWeight: '700',
-    color: Colors.text,
     textAlign: 'center',
     marginBottom: Spacing.md,
   },
   description: {
-    fontSize: FontSize.lg,
+    fontSize: FontSize.md,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: FontSize.lg * 1.5,
+    lineHeight: FontSize.md * 1.6,
+    paddingHorizontal: Spacing.md,
   },
   featuresList: {
-    marginTop: Spacing.xl,
+    marginTop: Spacing.lg,
     alignItems: 'center',
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.sm,
+    paddingHorizontal: Spacing.md,
   },
   featureBullet: {
-    color: Colors.holy.gold,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     marginRight: Spacing.sm,
   },
   featureText: {
-    fontSize: FontSize.md,
+    fontSize: FontSize.sm,
     color: Colors.text,
   },
   pagination: {
@@ -319,16 +474,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: Spacing.lg,
+    gap: 8,
   },
   dot: {
-    width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Colors.stone.dark,
-    marginHorizontal: 6,
-  },
-  dotActive: {
-    backgroundColor: Colors.arcane.purple,
   },
   footer: {
     padding: Spacing.md,
