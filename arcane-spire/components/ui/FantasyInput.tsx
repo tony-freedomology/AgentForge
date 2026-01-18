@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   TextInput,
@@ -7,6 +7,8 @@ import {
   TextStyle,
   TouchableOpacity,
   Text,
+  Keyboard,
+  TextInput as RNTextInput,
 } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring, useSharedValue } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -68,6 +70,7 @@ export function FantasyInput({
   const handleSubmit = () => {
     if (onSubmit && value.trim()) {
       soundService.play('tap');
+      Keyboard.dismiss();
       onSubmit();
     }
   };

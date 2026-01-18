@@ -271,8 +271,13 @@ export function PixelEffect({
 /**
  * Pre-configured loot item component
  */
+type LootType = 'scroll' | 'tome' | 'crystal' | 'orb' | 'gem' | 'artifact' | 'chest';
+
 interface LootItemProps {
-  source: ImageSourcePropType;
+  /** Direct image source - takes precedence over type */
+  source?: ImageSourcePropType;
+  /** Type of loot for automatic icon selection */
+  type?: LootType;
   rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   size?: number;
   style?: ViewStyle;
@@ -286,18 +291,33 @@ const RARITY_COLORS: Record<string, string> = {
   legendary: Colors.holy.gold,
 };
 
+// Loot type to icon mapping - using existing icons
+const LOOT_ICONS: Record<LootType, ImageSourcePropType> = {
+  scroll: require('../../assets/images/icons/quest/icon_scroll.png'),
+  tome: require('../../assets/images/icons/file/icon_file_doc.png'),
+  crystal: require('../../assets/images/icons/file/icon_file_code.png'),
+  orb: require('../../assets/images/icons/loot/icon_artifact.png'),
+  gem: require('../../assets/images/icons/loot/icon_artifact.png'),
+  artifact: require('../../assets/images/icons/loot/icon_artifact.png'),
+  chest: require('../../assets/images/icons/loot/icon_chest_closed.png'),
+};
+
 export function LootItem({
   source,
+  type,
   rarity = 'common',
   size = 48,
   style,
 }: LootItemProps) {
   const color = RARITY_COLORS[rarity];
 
+  // Use source if provided, otherwise look up by type
+  const imageSource = source || (type && LOOT_ICONS[type]) || LOOT_ICONS.artifact;
+
   return (
     <View style={[styles.lootContainer, { borderColor: color }, style]}>
       <Image
-        source={source}
+        source={imageSource}
         style={{ width: size, height: size }}
         resizeMode="contain"
       />

@@ -270,15 +270,26 @@ export const Icons = {
 
   // Action icons
   action: {
-    send: require('../assets/images/icons/action/icon_action_send.png'),
-    cancel: require('../assets/images/icons/action/icon_action_cancel.png'),
-    dismiss: require('../assets/images/icons/action/icon_action_dismiss.png'),
-    settings: require('../assets/images/icons/action/icon_action_settings.png'),
-    connect: require('../assets/images/icons/action/icon_action_connect.png'),
-    summon: require('../assets/images/icons/action/icon_action_summon.png'),
-    refresh: require('../assets/images/icons/action/icon_action_refresh.png'),
-    back: require('../assets/images/icons/action/icon_action_back.png'),
-    close: require('../assets/images/icons/action/icon_action_close.png'),
+    send: require('../assets/images/icons/action/icon_send.png'),
+    back: require('../assets/images/icons/action/icon_back.png'),
+    close: require('../assets/images/icons/action/icon_close.png'),
+    settings: require('../assets/images/icons/action/icon_settings.png'),
+    refresh: require('../assets/images/icons/action/icon_refresh.png'),
+    menu: require('../assets/images/icons/action/icon_menu.png'),
+    expand: require('../assets/images/icons/action/icon_expand.png'),
+    collapse: require('../assets/images/icons/action/icon_collapse.png'),
+  },
+
+  // Tab icons
+  tabs: {
+    spire: require('../assets/images/icons/action/tab_spire.png'),
+    spireActive: require('../assets/images/icons/action/tab_spire_active.png'),
+    chronicle: require('../assets/images/icons/action/tab_chronicle.png'),
+    chronicleActive: require('../assets/images/icons/action/tab_chronicle_active.png'),
+    quests: require('../assets/images/icons/action/tab_quests.png'),
+    questsActive: require('../assets/images/icons/action/tab_quests_active.png'),
+    grimoire: require('../assets/images/icons/action/tab_grimoire.png'),
+    grimoireActive: require('../assets/images/icons/action/tab_grimoire_active.png'),
   },
 
   // Quest icons
@@ -286,42 +297,54 @@ export const Icons = {
     active: require('../assets/images/icons/quest/icon_quest_active.png'),
     complete: require('../assets/images/icons/quest/icon_quest_complete.png'),
     failed: require('../assets/images/icons/quest/icon_quest_failed.png'),
-    xp: require('../assets/images/icons/quest/icon_quest_xp.png'),
-    timer: require('../assets/images/icons/quest/icon_quest_timer.png'),
+    pending: require('../assets/images/icons/quest/icon_quest_pending.png'),
+    scroll: require('../assets/images/icons/quest/icon_scroll.png'),
+    loot: require('../assets/images/icons/quest/icon_loot.png'),
+    accept: require('../assets/images/icons/quest/icon_accept.png'),
+    revise: require('../assets/images/icons/quest/icon_revise.png'),
+    diff: require('../assets/images/icons/quest/icon_diff.png'),
   },
 
   // Loot icons
   loot: {
     chestClosed: require('../assets/images/icons/loot/icon_chest_closed.png'),
     chestOpen: require('../assets/images/icons/loot/icon_chest_open.png'),
-    scroll: require('../assets/images/icons/loot/icon_loot_scroll.png'),
-    gem: require('../assets/images/icons/loot/icon_loot_gem.png'),
-    potion: require('../assets/images/icons/loot/icon_loot_potion.png'),
+    artifact: require('../assets/images/icons/loot/icon_artifact.png'),
+    preview: require('../assets/images/icons/loot/icon_preview.png'),
+    share: require('../assets/images/icons/loot/icon_share.png'),
+    fileCreated: require('../assets/images/icons/loot/icon_file_created.png'),
+    fileModified: require('../assets/images/icons/loot/icon_file_modified.png'),
+    fileDeleted: require('../assets/images/icons/loot/icon_file_deleted.png'),
   },
 
   // Badge icons
   badges: {
-    levelUp: require('../assets/images/icons/badges/badge_level_up.png'),
-    questComplete: require('../assets/images/icons/badges/badge_quest_complete.png'),
-    newAgent: require('../assets/images/icons/badges/badge_new_agent.png'),
-    attention: require('../assets/images/icons/badges/badge_attention.png'),
-    streak: require('../assets/images/icons/badges/badge_streak.png'),
+    count: require('../assets/images/icons/badges/badge_count.png'),
+    new: require('../assets/images/icons/badges/badge_new.png'),
+    alert: require('../assets/images/icons/badges/badge_alert.png'),
   },
 
   // Realm icons
   realm: {
     all: require('../assets/images/icons/realm/icon_realm_all.png'),
-    frontend: require('../assets/images/icons/realm/icon_realm_frontend.png'),
-    backend: require('../assets/images/icons/realm/icon_realm_backend.png'),
     mobile: require('../assets/images/icons/realm/icon_realm_mobile.png'),
-    devops: require('../assets/images/icons/realm/icon_realm_devops.png'),
+    web: require('../assets/images/icons/realm/icon_realm_web.png'),
+    api: require('../assets/images/icons/realm/icon_realm_api.png'),
+    add: require('../assets/images/icons/realm/icon_realm_add.png'),
+    custom: require('../assets/images/icons/realm/icon_realm_custom.png'),
   },
 
   // Talent icons
   talent: {
     locked: require('../assets/images/icons/talent/icon_talent_locked.png'),
     available: require('../assets/images/icons/talent/icon_talent_available.png'),
-    maxed: require('../assets/images/icons/talent/icon_talent_maxed.png'),
+    learned: require('../assets/images/icons/talent/icon_talent_learned.png'),
+    point: require('../assets/images/icons/talent/icon_talent_point.png'),
+    focus: require('../assets/images/icons/talent/icon_talent_focus.png'),
+    lore: require('../assets/images/icons/talent/icon_talent_lore.png'),
+    mastery: require('../assets/images/icons/talent/icon_talent_mastery.png'),
+    haste: require('../assets/images/icons/talent/icon_talent_haste.png'),
+    endurance: require('../assets/images/icons/talent/icon_talent_endurance.png'),
   },
 } as const;
 
@@ -330,14 +353,23 @@ export const Icons = {
 // ============================================================================
 
 export const Effects = {
-  portalSpawn: require('../assets/images/effects/effect_portal_spawn.png'),
-  portalGlow: require('../assets/images/effects/effect_portal_glow.png'),
-  sparkles: require('../assets/images/effects/effect_sparkles.png'),
-  levelUpBurst: require('../assets/images/effects/effect_level_up_burst.png'),
-  levelUpRays: require('../assets/images/effects/effect_level_up_rays.png'),
-  magicCircle: require('../assets/images/effects/effect_magic_circle.png'),
-  alertPulse: require('../assets/images/effects/effect_alert_pulse.png'),
-  thoughtBubble: require('../assets/images/effects/effect_thought_bubble.png'),
+  spawnPortal: require('../assets/images/effects/effect_spawn_portal.png'),
+  levelUp: require('../assets/images/effects/effect_level_up.png'),
+  questComplete: require('../assets/images/effects/effect_quest_complete.png'),
+  magicSparkle: require('../assets/images/effects/effect_magic_sparkle.png'),
+  magicFloat: require('../assets/images/effects/effect_magic_float.png'),
+  runeGlow: require('../assets/images/effects/effect_rune_glow.png'),
+  thinking: require('../assets/images/effects/effect_thinking.png'),
+  typing: require('../assets/images/effects/effect_typing.png'),
+  steam: require('../assets/images/effects/effect_steam.png'),
+  candleFlicker: require('../assets/images/effects/effect_candle_flicker.png'),
+  errorFlash: require('../assets/images/effects/effect_error_flash.png'),
+  vaultGlow: require('../assets/images/effects/vault_glow.png'),
+  // Thought bubbles
+  bubbleThought: require('../assets/images/effects/bubble_thought.png'),
+  bubbleThoughtTail: require('../assets/images/effects/bubble_thought_tail.png'),
+  bubbleSpeech: require('../assets/images/effects/bubble_speech.png'),
+  bubbleSpeechTail: require('../assets/images/effects/bubble_speech_tail.png'),
 } as const;
 
 // ============================================================================
@@ -345,10 +377,10 @@ export const Effects = {
 // ============================================================================
 
 export const EmptyStates = {
-  noAgents: require('../assets/images/empty-states/empty_no_agents.png'),
-  noQuests: require('../assets/images/empty-states/empty_no_quests.png'),
-  noConnection: require('../assets/images/empty-states/empty_no_connection.png'),
-  noActivity: require('../assets/images/empty-states/empty_no_activity.png'),
+  spire: require('../assets/images/empty-states/empty_spire.png'),
+  chronicle: require('../assets/images/empty-states/empty_chronicle.png'),
+  quests: require('../assets/images/empty-states/empty_quests.png'),
+  loot: require('../assets/images/empty-states/empty_loot.png'),
 } as const;
 
 // ============================================================================
@@ -357,10 +389,15 @@ export const EmptyStates = {
 
 export const Onboarding = {
   welcome: require('../assets/images/onboarding/onboard_welcome.png'),
-  agents: require('../assets/images/onboarding/onboard_agents.png'),
-  quests: require('../assets/images/onboarding/onboard_quests.png'),
   connect: require('../assets/images/onboarding/onboard_connect.png'),
-  ready: require('../assets/images/onboarding/onboard_ready.png'),
+  daemon: require('../assets/images/onboarding/onboard_daemon.png'),
+  success: require('../assets/images/onboarding/onboard_success.png'),
+  // Connection status indicators
+  statusConnecting: require('../assets/images/onboarding/status_connecting.png'),
+  statusConnected: require('../assets/images/onboarding/status_connected.png'),
+  statusDisconnected: require('../assets/images/onboarding/status_disconnected.png'),
+  statusError: require('../assets/images/onboarding/status_error.png'),
+  qrFrame: require('../assets/images/onboarding/qr_frame.png'),
 } as const;
 
 // ============================================================================

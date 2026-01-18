@@ -138,6 +138,10 @@ class SpireConnectionService {
     this.send('agent_list', {});
   }
 
+  reviewQuest(questId: string, action: 'accept' | 'reject' | 'revise', note?: string): void {
+    this.send('quest_review', { questId, action, note });
+  }
+
   // Private methods
   private setupSocketListeners(): void {
     if (!this.socket) return;

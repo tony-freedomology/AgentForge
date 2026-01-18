@@ -332,6 +332,11 @@ export function useSpireConnection() {
     spireConnection.answerQuestion(agentId, answer);
   }, []);
 
+  // Review quest (accept, reject, request revision)
+  const sendQuestReview = useCallback((questId: string, action: 'accept' | 'reject' | 'revise', note?: string) => {
+    spireConnection.reviewQuest(questId, action, note);
+  }, []);
+
   return {
     // State
     connectionStatus,
@@ -346,5 +351,6 @@ export function useSpireConnection() {
     spawnAgent,
     killAgent,
     answerQuestion,
+    sendQuestReview,
   };
 }
