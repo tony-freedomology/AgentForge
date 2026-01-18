@@ -146,7 +146,7 @@ export function AgentTerminal() {
   if (!selectedAgent) {
     return (
       <div
-        className="!fixed right-4 bottom-4 w-[450px] overflow-hidden z-50"
+        className="!fixed right-4 bottom-4 w-[450px] overflow-hidden z-[45]"
         style={{ maxWidth: 'calc(100vw - 340px)' }}
       >
         {/* Ornate frame */}
@@ -184,7 +184,7 @@ export function AgentTerminal() {
     return (
       <button
         onClick={() => setIsMinimized(false)}
-        className="!fixed right-4 bottom-4 overflow-hidden rounded-xl z-50 group transition-all hover:scale-105"
+        className="!fixed right-4 bottom-4 overflow-hidden rounded-xl z-[45] group transition-all hover:scale-105"
         style={{ maxWidth: 'calc(100vw - 340px)' }}
       >
         <div
@@ -238,7 +238,7 @@ export function AgentTerminal() {
 
   return (
     <div
-      className={`!fixed right-4 bottom-4 overflow-hidden z-50 transition-all ${isExpanded ? 'w-[680px]' : 'w-[480px]'}`}
+      className={`!fixed right-4 bottom-4 overflow-hidden z-[45] transition-all ${isExpanded ? 'w-[680px]' : 'w-[480px]'}`}
       style={{ maxWidth: 'calc(100vw - 340px)' }}
     >
       {/* Main dialogue box */}
@@ -423,7 +423,7 @@ export function AgentTerminal() {
             if (isUserInput) {
               // User message - right aligned speech bubble
               return (
-                <div key={i} className="flex justify-end">
+                <div key={`msg-${i}-${line.slice(0, 20)}`} className="flex justify-end">
                   <div
                     className="max-w-[80%] p-4 rounded-xl rounded-br-sm"
                     style={{
@@ -442,7 +442,7 @@ export function AgentTerminal() {
             if (isInterrupt) {
               // Interrupt indicator
               return (
-                <div key={i} className="flex justify-center">
+                <div key={`interrupt-${i}`} className="flex justify-center">
                   <span className="text-xs text-red-400/60 px-4 py-1 rounded-full bg-red-900/20 border border-red-900/30">
                     — Spell Interrupted —
                   </span>
@@ -452,7 +452,7 @@ export function AgentTerminal() {
 
             // Agent message - left aligned with avatar
             return (
-              <div key={i} className="flex gap-3 items-start">
+              <div key={`agent-${i}-${line.slice(0, 20)}`} className="flex gap-3 items-start">
                 {/* Mini avatar for first message in sequence or every 5th */}
                 {(i === 0 || i % 5 === 0) && (
                   <div

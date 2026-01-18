@@ -42,7 +42,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
     if (!isVisible) return null;
 
     return (
-        <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`fixed inset-0 z-[70] flex flex-col items-center justify-center transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
 
             {/* Background Image Layer */}
             <div

@@ -202,8 +202,8 @@ export function QuestTurnIn({ agent, onClose }: QuestTurnInProps) {
                     <div className="text-xs text-green-400 font-bold uppercase tracking-wider px-1">
                       Created ({createdFiles.length})
                     </div>
-                    {createdFiles.map((file, i) => (
-                      <FileArtifactItem key={`created-${i}`} file={file} />
+                    {createdFiles.map((file) => (
+                      <FileArtifactItem key={`created-${file.path}`} file={file} />
                     ))}
                   </div>
                 )}
@@ -213,8 +213,8 @@ export function QuestTurnIn({ agent, onClose }: QuestTurnInProps) {
                     <div className="text-xs text-amber-400 font-bold uppercase tracking-wider px-1">
                       Modified ({modifiedFiles.length})
                     </div>
-                    {modifiedFiles.map((file, i) => (
-                      <FileArtifactItem key={`modified-${i}`} file={file} />
+                    {modifiedFiles.map((file) => (
+                      <FileArtifactItem key={`modified-${file.path}`} file={file} />
                     ))}
                   </div>
                 )}
@@ -224,8 +224,8 @@ export function QuestTurnIn({ agent, onClose }: QuestTurnInProps) {
                     <div className="text-xs text-red-400 font-bold uppercase tracking-wider px-1">
                       Deleted ({deletedFiles.length})
                     </div>
-                    {deletedFiles.map((file, i) => (
-                      <FileArtifactItem key={`deleted-${i}`} file={file} />
+                    {deletedFiles.map((file) => (
+                      <FileArtifactItem key={`deleted-${file.path}`} file={file} />
                     ))}
                   </div>
                 )}

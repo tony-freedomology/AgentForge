@@ -193,9 +193,9 @@ function AgentLootSection({
       {/* Loot items */}
       {isExpanded && (
         <div className="p-3 space-y-2 bg-black/20">
-          {allFiles.map((file, i) => (
+          {allFiles.map((file) => (
             <LootItem
-              key={`${file.path}-${i}`}
+              key={file.path}
               file={file}
               onCollect={onCollect}
             />
@@ -245,10 +245,15 @@ export function LootPanel() {
   };
 
   const handleCollect = (filePath: string) => {
-    // In a real implementation, this would open the file
-    // For now, we'll just log it
-    console.log('Collecting loot:', filePath);
-    // Could integrate with VS Code or system file opener
+    // In a real implementation, this would open the file in VS Code or system file opener
+    // For now, try to open via window.open for supported protocols
+    try {
+      // This will work if the user has a handler registered for vscode:// protocol
+      window.open(`vscode://file${filePath}`, '_blank');
+    } catch {
+      // Fallback: just show a toast that the file path was copied
+      navigator.clipboard?.writeText(filePath);
+    }
   };
 
   if (agentsWithLoot.length === 0) return null;

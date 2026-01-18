@@ -186,9 +186,9 @@ function QuestItem({ quest, agent, isExpanded, onToggle }: QuestItemProps) {
                 Produced Files:
               </div>
               <div className="space-y-1">
-                {quest.producedFiles.slice(0, 5).map((file, i) => (
+                {quest.producedFiles.slice(0, 5).map((file) => (
                   <div
-                    key={i}
+                    key={file.path}
                     className="text-xs font-mono text-gray-400 truncate"
                   >
                     • {file.path}

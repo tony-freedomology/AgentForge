@@ -310,7 +310,7 @@ export function CommandPalette({ isOpen, onClose, onOpenSpawnDialog, onOpenHelp 
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 backdrop-blur-sm pt-[15vh]"
+      className="fixed inset-0 bg-black/70 flex items-start justify-center z-[60] backdrop-blur-sm pt-[15vh]"
       onClick={onClose}
       role="dialog"
       aria-modal="true"

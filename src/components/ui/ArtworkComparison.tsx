@@ -94,16 +94,20 @@ export const ArtworkComparison: React.FC<ArtworkComparisonProps> = ({ onClose })
   };
 
   const handleNextCharacter = useCallback(() => {
-    const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharacter.id);
-    const nextIndex = (currentIndex + 1) % CHARACTERS.length;
-    setSelectedCharacter(CHARACTERS[nextIndex]);
-  }, [selectedCharacter]);
+    setSelectedCharacter(prev => {
+      const currentIndex = CHARACTERS.findIndex(c => c.id === prev.id);
+      const nextIndex = (currentIndex + 1) % CHARACTERS.length;
+      return CHARACTERS[nextIndex];
+    });
+  }, []);
 
   const handlePrevCharacterCb = useCallback(() => {
-    const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharacter.id);
-    const prevIndex = (currentIndex - 1 + CHARACTERS.length) % CHARACTERS.length;
-    setSelectedCharacter(CHARACTERS[prevIndex]);
-  }, [selectedCharacter]);
+    setSelectedCharacter(prev => {
+      const currentIndex = CHARACTERS.findIndex(c => c.id === prev.id);
+      const prevIndex = (currentIndex - 1 + CHARACTERS.length) % CHARACTERS.length;
+      return CHARACTERS[prevIndex];
+    });
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {

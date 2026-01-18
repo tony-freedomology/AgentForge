@@ -57,16 +57,14 @@ export function useAutoSave(intervalMs: number = 60000) {
  */
 export function useSessionRestore() {
   const loadSession = useGameStore((s) => s.loadSession);
-  const spawnAgent = useGameStore((s) => s.spawnAgent);
+  const restoreAgents = useGameStore((s) => s.restoreAgents);
 
   useEffect(() => {
     const savedAgents = loadSession();
 
     if (savedAgents && Array.isArray(savedAgents) && savedAgents.length > 0) {
-      // Offer to restore agents (for now, just log)
-      console.log('Session restored with agent data:', savedAgents);
-      // Note: Full restoration would require re-spawning agents via the backend
-      // For now, we just restore positions and metadata
+      // Restore agents from saved session
+      restoreAgents(savedAgents);
     }
-  }, [loadSession, spawnAgent]);
+  }, [loadSession, restoreAgents]);
 }

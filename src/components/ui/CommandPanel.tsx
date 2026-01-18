@@ -259,7 +259,7 @@ function TerminalView({ agent, onClose }: TerminalViewProps) {
 
         <div className="flex-1 overflow-auto p-4 font-mono text-sm bg-black/90 text-stone-300">
           {agent.terminalOutput.map((line, i) => (
-            <div key={i} className="whitespace-pre-wrap mb-1">
+            <div key={`${i}-${line.slice(0, 20)}`} className="whitespace-pre-wrap mb-1">
               <span className="text-stone-600 mr-2 opacity-50">Build {i + 100} ::</span>
               <span className={line.startsWith('>') ? 'text-amber-400 font-bold' : 'text-stone-300'}>{line}</span>
             </div>

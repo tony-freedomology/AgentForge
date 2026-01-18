@@ -17,6 +17,7 @@ import type {
   Quest,
   TaskProgress,
   ProjectZone,
+  AgentTalents,
 } from '../types/agent';
 import { canLearnTalent } from '../config/talents';
 import { ACTIVITY_PATTERNS, PROGRESS_PATTERNS } from '../types/agent';
@@ -30,6 +31,20 @@ const IDLE_TIMEOUT_MS = 60000;
 
 // Session storage key
 const SESSION_STORAGE_KEY = 'agentforge_session';
+
+// Saved agent data structure for session persistence
+export interface SavedAgentData {
+  id: string;
+  name: string;
+  provider: AgentProvider;
+  class: AgentClass;
+  position: AgentPosition;
+  level: number;
+  experience: number;
+  talents: AgentTalents;
+  completedQuests: Quest[];
+  controlGroup?: number;
+}
 
 interface GameState {
   // Agents
@@ -138,9 +153,10 @@ interface GameState {
   getZoneForHex: (q: number, r: number) => ProjectZone | undefined;
 
   // Session Persistence
-  saveSession: () => void;
-  loadSession: () => boolean;
+  saveSession: () => boolean;
+  loadSession: () => SavedAgentData[] | false;
   clearSession: () => void;
+  restoreAgents: (agents: SavedAgentData[]) => void;
 
   // Computed helpers
   getAgentsNeedingAttention: () => Agent[];
@@ -1236,6 +1252,82 @@ export const useGameStore = create<GameState>()(
     clearSession: () => {
       localStorage.removeItem(SESSION_STORAGE_KEY);
       toast.info('Session Cleared', 'Saved session data has been removed');
+    },
+
+    restoreAgents: (savedAgents: SavedAgentData[]) => {
+      if (!savedAgents || savedAgents.length === 0) return;
+
+      savedAgents.forEach(saved => {
+        const hexGrid = get().hexGrid;
+
+        // Check if position is available
+        const hexKey = `${saved.position.q},${saved.position.r}`;
+        const hex = hexGrid.get(hexKey);
+        if (hex?.occupied) {
+          // Find a nearby unoccupied hex
+          const neighbors = [
+            { q: saved.position.q + 1, r: saved.position.r },
+            { q: saved.position.q - 1, r: saved.position.r },
+            { q: saved.position.q, r: saved.position.r + 1 },
+            { q: saved.position.q, r: saved.position.r - 1 },
+          ];
+          for (const n of neighbors) {
+            const nHex = hexGrid.get(`${n.q},${n.r}`);
+            if (nHex && !nHex.occupied && nHex.type !== 'water' && nHex.type !== 'portal') {
+              saved.position = { ...saved.position, q: n.q, r: n.r };
+              break;
+            }
+          }
+        }
+
+        // Create the agent with saved data
+        const newAgent: Agent = {
+          id: saved.id,
+          name: saved.name,
+          provider: saved.provider,
+          class: saved.class,
+          status: 'idle',
+          position: saved.position,
+          health: 100,
+          mana: 100,
+          experience: saved.experience,
+          level: saved.level,
+          taskQueue: [],
+          terminalOutput: ['[Session restored]'],
+          createdAt: new Date(),
+          lastActiveAt: new Date(),
+          controlGroup: saved.controlGroup,
+          activity: 'idle',
+          activityStartedAt: Date.now(),
+          needsAttention: false,
+          contextTokens: 0,
+          contextLimit: 200000,
+          usagePercent: 0,
+          completedQuests: saved.completedQuests || [],
+          producedFiles: [],
+          talents: saved.talents || { points: 0, allocated: {} },
+        };
+
+        set(state => {
+          const newAgents = new Map(state.agents);
+          newAgents.set(newAgent.id, newAgent);
+
+          // Update hex grid
+          const newHexGrid = new Map(state.hexGrid);
+          const targetHex = newHexGrid.get(`${newAgent.position.q},${newAgent.position.r}`);
+          if (targetHex) {
+            newHexGrid.set(`${newAgent.position.q},${newAgent.position.r}`, {
+              ...targetHex,
+              occupied: true,
+              occupiedBy: newAgent.id,
+            });
+          }
+
+          return { agents: newAgents, hexGrid: newHexGrid };
+        });
+      });
+
+      toast.success('Agents Restored', `${savedAgents.length} agent(s) restored from session`);
     },
 
     // Computed helpers
