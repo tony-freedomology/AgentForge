@@ -9,6 +9,7 @@ import { SpawnAgentDialog } from './components/ui/SpawnAgentDialog';
 import { PartyFrames } from './components/ui/PartyFrames';
 import { LootPanel } from './components/ui/LootPanel';
 import { PendingQuestsNotification } from './components/ui/QuestTurnIn';
+import { QuestLog, QuestLogButton } from './components/ui/QuestLog';
 import { ToastContainer } from './components/ui/Toast';
 import { SoundToggle } from './components/ui/SoundSettings';
 import { CommandPalette } from './components/ui/CommandPalette';
@@ -195,6 +196,7 @@ function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showSpawnDialog, setShowSpawnDialog] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showQuestLog, setShowQuestLog] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   const [useIsometric, setUseIsometric] = useState(true); // Phase 0: Default to isometric for testing
   const [dimensions, setDimensions] = useState(getWindowDimensions);
@@ -257,6 +259,12 @@ function App() {
           e.preventDefault();
           setShowSpawnDialog(true);
         }
+      }
+
+      // Q for quest log
+      if (e.key === 'q' && !showWelcome && !showSpawnDialog && !showCommandPalette && !isInInput) {
+        e.preventDefault();
+        setShowQuestLog((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -386,8 +394,9 @@ function App() {
       {/* Toast notifications */}
       <ToastContainer />
 
-      {/* Sound controls */}
-      <div className="fixed bottom-4 right-4 z-40">
+      {/* Sound controls and Quest Log button */}
+      <div className="fixed bottom-4 right-4 z-40 flex items-center gap-2">
+        <QuestLogButton onClick={() => setShowQuestLog(true)} />
         <SoundToggle />
       </div>
 
@@ -395,6 +404,7 @@ function App() {
       {showWelcome && <WelcomeOverlay onStart={handleStart} />}
       {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
       {showSpawnDialog && <SpawnAgentDialog onClose={() => setShowSpawnDialog(false)} />}
+      {showQuestLog && <QuestLog onClose={() => setShowQuestLog(false)} />}
       <CommandPalette
         isOpen={showCommandPalette}
         onClose={() => setShowCommandPalette(false)}
