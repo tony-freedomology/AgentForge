@@ -15,13 +15,21 @@ import type {
   AgentTask,
   FileArtifact,
   Quest,
+  TaskProgress,
+  ProjectZone,
 } from '../types/agent';
 import { canLearnTalent } from '../config/talents';
-import { ACTIVITY_PATTERNS } from '../types/agent';
+import { ACTIVITY_PATTERNS, PROGRESS_PATTERNS } from '../types/agent';
 import { v4 as uuidv4 } from 'uuid';
 import { generateHexGrid } from '../utils/hexUtils';
 import { agentBridge } from '../services/agentBridge';
 import { toast } from './toastStore';
+
+// Idle timeout threshold in milliseconds (60 seconds)
+const IDLE_TIMEOUT_MS = 60000;
+
+// Session storage key
+const SESSION_STORAGE_KEY = 'agentforge_session';
 
 interface GameState {
   // Agents
@@ -52,6 +60,9 @@ interface GameState {
   // Control Groups
   controlGroups: Map<number, Set<string>>;
 
+  // Project Zones
+  projectZones: Map<string, ProjectZone>;
+
   // Actions
   spawnAgent: (provider: AgentProvider, agentClass: AgentClass, name: string, position: AgentPosition, workingDir?: string) => Agent;
   removeAgent: (agentId: string) => void;
@@ -73,6 +84,10 @@ interface GameState {
   updateAgentUsage: (agentId: string, percent: number) => void;
   addProducedFile: (agentId: string, file: FileArtifact) => void;
   detectActivityFromOutput: (agentId: string, output: string) => void;
+  updateAgentProgress: (agentId: string, progress: TaskProgress | undefined) => void;
+  detectProgressFromOutput: (agentId: string, output: string) => void;
+  detectResourceUsageFromOutput: (agentId: string, output: string) => void;
+  checkIdleTimeouts: () => void;
 
   // Quest System Actions
   startQuest: (agentId: string, description: string) => void;
@@ -115,6 +130,17 @@ interface GameState {
   // Hex Grid
   revealHex: (q: number, r: number) => void;
   setHexOccupied: (q: number, r: number, occupied: boolean, agentId?: string) => void;
+
+  // Project Zones
+  createProjectZone: (name: string, color: string, hexes: Array<{ q: number; r: number }>) => ProjectZone;
+  removeProjectZone: (zoneId: string) => void;
+  updateProjectZone: (zoneId: string, updates: Partial<ProjectZone>) => void;
+  getZoneForHex: (q: number, r: number) => ProjectZone | undefined;
+
+  // Session Persistence
+  saveSession: () => void;
+  loadSession: () => boolean;
+  clearSession: () => void;
 
   // Computed helpers
   getAgentsNeedingAttention: () => Agent[];
@@ -175,6 +201,7 @@ export const useGameStore = create<GameState>()(
     isPaused: false,
     currentTime: 0,
     controlGroups: new Map(),
+    projectZones: new Map(),
 
     // Agent Actions
     spawnAgent: (provider, agentClass, name, position, workingDir) => {
@@ -423,12 +450,22 @@ export const useGameStore = create<GameState>()(
         const agent = state.agents.get(agentId);
         if (!agent) return state;
 
+        const now = Date.now();
         const newAgents = new Map(state.agents);
+
+        // Track when agent becomes idle for timeout detection
+        const wasIdle = agent.activity === 'idle';
+        const isNowIdle = activity === 'idle';
+
         newAgents.set(agentId, {
           ...agent,
           activity,
-          activityStartedAt: Date.now(),
+          activityStartedAt: now,
           activityDetails: details,
+          // Set idleSince when transitioning to idle, clear when leaving idle
+          idleSince: isNowIdle ? (wasIdle ? agent.idleSince : now) : undefined,
+          // Clear progress when activity changes
+          taskProgress: activity !== agent.activity ? undefined : agent.taskProgress,
         });
         return { agents: newAgents };
       });
@@ -519,9 +556,130 @@ export const useGameStore = create<GameState>()(
         }
       }
 
-      // Also detect file artifacts and quest completion
+      // Also detect file artifacts, quest completion, progress, and resource usage
       get().detectFileArtifacts(agentId, output);
       get().detectQuestCompletion(agentId, output);
+      get().detectProgressFromOutput(agentId, output);
+      get().detectResourceUsageFromOutput(agentId, output);
+    },
+
+    // Progress tracking
+    updateAgentProgress: (agentId, progress) => {
+      set((state) => {
+        const agent = state.agents.get(agentId);
+        if (!agent) return state;
+
+        const newAgents = new Map(state.agents);
+        newAgents.set(agentId, {
+          ...agent,
+          taskProgress: progress,
+        });
+        return { agents: newAgents };
+      });
+    },
+
+    detectProgressFromOutput: (agentId, output) => {
+      const agent = get().agents.get(agentId);
+      if (!agent) return;
+
+      // Check each progress pattern type
+      for (const [type, patterns] of Object.entries(PROGRESS_PATTERNS)) {
+        if (type === 'context' || type === 'usage') continue; // Handle separately
+
+        for (const pattern of patterns) {
+          const match = output.match(pattern);
+          if (match) {
+            const current = parseInt(match[1], 10);
+            const total = match[2] ? parseInt(match[2], 10) : current;
+
+            // Only update if we have valid numbers
+            if (!isNaN(current) && total > 0) {
+              const progressType = type as 'tests' | 'build' | 'lint' | 'files';
+              const labels: Record<string, string> = {
+                tests: 'Running tests...',
+                build: 'Building...',
+                lint: 'Linting...',
+                files: 'Processing files...',
+              };
+
+              get().updateAgentProgress(agentId, {
+                type: progressType,
+                current,
+                total,
+                label: labels[progressType] || 'Processing...',
+                startedAt: agent.taskProgress?.startedAt || Date.now(),
+              });
+
+              // Clear progress when complete
+              if (current >= total) {
+                setTimeout(() => {
+                  get().updateAgentProgress(agentId, undefined);
+                }, 2000);
+              }
+              return;
+            }
+          }
+        }
+      }
+    },
+
+    detectResourceUsageFromOutput: (agentId, output) => {
+      // Check for context token usage
+      for (const pattern of PROGRESS_PATTERNS.context) {
+        const match = output.match(pattern);
+        if (match) {
+          const current = parseInt(match[1].replace(/,/g, ''), 10);
+          const limit = parseInt(match[2].replace(/,/g, ''), 10);
+          if (!isNaN(current) && !isNaN(limit) && limit > 0) {
+            get().updateAgentContext(agentId, current, limit);
+            return;
+          }
+        }
+      }
+
+      // Check for API usage percentage
+      for (const pattern of PROGRESS_PATTERNS.usage) {
+        const match = output.match(pattern);
+        if (match) {
+          let percent: number;
+          if (match[2]) {
+            // $current/$total format
+            const current = parseFloat(match[1]);
+            const total = parseFloat(match[2]);
+            percent = total > 0 ? ((total - current) / total) * 100 : 100;
+          } else {
+            // Direct percentage
+            percent = 100 - parseInt(match[1], 10); // Invert: usage shown vs remaining
+          }
+          if (!isNaN(percent)) {
+            get().updateAgentUsage(agentId, Math.max(0, Math.min(100, percent)));
+            return;
+          }
+        }
+      }
+    },
+
+    // Idle timeout checking - called periodically
+    checkIdleTimeouts: () => {
+      const now = Date.now();
+      const agents = get().agents;
+
+      agents.forEach((agent, agentId) => {
+        // Skip if already needs attention or not idle
+        if (agent.needsAttention) return;
+        if (agent.status !== 'idle') return;
+        if (agent.activity !== 'idle') return;
+
+        // Check if idle for too long
+        const idleTime = agent.idleSince ? now - agent.idleSince : 0;
+        if (idleTime > IDLE_TIMEOUT_MS) {
+          get().setAgentNeedsAttention(agentId, true, 'idle_timeout');
+          toast.warning(
+            'Agent Idle',
+            `${agent.name} has been idle for over a minute`
+          );
+        }
+      });
     },
 
     // Quest System Actions
@@ -941,6 +1099,135 @@ export const useGameStore = create<GameState>()(
         newGrid.set(hexKey, { ...hex, occupied, occupiedBy: agentId });
         return { hexGrid: newGrid };
       });
+    },
+
+    // Project Zones
+    createProjectZone: (name, color, hexes) => {
+      const id = uuidv4();
+      const zone: ProjectZone = { id, name, color, hexes };
+
+      set((state) => {
+        const newZones = new Map(state.projectZones);
+        newZones.set(id, zone);
+        return { projectZones: newZones };
+      });
+
+      toast.info('Zone Created', `Project zone "${name}" has been created`);
+      return zone;
+    },
+
+    removeProjectZone: (zoneId) => {
+      set((state) => {
+        const newZones = new Map(state.projectZones);
+        newZones.delete(zoneId);
+        return { projectZones: newZones };
+      });
+    },
+
+    updateProjectZone: (zoneId, updates) => {
+      set((state) => {
+        const zone = state.projectZones.get(zoneId);
+        if (!zone) return state;
+
+        const newZones = new Map(state.projectZones);
+        newZones.set(zoneId, { ...zone, ...updates });
+        return { projectZones: newZones };
+      });
+    },
+
+    getZoneForHex: (q, r) => {
+      const zones = get().projectZones;
+      for (const zone of zones.values()) {
+        if (zone.hexes.some(h => h.q === q && h.r === r)) {
+          return zone;
+        }
+      }
+      return undefined;
+    },
+
+    // Session Persistence
+    saveSession: () => {
+      try {
+        const state = get();
+
+        // Serialize agents (convert Map to array)
+        const agentsArray = Array.from(state.agents.entries()).map(([id, agent]) => ({
+          id,
+          name: agent.name,
+          provider: agent.provider,
+          class: agent.class,
+          position: agent.position,
+          level: agent.level,
+          experience: agent.experience,
+          talents: agent.talents,
+          completedQuests: agent.completedQuests,
+          controlGroup: agent.controlGroup,
+        }));
+
+        // Serialize project zones
+        const zonesArray = Array.from(state.projectZones.entries());
+
+        // Serialize control groups
+        const controlGroupsArray = Array.from(state.controlGroups.entries()).map(
+          ([num, ids]) => [num, Array.from(ids)]
+        );
+
+        const session = {
+          version: 1,
+          timestamp: Date.now(),
+          agents: agentsArray,
+          projectZones: zonesArray,
+          controlGroups: controlGroupsArray,
+          camera: state.camera,
+          resources: state.resources,
+        };
+
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+        toast.success('Session Saved', 'Your agent layout has been saved');
+        return true;
+      } catch (error) {
+        console.error('Failed to save session:', error);
+        toast.error('Save Failed', 'Could not save session');
+        return false;
+      }
+    },
+
+    loadSession: () => {
+      try {
+        const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+        if (!saved) return false;
+
+        const session = JSON.parse(saved);
+        if (session.version !== 1) return false;
+
+        // Restore project zones
+        const zones = new Map<string, ProjectZone>(session.projectZones || []);
+
+        // Restore control groups
+        const controlGroups = new Map<number, Set<string>>(
+          (session.controlGroups || []).map(([num, ids]: [number, string[]]) => [num, new Set(ids)])
+        );
+
+        set({
+          projectZones: zones,
+          controlGroups,
+          camera: session.camera || get().camera,
+        });
+
+        // Note: Agents need to be re-spawned via the backend
+        // We return the saved agent data for the caller to handle
+        toast.info('Session Loaded', `Found ${session.agents?.length || 0} saved agents`);
+
+        return session.agents || [];
+      } catch (error) {
+        console.error('Failed to load session:', error);
+        return false;
+      }
+    },
+
+    clearSession: () => {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+      toast.info('Session Cleared', 'Saved session data has been removed');
     },
 
     // Computed helpers

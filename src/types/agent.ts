@@ -82,6 +82,24 @@ export interface Quest {
   agentNotes?: string;
 }
 
+// Progress tracking for specific tasks (tests, builds, etc.)
+export interface TaskProgress {
+  type: 'tests' | 'build' | 'lint' | 'files' | 'generic';
+  current: number;
+  total: number;
+  label?: string;      // e.g., "Running tests..."
+  startedAt: number;
+}
+
+// Project zone for spatial organization
+export interface ProjectZone {
+  id: string;
+  name: string;
+  color: string;
+  hexes: Array<{ q: number; r: number }>;
+  description?: string;
+}
+
 export interface Agent {
   id: string;
   name: string;
@@ -105,11 +123,13 @@ export interface Agent {
   activity: AgentActivity;
   activityStartedAt: number;
   activityDetails?: string;   // e.g., "Searching for auth patterns..."
+  taskProgress?: TaskProgress; // Progress for specific tasks (3/10 tests)
 
   // Attention system (Phase 1)
   needsAttention: boolean;
   attentionReason?: AttentionReason;
   attentionSince?: number;    // Timestamp when attention was first needed
+  idleSince?: number;         // When agent became idle (for timeout detection)
 
   // Resource tracking (Phase 1)
   contextTokens: number;      // Current context usage
@@ -214,6 +234,46 @@ export const ACTIVITY_PATTERNS: Record<AgentActivity, RegExp[]> = {
   error: [/error/i, /failed/i, /exception/i, /crash/i, /❌/],
   thinking: [/thinking/i, /processing/i, /analyzing/i],
   idle: [],
+};
+
+// Progress detection patterns for specific task types
+export const PROGRESS_PATTERNS = {
+  // Test runners: "3/10 tests", "Tests: 5 passed, 2 failed", "PASS src/foo.test.ts (3/10)"
+  tests: [
+    /(\d+)\s*(?:\/|of)\s*(\d+)\s*tests?/i,
+    /Tests?:\s*(\d+)\s*(?:passed|✓)/i,
+    /(\d+)\s*(?:passed|passing)/i,
+    /PASS.*\((\d+)\/(\d+)\)/i,
+    /(\d+)\s*tests?\s*(?:complete|done|finished)/i,
+  ],
+  // Build progress: "Building 3/10 modules", "Compiling (45%)"
+  build: [
+    /(?:Building|Compiling|Bundling)\s*(?:\()?(\d+)\s*(?:\/|of)\s*(\d+)/i,
+    /(\d+)%\s*(?:complete|done|built)/i,
+    /\[(\d+)\/(\d+)\]\s*(?:Building|Compiling)/i,
+  ],
+  // Lint progress: "Linting 5/20 files"
+  lint: [
+    /Linting\s*(\d+)\s*(?:\/|of)\s*(\d+)/i,
+    /(\d+)\s*files?\s*linted/i,
+  ],
+  // File operations: "Processing 3/10 files"
+  files: [
+    /(?:Processing|Scanning|Reading)\s*(\d+)\s*(?:\/|of)\s*(\d+)\s*files?/i,
+    /Files?:\s*(\d+)\s*(?:\/|of)\s*(\d+)/i,
+  ],
+  // Context/token usage: "Context: 45,000/200,000 tokens"
+  context: [
+    /Context:?\s*([\d,]+)\s*(?:\/|of)\s*([\d,]+)\s*tokens?/i,
+    /([\d,]+)\s*(?:\/|of)\s*([\d,]+)\s*tokens?\s*(?:used|remaining)/i,
+    /tokens?:\s*([\d,]+)\s*(?:\/|of)\s*([\d,]+)/i,
+  ],
+  // API usage: "Usage: 45% of quota", "API: $0.45/$1.00"
+  usage: [
+    /Usage:?\s*(\d+)%/i,
+    /API:?\s*\$?([\d.]+)\s*(?:\/|of)\s*\$?([\d.]+)/i,
+    /(\d+)%\s*(?:of\s*)?(?:quota|limit|budget)/i,
+  ],
 };
 
 // Activity icons for display

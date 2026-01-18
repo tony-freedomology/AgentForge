@@ -11,14 +11,16 @@ import { LootPanel } from './components/ui/LootPanel';
 import { PendingQuestsNotification } from './components/ui/QuestTurnIn';
 import { QuestLog, QuestLogButton } from './components/ui/QuestLog';
 import { ToastContainer } from './components/ui/Toast';
+import { SessionControls } from './components/ui/SessionControls';
+import { ProjectZonesPanel, ProjectZonesButton } from './components/ui/ProjectZones';
 
 import { SoundToggle } from './components/ui/SoundSettings';
 import { CommandPalette } from './components/ui/CommandPalette';
 import { WelcomeScreen } from './components/ui/WelcomeScreen';
 import { IsometricWorld } from './components/isometric/IsometricWorld';
 import { useKeyboardShortcuts, KEYBOARD_SHORTCUTS } from './hooks/useKeyboardShortcuts';
+import { useIdleMonitor } from './hooks/useIdleMonitor';
 import { agentBridge } from './services/agentBridge';
-// Icons unused after refactor but kept for potential future use
 import { useState, useEffect } from 'react';
 
 function HelpOverlay({ onClose }: { onClose: () => void }) {
@@ -86,12 +88,16 @@ function App() {
   const [showSpawnDialog, setShowSpawnDialog] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showQuestLog, setShowQuestLog] = useState(false);
+  const [showProjectZones, setShowProjectZones] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   const [useIsometric, setUseIsometric] = useState(true); // Phase 0: Default to isometric for testing
   const [dimensions, setDimensions] = useState(getWindowDimensions);
 
   // Initialize keyboard shortcuts
   useKeyboardShortcuts();
+
+  // Initialize idle timeout monitoring
+  useIdleMonitor();
 
   // Handle window resize for isometric canvas
   useEffect(() => {
@@ -154,6 +160,12 @@ function App() {
       if (e.key === 'q' && !showWelcome && !showSpawnDialog && !showCommandPalette && !isInInput) {
         e.preventDefault();
         setShowQuestLog((prev) => !prev);
+      }
+
+      // Z for project zones
+      if (e.key === 'z' && !showWelcome && !showSpawnDialog && !showCommandPalette && !isInInput) {
+        e.preventDefault();
+        setShowProjectZones((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -257,8 +269,11 @@ function App() {
       {/* Toast notifications */}
       <ToastContainer />
 
-      {/* Sound controls and Quest Log button */}
+      {/* Sound controls, session controls, and panel buttons */}
       <div className="fixed bottom-4 right-4 z-40 flex items-center gap-2">
+        <SessionControls />
+        <div className="w-px h-6 bg-stone-700/50" /> {/* Divider */}
+        <ProjectZonesButton onClick={() => setShowProjectZones(true)} />
         <QuestLogButton onClick={() => setShowQuestLog(true)} />
         <SoundToggle />
       </div>
@@ -268,6 +283,7 @@ function App() {
       {showHelp && <HelpOverlay onClose={() => setShowHelp(false)} />}
       {showSpawnDialog && <SpawnAgentDialog onClose={() => setShowSpawnDialog(false)} />}
       {showQuestLog && <QuestLog onClose={() => setShowQuestLog(false)} />}
+      <ProjectZonesPanel isOpen={showProjectZones} onClose={() => setShowProjectZones(false)} />
       <CommandPalette
         isOpen={showCommandPalette}
         onClose={() => setShowCommandPalette(false)}

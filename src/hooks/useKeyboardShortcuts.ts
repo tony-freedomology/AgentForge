@@ -161,6 +161,8 @@ const modKey = isMac ? 'Cmd' : 'Ctrl';
 export const KEYBOARD_SHORTCUTS = [
   { key: `${modKey}+K`, description: 'Command palette' },
   { key: 'N', description: 'Summon new agent' },
+  { key: 'Q', description: 'Quest log' },
+  { key: 'Z', description: 'Project zones' },
   { key: '1-9', description: 'Select control group' },
   { key: `${modKey}+1-9`, description: 'Assign control group' },
   { key: 'Escape', description: 'Deselect all' },

@@ -47,6 +47,42 @@ function StatusBar({
   );
 }
 
+// Progress bar with specific progress (e.g., 3/10 tests)
+function ProgressBar({
+  current,
+  total,
+  color,
+  label,
+}: {
+  current: number;
+  total: number;
+  color: string;
+  label: string;
+}) {
+  const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+
+  return (
+    <div className="h-5 rounded-sm relative overflow-hidden border border-stone-700/50 bg-stone-950/80">
+      {/* Progress fill */}
+      <div
+        className="absolute inset-y-0 left-0 transition-all duration-300"
+        style={{
+          width: `${percent}%`,
+          background: `linear-gradient(180deg, ${color}, ${color}cc)`,
+          boxShadow: `0 0 10px ${color}40`,
+        }}
+      />
+      {/* Label and count */}
+      <div className="absolute inset-0 flex items-center justify-between px-2 text-[10px] font-medium z-10">
+        <span className="text-white drop-shadow-md truncate font-serif">{label}</span>
+        <span className="text-white font-mono font-bold drop-shadow-md">
+          {current}/{total}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // Activity/Cast bar component
 function ActivityBar({ agent }: { agent: Agent }) {
   const [elapsed, setElapsed] = useState(0);
@@ -66,6 +102,26 @@ function ActivityBar({ agent }: { agent: Agent }) {
     const secs = seconds % 60;
     return `${mins}m ${secs}s`;
   };
+
+  // Show specific progress bar if available
+  if (agent.taskProgress) {
+    const progressColors: Record<string, string> = {
+      tests: '#f59e0b',   // Amber for tests
+      build: '#ef4444',   // Red for build
+      lint: '#8b5cf6',    // Purple for lint
+      files: '#3b82f6',   // Blue for files
+      generic: '#22c55e', // Green for generic
+    };
+
+    return (
+      <ProgressBar
+        current={agent.taskProgress.current}
+        total={agent.taskProgress.total}
+        color={progressColors[agent.taskProgress.type] || '#22c55e'}
+        label={agent.taskProgress.label || `${agent.taskProgress.type}...`}
+      />
+    );
+  }
 
   if (agent.activity === 'idle' && !agent.needsAttention) {
     return (
@@ -239,7 +295,9 @@ function AgentFrame({
             boxShadow: `0 0 10px ${agent.attentionReason === 'error' ? '#ef4444' : '#eab308'}`,
           }}
         >
-          {agent.attentionReason === 'error' ? '!' : agent.attentionReason === 'waiting_input' ? '?' : '✓'}
+          {agent.attentionReason === 'error' ? '!' :
+           agent.attentionReason === 'waiting_input' ? '?' :
+           agent.attentionReason === 'idle_timeout' ? '💤' : '✓'}
         </div>
       )}
 
