@@ -8,12 +8,14 @@
  * - Asset loading with progress indicator
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Application, extend, useApplication, useTick } from '@pixi/react';
 import { Container, Graphics, Text, TextStyle, Ticker, Sprite, Texture } from 'pixi.js';
 import { gridToScreen, screenToGrid, TILE_WIDTH, TILE_HEIGHT } from '../../utils/isoCoords';
 import { assetLoader, DEFAULT_MANIFEST, loadAgentSprites } from '../../utils/assetLoader';
 import { useParticleEffects } from './ParticleEffects';
+import { IsometricAgent } from './IsometricAgent';
+import { useGameStore } from '../../stores/gameStore';
 
 // Register PixiJS components for JSX use
 extend({ Container, Graphics, Text, Sprite });
@@ -128,11 +130,17 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
   const [hoveredTile, setHoveredTile] = useState<{ x: number; y: number } | null>(null);
   const [selectedTile, setSelectedTile] = useState<{ x: number; y: number } | null>(null);
 
-  // Agent state - separate current position from target for smooth movement
-  const [agentTarget, setAgentTarget] = useState({ x: 5, y: 5 });
-  const [agentPosition, setAgentPosition] = useState({ x: 5, y: 5 });
-  const [agentDirection, setAgentDirection] = useState<'s' | 'sw' | 'w' | 'nw'>('s');
-  const [isMoving, setIsMoving] = useState(false);
+  // Get agents from store
+  const agents = useGameStore((state) => state.agents);
+  const selectedAgentIds = useGameStore((state) => state.selectedAgentIds);
+  const selectAgent = useGameStore((state) => state.selectAgent);
+
+  // Demo agent for when no real agents exist
+  const [demoAgentPosition, setDemoAgentPosition] = useState({ x: 5, y: 5 });
+  const [demoAgentTarget, setDemoAgentTarget] = useState({ x: 5, y: 5 });
+  const [demoDirection, setDemoDirection] = useState<'s' | 'sw' | 'w' | 'nw'>('s');
+  const [isDemoMoving, setIsDemoMoving] = useState(false);
+  const wasDemoMoving = useRef(false);
 
   const [cameraOffset, setCameraOffset] = useState({ x: 0, y: 0 });
   const [cameraZoom, setCameraZoom] = useState(1.0);
@@ -143,48 +151,53 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
 
   // Particle effects
   const { spawnEffect, EffectsRenderer } = useParticleEffects();
-  const wasMoving = useRef(false);
+
+  // Convert agents Map to array for rendering
+  const agentList = useMemo(() => Array.from(agents.values()), [agents]);
+  const hasRealAgents = agentList.length > 0;
+
+  // Callback for agent spawn effects
+  const handleAgentEffect = useCallback((x: number, y: number, type: 'spawn' | 'teleport') => {
+    spawnEffect(x, y, type);
+  }, [spawnEffect]);
 
   // Center the view
   const centerOffsetX = width / 2;
   const centerOffsetY = height / 3;
 
-  // Animate portal pulse and agent movement
+  // Animate portal pulse and demo agent movement
   useTick((ticker: Ticker) => {
     setPortalPulse((p) => (p + ticker.deltaTime * 0.05) % (Math.PI * 2));
 
-    // Smooth agent movement
-    const dx = agentTarget.x - agentPosition.x;
-    const dy = agentTarget.y - agentPosition.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    // Only animate demo agent if no real agents exist
+    if (!hasRealAgents) {
+      const dx = demoAgentTarget.x - demoAgentPosition.x;
+      const dy = demoAgentTarget.y - demoAgentPosition.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance > 0.01) {
-      const speed = MOVE_SPEED * (ticker.deltaTime / 60);
+      if (distance > 0.01) {
+        const speed = MOVE_SPEED * (ticker.deltaTime / 60);
 
-      if (distance < speed) {
-        // Arrived at target
-        setAgentPosition({ x: agentTarget.x, y: agentTarget.y });
-        setIsMoving(false);
+        if (distance < speed) {
+          setDemoAgentPosition({ x: demoAgentTarget.x, y: demoAgentTarget.y });
+          setIsDemoMoving(false);
 
-        // Spawn arrival effect
-        if (wasMoving.current) {
-          const arrivalPos = gridToScreen(agentTarget.x, agentTarget.y);
-          spawnEffect(arrivalPos.x, arrivalPos.y - 30, 'teleport');
-          wasMoving.current = false;
+          if (wasDemoMoving.current) {
+            const arrivalPos = gridToScreen(demoAgentTarget.x, demoAgentTarget.y);
+            spawnEffect(arrivalPos.x, arrivalPos.y - 30, 'teleport');
+            wasDemoMoving.current = false;
+          }
+        } else {
+          const nx = dx / distance;
+          const ny = dy / distance;
+          setDemoAgentPosition((prev) => ({
+            x: prev.x + nx * speed,
+            y: prev.y + ny * speed,
+          }));
+          setIsDemoMoving(true);
+          wasDemoMoving.current = true;
+          setDemoDirection(getDirectionFromDelta(dx, dy));
         }
-      } else {
-        // Move towards target
-        const nx = dx / distance;
-        const ny = dy / distance;
-        setAgentPosition((prev) => ({
-          x: prev.x + nx * speed,
-          y: prev.y + ny * speed,
-        }));
-        setIsMoving(true);
-        wasMoving.current = true;
-
-        // Update direction while moving
-        setAgentDirection(getDirectionFromDelta(dx, dy));
       }
     }
   });
@@ -241,14 +254,18 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
 
       if (gridPos.x >= 0 && gridPos.x < GRID_SIZE && gridPos.y >= 0 && gridPos.y < GRID_SIZE) {
         setSelectedTile(gridPos);
-        if (gridPos.x !== agentTarget.x || gridPos.y !== agentTarget.y) {
-          // Set target for smooth movement
-          const dx = gridPos.x - agentPosition.x;
-          const dy = gridPos.y - agentPosition.y;
-          setAgentDirection(getDirectionFromDelta(dx, dy));
-          setAgentTarget(gridPos);
-          setIsMoving(true);
+
+        // In demo mode (no real agents), move demo agent
+        if (!hasRealAgents) {
+          if (gridPos.x !== demoAgentTarget.x || gridPos.y !== demoAgentTarget.y) {
+            const dx = gridPos.x - demoAgentPosition.x;
+            const dy = gridPos.y - demoAgentPosition.y;
+            setDemoDirection(getDirectionFromDelta(dx, dy));
+            setDemoAgentTarget(gridPos);
+            setIsDemoMoving(true);
+          }
         }
+        // TODO: With real agents, implement move command via store
       }
     };
 
@@ -278,7 +295,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
       canvas.removeEventListener('wheel', handleWheel);
       canvas.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [app, isDragging, cameraOffset, cameraZoom, centerOffsetX, centerOffsetY, agentTarget, agentPosition]);
+  }, [app, isDragging, cameraOffset, cameraZoom, centerOffsetX, centerOffsetY, hasRealAgents, demoAgentTarget, demoAgentPosition]);
 
   // Generate tiles in render order
   const tiles: { x: number; y: number }[] = [];
@@ -317,29 +334,44 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
     return assetLoader.getTexture(tileTypes[index]) || null;
   };
 
-  // Get agent sprite texture based on movement state
-  const getAgentTexture = (): Texture | null => {
-    const animation = isMoving ? 'walk' : 'idle';
-    const spriteId = `claude_${animation}_${agentDirection}`;
+  // Get demo agent sprite texture based on movement state
+  const getDemoAgentTexture = (): Texture | null => {
+    const animation = isDemoMoving ? 'walk' : 'idle';
+    const spriteId = `claude_${animation}_${demoDirection}`;
     return assetLoader.getTexture(spriteId) || null;
   };
+
+  // Get first selected agent for the status panel
+  const selectedAgent = useMemo(() => {
+    if (selectedAgentIds.size > 0) {
+      const firstSelectedId = Array.from(selectedAgentIds)[0];
+      return agents.get(firstSelectedId);
+    }
+    return null;
+  }, [agents, selectedAgentIds]);
 
   // Handle keyboard for effects demo (L = level-up, M = magic)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Get position for effect (use first selected agent or demo agent)
+      let effectPos: { x: number; y: number };
+      if (selectedAgent) {
+        effectPos = gridToScreen(selectedAgent.position.q + 5, selectedAgent.position.r + 5);
+      } else {
+        effectPos = gridToScreen(demoAgentPosition.x, demoAgentPosition.y);
+      }
+
       if (e.key === 'l' || e.key === 'L') {
-        const pos = gridToScreen(agentPosition.x, agentPosition.y);
-        spawnEffect(pos.x, pos.y - 30, 'levelup');
+        spawnEffect(effectPos.x, effectPos.y - 30, 'levelup');
       }
       if (e.key === 'm' || e.key === 'M') {
-        const pos = gridToScreen(agentPosition.x, agentPosition.y);
-        spawnEffect(pos.x, pos.y - 30, 'magic');
+        spawnEffect(effectPos.x, effectPos.y - 30, 'magic');
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [agentPosition, spawnEffect]);
+  }, [demoAgentPosition, selectedAgent, spawnEffect]);
 
   return (
     <pixiContainer x={centerOffsetX + cameraOffset.x} y={centerOffsetY + cameraOffset.y} scale={cameraZoom} sortableChildren={true}>
@@ -488,16 +520,28 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
         );
       })()}
 
-      {/* Agent */}
-      {(() => {
-        const screenPos = gridToScreen(agentPosition.x, agentPosition.y);
-        const isAgentSelected = selectedTile?.x === agentPosition.x && selectedTile?.y === agentPosition.y;
-        const agentTexture = getAgentTexture();
+      {/* Real Agents from Store */}
+      {agentList.map((agent) => (
+        <IsometricAgent
+          key={agent.id}
+          agent={agent}
+          isSelected={selectedAgentIds.has(agent.id)}
+          onSelect={selectAgent}
+          onSpawnEffect={handleAgentEffect}
+        />
+      ))}
+
+      {/* Demo Agent (when no real agents exist) */}
+      {!hasRealAgents && (() => {
+        const screenPos = gridToScreen(demoAgentPosition.x, demoAgentPosition.y);
+        const isDemoSelected = selectedTile?.x === Math.floor(demoAgentPosition.x) &&
+                               selectedTile?.y === Math.floor(demoAgentPosition.y);
+        const agentTexture = getDemoAgentTexture();
 
         return (
-          <pixiContainer x={screenPos.x} y={screenPos.y} zIndex={agentPosition.x + agentPosition.y + 100}>
+          <pixiContainer x={screenPos.x} y={screenPos.y} zIndex={Math.floor(demoAgentPosition.x + demoAgentPosition.y) + 100}>
             {/* Selection ring */}
-            {isAgentSelected && (
+            {isDemoSelected && (
               <pixiGraphics
                 draw={(g: Graphics) => {
                   g.clear();
@@ -530,6 +574,20 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
                 }}
               />
             )}
+
+            {/* Demo label */}
+            <pixiText
+              text="Demo Agent"
+              y={-60}
+              anchor={{ x: 0.5, y: 0.5 }}
+              style={new TextStyle({
+                fontFamily: 'monospace',
+                fontSize: 10,
+                fontWeight: 'bold',
+                fill: 0xffffff,
+                stroke: { color: 0x000000, width: 2 },
+              })}
+            />
           </pixiContainer>
         );
       })()}
@@ -642,7 +700,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
 
         {/* Agent name */}
         <pixiText
-          text="Claude"
+          text={selectedAgent?.name || (hasRealAgents ? 'Select Agent' : 'Demo Agent')}
           x={70}
           y={10}
           style={new TextStyle({
@@ -653,23 +711,26 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
           })}
         />
 
-        {/* HP bar */}
+        {/* HP bar (Context usage for real agents) */}
         <pixiContainer x={70} y={30}>
           <pixiGraphics
             draw={(g: Graphics) => {
               g.clear();
+              const hpPercent = selectedAgent
+                ? Math.max(0, 100 - (selectedAgent.contextTokens / selectedAgent.contextLimit) * 100)
+                : 85;
               // Background
               g.rect(0, 0, 100, 12);
               g.fill({ color: 0x1a1a2e });
               g.stroke({ color: 0x4b5563, width: 1 });
-              // Fill (85% HP)
-              g.rect(1, 1, 83, 10);
-              g.fill({ color: 0x22c55e });
+              // Fill
+              g.rect(1, 1, Math.max(0, (hpPercent / 100) * 98), 10);
+              g.fill({ color: hpPercent > 30 ? 0x22c55e : hpPercent > 10 ? 0xf59e0b : 0xef4444 });
             }}
           />
           <pixiText
-            text="HP"
-            x={-20}
+            text="CTX"
+            x={-24}
             y={-1}
             style={new TextStyle({
               fontFamily: 'monospace',
@@ -679,23 +740,24 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
           />
         </pixiContainer>
 
-        {/* XP bar */}
+        {/* XP bar (Usage percent for real agents) */}
         <pixiContainer x={70} y={48}>
           <pixiGraphics
             draw={(g: Graphics) => {
               g.clear();
+              const xpPercent = selectedAgent?.usagePercent || 60;
               // Background
               g.rect(0, 0, 100, 12);
               g.fill({ color: 0x1a1a2e });
               g.stroke({ color: 0x4b5563, width: 1 });
-              // Fill (60% XP)
-              g.rect(1, 1, 60, 10);
+              // Fill
+              g.rect(1, 1, Math.max(0, (xpPercent / 100) * 98), 10);
               g.fill({ color: 0x8b5cf6 });
             }}
           />
           <pixiText
-            text="XP"
-            x={-20}
+            text="USE"
+            x={-24}
             y={-1}
             style={new TextStyle({
               fontFamily: 'monospace',
@@ -707,7 +769,7 @@ function IsometricScene({ width, height }: IsometricSceneProps) {
 
         {/* Level badge */}
         <pixiText
-          text="Lv 5"
+          text={`Lv ${selectedAgent?.level || 1}`}
           x={135}
           y={62}
           style={new TextStyle({
