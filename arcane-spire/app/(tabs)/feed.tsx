@@ -171,6 +171,8 @@ function getEntryConfig(type: ChronicleEntryType): { color: string; icon: string
   switch (type) {
     case 'quest_complete':
       return { color: Colors.holy.gold, icon: 'trophy' };
+    case 'quest_failed':
+      return { color: Colors.fire.orange, icon: 'close-circle' };
     case 'quest_started':
       return { color: Colors.arcane.purple, icon: 'flag' };
     case 'quest_accepted':

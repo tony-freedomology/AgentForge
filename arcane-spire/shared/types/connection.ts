@@ -64,6 +64,7 @@ export type WSMessageType =
   | 'quest_started'
   | 'quest_progress'
   | 'quest_complete'
+  | 'quest_failed'
   | 'quest_accepted'
   | 'quest_revision'
 

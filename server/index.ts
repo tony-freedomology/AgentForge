@@ -57,11 +57,12 @@ interface Quest {
   agentId: string;
   title: string;
   description: string;
-  status: 'active' | 'complete' | 'accepted' | 'revision';
+  status: 'active' | 'complete' | 'accepted' | 'revision' | 'failed';
   artifacts: string[];
   xpReward: number;
   startedAt: Date;
   completedAt?: Date;
+  reviewedAt?: Date;
 }
 
 interface MachineInfo {
@@ -339,6 +340,21 @@ function extractThought(output: string): { type: 'thinking' | 'action'; content:
   return null;
 }
 
+function completeQuestForAgent(io: SocketIOServer, agentId: string): void {
+  const activeQuests = Array.from(quests.values()).filter(
+    (quest) => quest.agentId === agentId && (quest.status === 'active' || quest.status === 'revision')
+  );
+
+  if (activeQuests.length === 0) return;
+
+  const quest = activeQuests.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0];
+  if (quest.status === 'complete') return;
+
+  quest.status = 'complete';
+  quest.completedAt = new Date();
+  io.emit('quest_complete', quest);
+}
+
 function extractQuestion(output: string): { question: string; quickReplies: string[] } | null {
   for (const pattern of QUESTION_PATTERNS) {
     const match = output.match(pattern);
@@ -521,6 +537,10 @@ async function spawnAgent(
         status: newStatus,
         activity: agent.activity,
       });
+
+      if (newStatus === 'complete') {
+        completeQuestForAgent(io, id);
+      }
     }
 
     // Extract thoughts
@@ -744,6 +764,7 @@ io.on('connection', (socket) => {
 
     if (payload.action === 'accept') {
       quest.status = 'accepted';
+      quest.reviewedAt = new Date();
       io.emit('quest_accepted', quest);
 
       // Award XP to agent
@@ -763,6 +784,7 @@ io.on('connection', (socket) => {
       }
     } else if (payload.action === 'revise') {
       quest.status = 'revision';
+      quest.reviewedAt = new Date();
       io.emit('quest_revision', { quest, note: payload.note });
 
       // Send revision note to agent
@@ -770,6 +792,11 @@ io.on('connection', (socket) => {
       if (agent && payload.note) {
         sendInput(io, agent.id, `Revision requested: ${payload.note}`);
       }
+    } else if (payload.action === 'reject') {
+      quest.status = 'failed';
+      quest.reviewedAt = new Date();
+      quest.completedAt = new Date();
+      io.emit('quest_failed', quest);
     }
   });
 

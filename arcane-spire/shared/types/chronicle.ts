@@ -2,6 +2,7 @@
 export type ChronicleEntryType =
   | 'quest_started'
   | 'quest_complete'
+  | 'quest_failed'
   | 'quest_accepted'
   | 'quest_revision'
   | 'agent_spawned'

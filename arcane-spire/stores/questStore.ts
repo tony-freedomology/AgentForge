@@ -234,8 +234,8 @@ export const useQuestStore = create<QuestState>()(
         return Object.values(get().quests)
           .filter((q) => q.status === 'accepted' || q.status === 'failed')
           .sort((a, b) => {
-            const aDate = a.completedAt || a.startedAt;
-            const bDate = b.completedAt || b.startedAt;
+            const aDate = new Date(a.completedAt || a.startedAt);
+            const bDate = new Date(b.completedAt || b.startedAt);
             return bDate.getTime() - aDate.getTime();
           });
       },

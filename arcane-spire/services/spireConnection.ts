@@ -22,6 +22,7 @@ type AgentUpdateCallback = (agentId: string, updates: Partial<Agent>) => void;
 type AgentOutputCallback = (payload: AgentOutputPayload) => void;
 type AgentThoughtCallback = (payload: AgentThoughtPayload) => void;
 type AgentStatusCallback = (payload: AgentStatusPayload) => void;
+type AgentActivityCallback = (payload: { agentId: string; activity: string }) => void;
 type AgentProgressCallback = (payload: AgentProgressPayload) => void;
 type AgentQuestionCallback = (payload: AgentQuestionPayload) => void;
 type AgentSpawnedCallback = (agent: Agent) => void;
@@ -46,6 +47,7 @@ type QuestPayload = {
 };
 type QuestStartedCallback = (quest: QuestPayload) => void;
 type QuestCompleteCallback = (quest: QuestPayload) => void;
+type QuestFailedCallback = (quest: QuestPayload) => void;
 type QuestAcceptedCallback = (quest: QuestPayload) => void;
 type QuestRevisionCallback = (payload: { quest: QuestPayload; note?: string }) => void;
 
@@ -70,6 +72,7 @@ class SpireConnectionService {
   private onAgentOutput: AgentOutputCallback | null = null;
   private onAgentThought: AgentThoughtCallback | null = null;
   private onAgentStatus: AgentStatusCallback | null = null;
+  private onAgentActivity: AgentActivityCallback | null = null;
   private onAgentProgress: AgentProgressCallback | null = null;
   private onAgentQuestion: AgentQuestionCallback | null = null;
   private onAgentSpawned: AgentSpawnedCallback | null = null;
@@ -77,6 +80,7 @@ class SpireConnectionService {
   private onError: ErrorCallback | null = null;
   private onQuestStarted: QuestStartedCallback | null = null;
   private onQuestComplete: QuestCompleteCallback | null = null;
+  private onQuestFailed: QuestFailedCallback | null = null;
   private onQuestAccepted: QuestAcceptedCallback | null = null;
   private onQuestRevision: QuestRevisionCallback | null = null;
 
@@ -123,6 +127,7 @@ class SpireConnectionService {
     onAgentOutput?: AgentOutputCallback;
     onAgentThought?: AgentThoughtCallback;
     onAgentStatus?: AgentStatusCallback;
+    onAgentActivity?: AgentActivityCallback;
     onAgentProgress?: AgentProgressCallback;
     onAgentQuestion?: AgentQuestionCallback;
     onAgentSpawned?: AgentSpawnedCallback;
@@ -130,6 +135,7 @@ class SpireConnectionService {
     onError?: ErrorCallback;
     onQuestStarted?: QuestStartedCallback;
     onQuestComplete?: QuestCompleteCallback;
+    onQuestFailed?: QuestFailedCallback;
     onQuestAccepted?: QuestAcceptedCallback;
     onQuestRevision?: QuestRevisionCallback;
   }): void {
@@ -139,6 +145,7 @@ class SpireConnectionService {
     this.onAgentOutput = callbacks.onAgentOutput ?? null;
     this.onAgentThought = callbacks.onAgentThought ?? null;
     this.onAgentStatus = callbacks.onAgentStatus ?? null;
+    this.onAgentActivity = callbacks.onAgentActivity ?? null;
     this.onAgentProgress = callbacks.onAgentProgress ?? null;
     this.onAgentQuestion = callbacks.onAgentQuestion ?? null;
     this.onAgentSpawned = callbacks.onAgentSpawned ?? null;
@@ -146,6 +153,7 @@ class SpireConnectionService {
     this.onError = callbacks.onError ?? null;
     this.onQuestStarted = callbacks.onQuestStarted ?? null;
     this.onQuestComplete = callbacks.onQuestComplete ?? null;
+    this.onQuestFailed = callbacks.onQuestFailed ?? null;
     this.onQuestAccepted = callbacks.onQuestAccepted ?? null;
     this.onQuestRevision = callbacks.onQuestRevision ?? null;
   }
@@ -251,6 +259,10 @@ class SpireConnectionService {
       this.onAgentStatus?.(payload);
     });
 
+    this.socket.on('agent_activity_change', (payload: { agentId: string; activity: string }) => {
+      this.onAgentActivity?.(payload);
+    });
+
     this.socket.on('agent_progress', (payload: AgentProgressPayload) => {
       this.onAgentProgress?.(payload);
     });
@@ -265,6 +277,10 @@ class SpireConnectionService {
 
     this.socket.on('quest_complete', (quest: QuestPayload) => {
       this.onQuestComplete?.(quest);
+    });
+
+    this.socket.on('quest_failed', (quest: QuestPayload) => {
+      this.onQuestFailed?.(quest);
     });
 
     this.socket.on('quest_accepted', (quest: QuestPayload) => {
@@ -325,6 +341,10 @@ class SpireConnectionService {
         this.onAgentStatus?.(message.payload as AgentStatusPayload);
         break;
 
+      case 'agent_activity_change':
+        this.onAgentActivity?.(message.payload as { agentId: string; activity: string });
+        break;
+
       case 'agent_progress':
         this.onAgentProgress?.(message.payload as AgentProgressPayload);
         break;
@@ -339,6 +359,10 @@ class SpireConnectionService {
 
       case 'quest_complete':
         this.onQuestComplete?.(message.payload as QuestPayload);
+        break;
+
+      case 'quest_failed':
+        this.onQuestFailed?.(message.payload as QuestPayload);
         break;
 
       case 'quest_accepted':

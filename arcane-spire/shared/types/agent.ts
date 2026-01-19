@@ -204,7 +204,7 @@ export function createAgent(
     activity: 'idle',
     level: 1,
     xp: 0,
-    xpToNextLevel: 100,
+    xpToNextLevel: xpForLevel(1),
     talentPoints: 0,
     contextUsed: 0,
     contextTotal: 100,
@@ -218,9 +218,12 @@ export function createAgent(
   };
 }
 
+// XP required per level (kept in sync with the daemon)
+export const XP_PER_LEVEL = 500;
+
 // Calculate XP needed for a given level
-export function xpForLevel(level: number): number {
-  return Math.floor(100 * Math.pow(1.5, level - 1));
+export function xpForLevel(_level: number): number {
+  return XP_PER_LEVEL;
 }
 
 // Add XP to agent and handle level ups
