@@ -83,7 +83,7 @@ export function useAgentSync() {
         if (result.leveledUp) {
           const agent = useAgentStore.getState().getAgent(quest.agentId);
           if (agent) {
-            soundService.play('levelUp');
+            soundService.playSound('quest', 'levelUp');
 
             createEntry(
               'agent_level_up',

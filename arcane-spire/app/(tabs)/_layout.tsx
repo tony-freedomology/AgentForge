@@ -6,6 +6,7 @@ import { useAgentStore } from '../../stores/agentStore';
 import { useQuestStore } from '../../stores/questStore';
 import { useChronicleStore } from '../../stores/chronicleStore';
 import { CountBadge } from '../../components/ui/StatusBadge';
+import { soundService } from '../../services/sound';
 
 export default function TabLayout() {
   // Get badge counts
@@ -22,6 +23,11 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: styles.tabLabel,
         tabBarItemStyle: styles.tabItem,
+      }}
+      screenListeners={{
+        tabPress: () => {
+          soundService.playSound('ui', 'navTab');
+        },
       }}
     >
       <Tabs.Screen

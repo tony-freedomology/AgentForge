@@ -136,7 +136,7 @@ export function TalentTree({ agent, onTalentAllocate }: TalentTreeProps) {
     if (!selectedTalent || availablePoints <= 0) return;
     if (selectedTalent.currentRank >= selectedTalent.maxRank) return;
 
-    soundService.play('spawn');
+    soundService.playSound('quest', 'talentUnlock');
     onTalentAllocate?.(selectedTalent.id);
     setSelectedTalent(null);
   };

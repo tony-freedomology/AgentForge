@@ -50,21 +50,21 @@ export function useSpireConnection() {
 
       if (status === 'connected') {
         wasConnected.current = true;
-        soundService.play('connect');
+        soundService.playSound('connection', 'connectSuccess');
 
         // Notify if we were disconnected before
         if (appState.current !== 'active') {
           notificationService.notifyConnectionRestored();
         }
       } else if (status === 'disconnected' && wasConnected.current) {
-        soundService.play('disconnect');
+        soundService.playSound('connection', 'disconnect');
 
         // Notify if app is backgrounded
         if (appState.current !== 'active') {
           notificationService.notifyConnectionLost();
         }
       } else if (status === 'error') {
-        soundService.play('error');
+        soundService.playSound('connection', 'connectFail');
       }
     },
     [setConnectionStatus]
@@ -82,7 +82,7 @@ export function useSpireConnection() {
   const handleAgentSpawned = useCallback(
     (agent: Agent) => {
       addAgent(agent);
-      soundService.play('spawn');
+      soundService.playSound('agent', 'spawn');
 
       createEntry(
         'agent_spawned',
@@ -159,14 +159,14 @@ export function useSpireConnection() {
       if (!agent) return;
 
       if (payload.status === 'complete' && previousStatus !== 'complete') {
-        soundService.play('complete');
+        soundService.playSound('quest', 'questComplete');
 
         // Notify if app is backgrounded
         if (appState.current !== 'active') {
           // Quest completion handled separately
         }
       } else if (payload.status === 'error' && previousStatus !== 'error') {
-        soundService.play('error');
+        soundService.playSound('agent', 'error');
 
         createEntry(
           'agent_error',
@@ -200,7 +200,7 @@ export function useSpireConnection() {
   const handleAgentQuestion = useCallback(
     async (payload: { agentId: string; question: string; quickReplies?: string[] }) => {
       setAgentQuestion(payload.agentId, payload.question, payload.quickReplies);
-      soundService.play('notification');
+      soundService.playSound('notification', 'input');
 
       const agent = useAgentStore.getState().getAgent(payload.agentId);
       if (!agent) return;

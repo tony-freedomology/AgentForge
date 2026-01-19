@@ -59,6 +59,7 @@ export function AgentSheet({
   // Show/hide sheet
   React.useEffect(() => {
     if (visible) {
+      soundService.playSound('ui', 'modalOpen');
       translateY.value = withSpring(0, { damping: 20 });
     } else {
       translateY.value = withSpring(MAX_SHEET_HEIGHT, { damping: 20 });
@@ -73,7 +74,7 @@ export function AgentSheet({
   };
 
   const handleClose = useCallback(() => {
-    soundService.play('swipe');
+    soundService.playSound('ui', 'modalClose');
     onClose();
   }, [onClose]);
 
