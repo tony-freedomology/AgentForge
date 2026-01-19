@@ -3,9 +3,8 @@ import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, Image } fr
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, AgentColors } from '../../constants/theme';
-import { EmptyStates } from '../../constants/assets';
+import { EmptyStates, Icons, UIElements } from '../../constants/assets';
 import { useQuestStore } from '../../stores/questStore';
 import { Quest, QuestStatus } from '../../shared/types/quest';
 import { AGENT_CLASSES } from '../../shared/types/agent';
@@ -241,7 +240,7 @@ function QuestCard({ quest, onPress }: QuestCardProps) {
         {/* Artifacts count */}
         {quest.artifacts.length > 0 && (
           <View style={styles.questArtifacts}>
-            <Ionicons name="cube-outline" size={14} color={Colors.textSecondary} />
+            <Image source={Icons.loot.artifact} style={styles.artifactIcon} resizeMode="contain" />
             <Text style={styles.questArtifactsText}>
               {quest.artifacts.length} file{quest.artifacts.length !== 1 ? 's' : ''} modified
             </Text>
@@ -250,7 +249,7 @@ function QuestCard({ quest, onPress }: QuestCardProps) {
 
         {/* XP reward */}
         <View style={styles.questXp}>
-          <Ionicons name="star" size={14} color={Colors.holy.gold} />
+          <Image source={Icons.talent.point} style={styles.xpIcon} resizeMode="contain" />
           <Text style={styles.questXpText}>{quest.xpReward} XP</Text>
         </View>
       </FantasyCard>
@@ -391,6 +390,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     gap: 4,
   },
+  artifactIcon: {
+    width: 14,
+    height: 14,
+  },
   questArtifactsText: {
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
@@ -400,6 +403,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: Spacing.sm,
     gap: 4,
+  },
+  xpIcon: {
+    width: 14,
+    height: 14,
   },
   questXpText: {
     fontSize: FontSize.sm,

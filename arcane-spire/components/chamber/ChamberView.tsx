@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ImageBackground, Image } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInUp } from 'react-native-reanimated';
 import { Colors, Spacing, BorderRadius, FontSize, AgentColors } from '../../constants/theme';
-import { Agent, AGENT_CLASSES } from '../../shared/types/agent';
+import { Chambers, UIElements, Effects } from '../../constants/assets';
+import { Agent, AGENT_CLASSES, AgentClass } from '../../shared/types/agent';
 import { AgentAvatar } from '../ui/AgentAvatar';
 import { ThoughtBubble, ThoughtHistoryItem, FloatingThought } from '../ui/ThoughtBubble';
 import { SegmentedProgress } from '../ui/ProgressBar';
@@ -74,11 +75,17 @@ export function ChamberView({ agent, onSendMessage }: ChamberViewProps) {
       )}
 
       {/* Agent chamber (visual area) */}
-      <View style={[styles.chamberArea, { borderColor: color + '50' }]}>
-        {/* Background would be chamber art */}
-        <View style={styles.chamberBackground}>
-          {/* Placeholder for chamber background art */}
-        </View>
+      <ImageBackground
+        source={Chambers[agent.class as AgentClass]}
+        style={[styles.chamberArea, { borderColor: color + '50' }]}
+        imageStyle={styles.chamberBackgroundImage}
+      >
+        {/* Chamber frame overlay */}
+        <Image
+          source={UIElements.chamber.frame}
+          style={styles.chamberFrame}
+          resizeMode="stretch"
+        />
 
         {/* Agent sprite */}
         <View style={styles.agentContainer}>
@@ -109,7 +116,7 @@ export function ChamberView({ agent, onSendMessage }: ChamberViewProps) {
             style={styles.progressBar}
           />
         )}
-      </View>
+      </ImageBackground>
 
       {/* Thought history */}
       <View style={styles.thoughtHistory}>
@@ -218,10 +225,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
   },
-  chamberBackground: {
+  chamberBackgroundImage: {
+    borderRadius: BorderRadius.lg,
+    opacity: 0.8,
+  },
+  chamberFrame: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.shadow.darker,
-    // Placeholder for chamber background art
+    opacity: 0.3,
   },
   agentContainer: {
     position: 'absolute',

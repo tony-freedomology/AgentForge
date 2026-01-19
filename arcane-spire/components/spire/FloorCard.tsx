@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, ImageBackground } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -10,6 +10,7 @@ import Animated, {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, Shadows, AgentColors, StatusColors } from '../../constants/theme';
 import { getFloorName } from '../../constants/agentClasses';
+import { SpireElements, getFloorFrame } from '../../constants/assets';
 import { Agent, AGENT_CLASSES } from '../../shared/types/agent';
 import { AgentAvatar } from '../ui/AgentAvatar';
 import { StatusBadge, ActivityBadge } from '../ui/StatusBadge';
@@ -102,6 +103,9 @@ export function FloorCard({
     }
   };
 
+  // Get floor frame based on agent status
+  const floorFrame = getFloorFrame(agent.status);
+
   return (
     <AnimatedPressable
       onPress={handlePress}
@@ -112,14 +116,24 @@ export function FloorCard({
       exiting={FadeOut.duration(200)}
       style={[scaleStyle, needsAttention ? pulseStyle : glowStyle]}
     >
-      <View
+      {/* Floor connector between floors */}
+      <View style={styles.connectorContainer}>
+        <Image
+          source={SpireElements.connector}
+          style={styles.connector}
+          resizeMode="contain"
+        />
+      </View>
+
+      <ImageBackground
+        source={floorFrame}
         style={[
           styles.container,
           {
             borderColor: getBorderColor(),
-            backgroundColor: isSpawning ? color + '10' : Colors.shadow.lighter,
           },
         ]}
+        imageStyle={styles.frameImage}
       >
         {/* Floor header */}
         <View style={styles.header}>
@@ -186,7 +200,7 @@ export function FloorCard({
             </Text>
           </View>
         )}
-      </View>
+      </ImageBackground>
     </AnimatedPressable>
   );
 }
@@ -223,13 +237,27 @@ export function CompactFloorCard({ agent, onPress }: CompactFloorCardProps) {
 }
 
 const styles = StyleSheet.create({
+  connectorContainer: {
+    alignItems: 'center',
+    height: 20,
+    marginBottom: -10,
+    zIndex: 1,
+  },
+  connector: {
+    width: 30,
+    height: 20,
+  },
   container: {
     borderRadius: BorderRadius.lg,
     borderWidth: 2,
     padding: Spacing.md,
     marginHorizontal: Spacing.md,
-    marginVertical: Spacing.sm,
+    overflow: 'hidden',
     ...Shadows.md,
+  },
+  frameImage: {
+    borderRadius: BorderRadius.lg,
+    opacity: 0.15,
   },
   header: {
     marginBottom: Spacing.sm,

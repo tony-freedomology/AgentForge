@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Dimensions, Platform, Image, ImageBackground } from 'react-native';
 import { CameraView, Camera, BarcodeScanningResult } from 'expo-camera';
 import Animated, {
   useAnimatedStyle,
@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize } from '../constants/theme';
+import { Onboarding, Icons } from '../constants/assets';
 import { FantasyButton } from './ui/FantasyButton';
 import { LoadingRune } from './ui/LoadingRune';
 
@@ -138,7 +139,7 @@ export function QRScanner({
         {/* Top section */}
         <View style={styles.overlaySection}>
           <Pressable onPress={onClose} style={styles.closeBtn}>
-            <Ionicons name="close" size={28} color={Colors.text} />
+            <Image source={Icons.action.close} style={styles.closeBtnIcon} resizeMode="contain" />
           </Pressable>
         </View>
 
@@ -146,17 +147,15 @@ export function QRScanner({
         <View style={styles.middleSection}>
           <View style={styles.overlaySide} />
 
-          {/* Scan area */}
-          <View style={styles.scanArea}>
-            {/* Corners */}
-            <View style={[styles.corner, styles.cornerTL]} />
-            <View style={[styles.corner, styles.cornerTR]} />
-            <View style={[styles.corner, styles.cornerBL]} />
-            <View style={[styles.corner, styles.cornerBR]} />
-
+          {/* Scan area with pixel art frame */}
+          <ImageBackground
+            source={Onboarding.qrFrame}
+            style={styles.scanArea}
+            imageStyle={styles.qrFrameImage}
+          >
             {/* Scan line */}
             <Animated.View style={[styles.scanLine, scanLineStyle]} />
-          </View>
+          </ImageBackground>
 
           <View style={styles.overlaySide} />
         </View>
@@ -208,7 +207,7 @@ export function QRScannerButton({ onPress, label = 'Scan QR Code' }: QRScannerBu
       size="lg"
       fullWidth
       onPress={onPress}
-      icon={<Ionicons name="qr-code" size={20} color={Colors.text} />}
+      icon={<Image source={Onboarding.qrFrame} style={{ width: 20, height: 20 }} resizeMode="contain" />}
     >
       {label}
     </FantasyButton>
@@ -248,52 +247,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  closeBtnIcon: {
+    width: 24,
+    height: 24,
+    tintColor: Colors.text,
+  },
   scanArea: {
     width: SCAN_AREA_SIZE,
     height: SCAN_AREA_SIZE,
     backgroundColor: 'transparent',
     position: 'relative',
     overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  corner: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderColor: Colors.arcane.purple,
-    borderWidth: 4,
-  },
-  cornerTL: {
-    top: 0,
-    left: 0,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: BorderRadius.md,
-  },
-  cornerTR: {
-    top: 0,
-    right: 0,
-    borderLeftWidth: 0,
-    borderBottomWidth: 0,
-    borderTopRightRadius: BorderRadius.md,
-  },
-  cornerBL: {
-    bottom: 0,
-    left: 0,
-    borderRightWidth: 0,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: BorderRadius.md,
-  },
-  cornerBR: {
-    bottom: 0,
-    right: 0,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    borderBottomRightRadius: BorderRadius.md,
+  qrFrameImage: {
+    // The pixel art frame
   },
   scanLine: {
     position: 'absolute',
-    left: 4,
-    right: 4,
+    left: 20,
+    right: 20,
+    top: 20,
     height: 2,
     backgroundColor: Colors.arcane.purple,
     shadowColor: Colors.arcane.purple,

@@ -1,15 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Switch, Pressable, Image, ImageSourcePropType } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize } from '../../constants/theme';
+import { Icons, Branding } from '../../constants/assets';
 import { usePrefsStore } from '../../stores/prefsStore';
 import { useConnectionStore } from '../../stores/connectionStore';
 import { FantasyCard } from '../../components/ui/FantasyCard';
 import { FantasyButton } from '../../components/ui/FantasyButton';
 import { ConnectionStatusIndicator } from '../../components/ConnectionStatusBar';
 import { soundService } from '../../services/sound';
+
+// Map section icons to pixel art
+const SECTION_ICONS: Record<string, ImageSourcePropType> = {
+  link: Icons.action.settings, // Connection
+  notifications: Icons.badges.alert,
+  'volume-high': Icons.activity.idle, // Sound
+  eye: Icons.activity.reading, // Display
+  'information-circle': Icons.quest.scroll, // About
+  bug: Icons.status.error, // Debug
+};
 
 export default function GrimoireScreen() {
   const router = useRouter();
@@ -59,7 +70,7 @@ export default function GrimoireScreen() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
+            <Image source={Icons.action.expand} style={styles.chevronIcon} resizeMode="contain" />
           </Pressable>
 
           {savedConnections.length > 1 && (
@@ -183,7 +194,8 @@ export default function GrimoireScreen() {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>🏰 Arcane Spire</Text>
+          <Image source={Branding.logoIcon} style={styles.footerLogo} resizeMode="contain" />
+          <Text style={styles.footerText}>Arcane Spire</Text>
           <Text style={styles.footerSubtext}>Part of the AgentForge ecosystem</Text>
         </View>
       </ScrollView>
@@ -199,10 +211,16 @@ interface SettingsSectionProps {
 }
 
 function SettingsSection({ title, icon, children }: SettingsSectionProps) {
+  const iconSource = SECTION_ICONS[icon];
+
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Ionicons name={icon as any} size={20} color={Colors.arcane.purple} />
+        {iconSource ? (
+          <Image source={iconSource} style={styles.sectionIcon} resizeMode="contain" />
+        ) : (
+          <Ionicons name={icon as any} size={20} color={Colors.arcane.purple} />
+        )}
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
       <FantasyCard variant="dark" style={styles.sectionContent}>
@@ -269,6 +287,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     paddingHorizontal: Spacing.sm,
   },
+  sectionIcon: {
+    width: 20,
+    height: 20,
+    tintColor: Colors.arcane.purple,
+  },
   sectionTitle: {
     fontSize: FontSize.md,
     fontWeight: '600',
@@ -301,6 +324,11 @@ const styles = StyleSheet.create({
   connectionStatus: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
+  },
+  chevronIcon: {
+    width: 16,
+    height: 16,
+    tintColor: Colors.textMuted,
   },
   savedCount: {
     fontSize: FontSize.xs,
@@ -350,6 +378,11 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: 'center',
     paddingVertical: Spacing.xl,
+  },
+  footerLogo: {
+    width: 48,
+    height: 48,
+    marginBottom: Spacing.sm,
   },
   footerText: {
     fontSize: FontSize.lg,

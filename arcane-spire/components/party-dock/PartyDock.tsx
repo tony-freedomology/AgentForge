@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ImageBackground, Image } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withSpring,
@@ -7,8 +7,8 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, Shadows, AgentColors, StatusColors } from '../../constants/theme';
+import { UIElements, Icons } from '../../constants/assets';
 import { Agent, AGENT_CLASSES } from '../../shared/types/agent';
 import { MiniAvatar } from '../ui/AgentAvatar';
 import { MiniProgressBar } from '../ui/ProgressBar';
@@ -54,59 +54,65 @@ export function PartyDock({ agents, onAgentPress }: PartyDockProps) {
   ).length;
 
   return (
-    <Animated.View style={[styles.container, containerStyle]}>
-      {/* Collapsed view - mini icons */}
-      {!isExpanded && (
-        <View style={styles.collapsedContent}>
+    <ImageBackground
+      source={UIElements.dock.background}
+      style={[styles.container]}
+      imageStyle={styles.backgroundImage}
+    >
+      <Animated.View style={[styles.innerContainer, containerStyle]}>
+        {/* Collapsed view - mini icons */}
+        {!isExpanded && (
+          <View style={styles.collapsedContent}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.miniIconsContainer}
+            >
+              {agents.map((agent) => (
+                <PartyDockSlot
+                  key={agent.id}
+                  agent={agent}
+                  onPress={() => handleAgentPress(agent.id)}
+                />
+              ))}
+            </ScrollView>
+
+            {/* Attention indicator */}
+            {attentionCount > 0 && (
+              <View style={styles.attentionBadge}>
+                <Image source={Icons.badges.alert} style={styles.attentionIcon} resizeMode="contain" />
+                <Text style={styles.attentionText}>{attentionCount}</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Expanded view - full party frames */}
+        {isExpanded && (
           <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.miniIconsContainer}
+            style={styles.expandedContent}
+            showsVerticalScrollIndicator={false}
           >
             {agents.map((agent) => (
-              <PartyDockSlot
+              <ExpandedPartyFrame
                 key={agent.id}
                 agent={agent}
                 onPress={() => handleAgentPress(agent.id)}
               />
             ))}
           </ScrollView>
+        )}
 
-          {/* Attention indicator */}
-          {attentionCount > 0 && (
-            <View style={styles.attentionBadge}>
-              <Text style={styles.attentionText}>{attentionCount}</Text>
-            </View>
-          )}
-        </View>
-      )}
-
-      {/* Expanded view - full party frames */}
-      {isExpanded && (
-        <ScrollView
-          style={styles.expandedContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {agents.map((agent) => (
-            <ExpandedPartyFrame
-              key={agent.id}
-              agent={agent}
-              onPress={() => handleAgentPress(agent.id)}
-            />
-          ))}
-        </ScrollView>
-      )}
-
-      {/* Expand/collapse handle */}
-      <Pressable onPress={toggleExpand} style={styles.handle}>
-        <View style={styles.handleBar} />
-        <Ionicons
-          name={isExpanded ? 'chevron-up' : 'chevron-down'}
-          size={16}
-          color={Colors.textMuted}
-        />
-      </Pressable>
-    </Animated.View>
+        {/* Expand/collapse handle */}
+        <Pressable onPress={toggleExpand} style={styles.handle}>
+          <Image
+            source={UIElements.dock.expandHandle}
+            style={[styles.handleImage, isExpanded && styles.handleImageFlipped]}
+            resizeMode="contain"
+          />
+        </Pressable>
+      </Animated.View>
+    </ImageBackground>
   );
 }
 
@@ -121,51 +127,58 @@ function PartyDockSlot({ agent, onPress }: PartyDockSlotProps) {
   const color = AgentColors[agent.class];
   const needsAttention = agent.status === 'awaiting' || agent.status === 'error' || agent.status === 'complete';
 
-  const getStatusIcon = () => {
+  // Get status icon from assets
+  const getStatusIconSource = () => {
     switch (agent.status) {
       case 'channeling':
-        return '⚡';
+        return Icons.status.working;
       case 'dormant':
-        return '💤';
+        return Icons.status.idle;
       case 'awaiting':
-        return '❓';
+        return Icons.status.waiting;
       case 'complete':
-        return '✓';
+        return Icons.status.complete;
       case 'error':
-        return '⚠️';
+        return Icons.status.error;
       case 'spawning':
-        return '✨';
+        return Icons.status.spawning;
       default:
-        return '';
+        return Icons.status.idle;
     }
   };
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.slot,
-        {
-          borderColor: needsAttention ? StatusColors[agent.status] : color,
-        },
-        needsAttention && styles.slotAttention,
-      ]}
-    >
-      <Text style={styles.slotIcon}>{classInfo.icon}</Text>
-      <Text style={styles.slotStatus}>{getStatusIcon()}</Text>
+    <Pressable onPress={onPress}>
+      <ImageBackground
+        source={needsAttention ? UIElements.dock.slotAlert : UIElements.dock.slot}
+        style={[
+          styles.slot,
+          {
+            borderColor: needsAttention ? StatusColors[agent.status] : color,
+          },
+        ]}
+        imageStyle={styles.slotImage}
+      >
+        <Text style={styles.slotIcon}>{classInfo.icon}</Text>
+        <Image source={getStatusIconSource()} style={styles.slotStatusIcon} resizeMode="contain" />
 
-      {/* Mini context bar */}
-      <View style={styles.slotBarContainer}>
-        <View
-          style={[
-            styles.slotBar,
-            {
-              width: `${agent.contextUsed}%`,
-              backgroundColor: color,
-            },
-          ]}
-        />
-      </View>
+        {/* Mini context bar using dock miniBar */}
+        <ImageBackground
+          source={UIElements.dock.miniBar}
+          style={styles.slotBarContainer}
+          imageStyle={styles.slotBarBg}
+        >
+          <View
+            style={[
+              styles.slotBar,
+              {
+                width: `${agent.contextUsed}%`,
+                backgroundColor: color,
+              },
+            ]}
+          />
+        </ImageBackground>
+      </ImageBackground>
     </Pressable>
   );
 }
@@ -238,10 +251,15 @@ function getIdleTime(idleSince: Date): string {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.shadow.lighter,
     borderBottomWidth: 2,
     borderBottomColor: Colors.border,
     overflow: 'hidden',
+  },
+  backgroundImage: {
+    opacity: 0.9,
+  },
+  innerContainer: {
+    flex: 1,
   },
   collapsedContent: {
     flex: 1,
@@ -258,11 +276,17 @@ const styles = StyleSheet.create({
     right: Spacing.sm,
     backgroundColor: Colors.fire.orange,
     borderRadius: 10,
-    minWidth: 20,
+    minWidth: 24,
     height: 20,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
+    gap: 2,
+  },
+  attentionIcon: {
+    width: 12,
+    height: 12,
   },
   attentionText: {
     color: Colors.text,
@@ -278,12 +302,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.xs,
   },
-  handleBar: {
-    width: 40,
-    height: 4,
-    backgroundColor: Colors.stone.dark,
-    borderRadius: 2,
-    marginBottom: 2,
+  handleImage: {
+    width: 48,
+    height: 16,
+  },
+  handleImageFlipped: {
+    transform: [{ rotate: '180deg' }],
   },
 
   // Slot styles
@@ -292,31 +316,33 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: BorderRadius.md,
     borderWidth: 2,
-    backgroundColor: Colors.shadow.darker,
     alignItems: 'center',
     padding: 4,
+    overflow: 'hidden',
   },
-  slotAttention: {
-    ...Shadows.glow(Colors.holy.gold),
+  slotImage: {
+    borderRadius: BorderRadius.md - 2,
   },
   slotIcon: {
     fontSize: 24,
   },
-  slotStatus: {
-    fontSize: 10,
+  slotStatusIcon: {
+    width: 12,
+    height: 12,
     marginTop: 2,
   },
   slotBarContainer: {
     width: '100%',
-    height: 4,
-    backgroundColor: Colors.shadow.black,
-    borderRadius: 2,
+    height: 6,
     marginTop: 4,
     overflow: 'hidden',
   },
+  slotBarBg: {
+    borderRadius: 3,
+  },
   slotBar: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 3,
   },
 
   // Expanded frame styles

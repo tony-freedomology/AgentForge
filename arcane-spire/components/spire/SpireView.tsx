@@ -1,10 +1,11 @@
 import React, { useCallback, useRef } from 'react';
-import { View, StyleSheet, FlatList, ListRenderItem, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, ListRenderItem, RefreshControl, Image } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Agent } from '../../shared/types/agent';
 import { useAgentStore } from '../../stores/agentStore';
 import { useConnectionStore } from '../../stores/connectionStore';
 import { Colors, Spacing } from '../../constants/theme';
+import { SpireElements } from '../../constants/assets';
 import { FloorCard } from './FloorCard';
 import { SummonPortal } from './SummonPortal';
 import { EmptySpire } from './EmptySpire';
@@ -91,9 +92,13 @@ export function SpireView({
           onAgentPress={scrollToAgent}
         />
 
-        {/* Spire top decoration (placeholder) */}
+        {/* Spire top decoration */}
         <View style={styles.spireTop}>
-          {/* Spire top art would go here */}
+          <Image
+            source={SpireElements.top}
+            style={styles.spireTopImage}
+            resizeMode="contain"
+          />
         </View>
       </Animated.View>
     ),
@@ -109,9 +114,13 @@ export function SpireView({
           disabled={connectionStatus !== 'connected'}
         />
 
-        {/* Spire ground decoration (placeholder) */}
+        {/* Spire ground decoration */}
         <View style={styles.spireGround}>
-          {/* Spire ground art would go here */}
+          <Image
+            source={SpireElements.ground}
+            style={styles.spireGroundImage}
+            resizeMode="contain"
+          />
         </View>
       </View>
     ),
@@ -172,14 +181,24 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   spireTop: {
-    height: 60,
-    // Spire top decoration
+    height: 80,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  spireTopImage: {
+    width: '100%',
+    height: 80,
   },
   footer: {
     marginTop: Spacing.md,
   },
   spireGround: {
-    height: 40,
-    // Spire ground decoration
+    height: 60,
+    alignItems: 'center',
+    marginTop: Spacing.md,
+  },
+  spireGroundImage: {
+    width: '100%',
+    height: 60,
   },
 });

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions, Image, ImageBackground } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   withSpring,
@@ -7,8 +7,8 @@ import Animated, {
   useSharedValue,
   interpolateColor,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize, AgentColors } from '../../constants/theme';
+import { UIElements, Icons } from '../../constants/assets';
 import { Agent, AgentClass } from '../../shared/types/agent';
 import { FantasyCard } from '../ui/FantasyCard';
 import { FantasyButton } from '../ui/FantasyButton';
@@ -154,15 +154,19 @@ export function TalentTree({ agent, onTalentAllocate }: TalentTreeProps) {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <ImageBackground
+        source={UIElements.talent.header}
+        style={styles.header}
+        imageStyle={styles.headerImage}
+      >
         <Text style={styles.title}>Talent Tree</Text>
         <View style={[styles.pointsBadge, { backgroundColor: agentColor + '30' }]}>
-          <Ionicons name="star" size={16} color={agentColor} />
+          <Image source={Icons.talent.point} style={styles.pointIcon} resizeMode="contain" />
           <Text style={[styles.pointsText, { color: agentColor }]}>
             {availablePoints} Points
           </Text>
         </View>
-      </View>
+      </ImageBackground>
 
       {/* Tree visualization */}
       <ScrollView
@@ -254,6 +258,13 @@ function TalentNode({
     transform: [{ scale: scale.value }],
   }));
 
+  // Get the appropriate status icon
+  const getStatusIcon = () => {
+    if (isMaxed || isUnlocked) return Icons.talent.learned;
+    if (canAllocate) return Icons.talent.available;
+    return Icons.talent.locked;
+  };
+
   return (
     <Pressable
       onPress={onPress}
@@ -262,30 +273,41 @@ function TalentNode({
     >
       <Animated.View
         style={[
-          styles.talentNode,
-          isUnlocked && { borderColor: agentColor, backgroundColor: agentColor + '20' },
           isSelected && styles.talentNodeSelected,
           !isUnlocked && !canAllocate && styles.talentNodeLocked,
           animatedStyle,
         ]}
       >
-        <Text style={styles.talentIcon}>{talent.icon}</Text>
-        <View style={styles.rankIndicator}>
-          {Array.from({ length: talent.maxRank }).map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.rankDot,
-                i < talent.currentRank && { backgroundColor: agentColor },
-              ]}
-            />
-          ))}
-        </View>
-        {isMaxed && (
-          <View style={[styles.maxBadge, { backgroundColor: agentColor }]}>
-            <Text style={styles.maxBadgeText}>MAX</Text>
+        <ImageBackground
+          source={isUnlocked ? UIElements.talent.nodeActive : UIElements.talent.nodeBg}
+          style={[
+            styles.talentNode,
+            isUnlocked && { borderColor: agentColor },
+          ]}
+          imageStyle={styles.talentNodeImage}
+        >
+          <Text style={styles.talentIcon}>{talent.icon}</Text>
+
+          {/* Status indicator */}
+          <Image source={getStatusIcon()} style={styles.talentStatusIcon} resizeMode="contain" />
+
+          <View style={styles.rankIndicator}>
+            {Array.from({ length: talent.maxRank }).map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.rankDot,
+                  i < talent.currentRank && { backgroundColor: agentColor },
+                ]}
+              />
+            ))}
           </View>
-        )}
+          {isMaxed && (
+            <View style={[styles.maxBadge, { backgroundColor: agentColor }]}>
+              <Text style={styles.maxBadgeText}>MAX</Text>
+            </View>
+          )}
+        </ImageBackground>
       </Animated.View>
     </Pressable>
   );
@@ -300,7 +322,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  headerImage: {
+    borderRadius: BorderRadius.md,
+    opacity: 0.9,
   },
   title: {
     fontSize: FontSize.lg,
@@ -314,6 +341,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.full,
     gap: 4,
+  },
+  pointIcon: {
+    width: 16,
+    height: 16,
   },
   pointsText: {
     fontSize: FontSize.md,
@@ -345,22 +376,32 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.shadow.darker,
     borderWidth: 2,
     borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
+    overflow: 'hidden',
+  },
+  talentNodeImage: {
+    borderRadius: BorderRadius.lg - 2,
   },
   talentNodeSelected: {
-    borderColor: Colors.holy.gold,
+    borderRadius: BorderRadius.lg,
     borderWidth: 3,
+    borderColor: Colors.holy.gold,
   },
   talentNodeLocked: {
     opacity: 0.4,
   },
   talentIcon: {
     fontSize: 32,
+  },
+  talentStatusIcon: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 14,
+    height: 14,
   },
   rankIndicator: {
     position: 'absolute',

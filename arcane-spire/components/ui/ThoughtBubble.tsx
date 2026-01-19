@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, Image, ImageBackground } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInUp } from 'react-native-reanimated';
 import { Colors, Spacing, BorderRadius, FontSize } from '../../constants/theme';
+import { Effects, Icons } from '../../constants/assets';
 
 type BubbleType = 'thought' | 'speech' | 'action';
 
@@ -40,41 +41,39 @@ export function ThoughtBubble({
 }: ThoughtBubbleProps) {
   const config = TYPE_CONFIG[type];
 
+  // Get the appropriate bubble tail based on type
+  const getBubbleTail = () => {
+    return type === 'thought' ? Effects.bubbleThoughtTail : Effects.bubbleSpeechTail;
+  };
+
   return (
     <Animated.View
       entering={FadeIn.duration(300).springify()}
       exiting={FadeOut.duration(200)}
-      style={[
-        styles.bubble,
-        {
-          backgroundColor: config.bg,
-          borderColor: config.border,
-        },
-        style,
-      ]}
+      style={[styles.bubbleContainer, style]}
     >
-      <Text
-        style={[styles.text, { color: config.textColor }]}
-        numberOfLines={maxLines}
+      <ImageBackground
+        source={type === 'thought' ? Effects.bubbleThought : Effects.bubbleSpeech}
+        style={[
+          styles.bubble,
+          {
+            borderColor: config.border,
+          },
+        ]}
+        imageStyle={styles.bubbleImage}
       >
-        {type === 'thought' ? `"${content}"` : content}
-      </Text>
+        <Text
+          style={[styles.text, { color: config.textColor }]}
+          numberOfLines={maxLines}
+        >
+          {type === 'thought' ? `"${content}"` : content}
+        </Text>
+      </ImageBackground>
       {/* Bubble tail */}
-      <View
-        style={[
-          styles.tail,
-          {
-            borderTopColor: config.border,
-          },
-        ]}
-      />
-      <View
-        style={[
-          styles.tailInner,
-          {
-            borderTopColor: config.bg,
-          },
-        ]}
+      <Image
+        source={getBubbleTail()}
+        style={styles.tailImage}
+        resizeMode="contain"
       />
     </Animated.View>
   );
@@ -123,20 +122,20 @@ interface ThoughtHistoryItemProps {
 }
 
 export function ThoughtHistoryItem({ content, type, timestamp }: ThoughtHistoryItemProps) {
-  const getIcon = () => {
+  const getIconSource = () => {
     switch (type) {
       case 'thinking':
-        return '💭';
+        return Icons.activity.thinking;
       case 'action':
-        return '⚡';
+        return Icons.status.working;
       case 'result':
-        return '✓';
+        return Icons.status.complete;
     }
   };
 
   return (
     <View style={styles.historyItem}>
-      <Text style={styles.historyIcon}>{getIcon()}</Text>
+      <Image source={getIconSource()} style={styles.historyIcon} resizeMode="contain" />
       <Text style={styles.historyText} numberOfLines={2}>
         {content}
       </Text>
@@ -145,43 +144,30 @@ export function ThoughtHistoryItem({ content, type, timestamp }: ThoughtHistoryI
 }
 
 const styles = StyleSheet.create({
+  bubbleContainer: {
+    maxWidth: '90%',
+    alignSelf: 'center',
+    alignItems: 'center',
+  },
   bubble: {
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
     borderWidth: 2,
-    maxWidth: '90%',
-    alignSelf: 'center',
+    overflow: 'hidden',
+  },
+  bubbleImage: {
+    borderRadius: BorderRadius.lg - 2,
+    opacity: 0.95,
   },
   text: {
     fontSize: FontSize.sm,
     fontStyle: 'italic',
     lineHeight: FontSize.sm * 1.4,
   },
-  tail: {
-    position: 'absolute',
-    bottom: -10,
-    left: '50%',
-    marginLeft: -8,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 8,
-    borderRightWidth: 8,
-    borderTopWidth: 10,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-  },
-  tailInner: {
-    position: 'absolute',
-    bottom: -6,
-    left: '50%',
-    marginLeft: -6,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderTopWidth: 8,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
+  tailImage: {
+    width: 20,
+    height: 12,
+    marginTop: -2,
   },
   floatingContainer: {
     position: 'absolute',
@@ -212,7 +198,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   historyIcon: {
-    fontSize: FontSize.sm,
+    width: 16,
+    height: 16,
     marginRight: Spacing.sm,
   },
   historyText: {
