@@ -129,7 +129,11 @@ class NotificationService {
     }
   ): Promise<string> {
     const trigger = options?.delay
-      ? { seconds: options.delay }
+      ? ({
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: options.delay,
+          repeats: false,
+        } as const)
       : null;
 
     return await Notifications.scheduleNotificationAsync({
