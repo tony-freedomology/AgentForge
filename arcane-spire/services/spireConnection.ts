@@ -27,6 +27,27 @@ type AgentQuestionCallback = (payload: AgentQuestionPayload) => void;
 type AgentSpawnedCallback = (agent: Agent) => void;
 type AgentKilledCallback = (agentId: string) => void;
 type ErrorCallback = (error: string) => void;
+type QuestPayload = {
+  id: string;
+  agentId: string;
+  title: string;
+  description?: string;
+  status?: string;
+  artifacts?: unknown[];
+  xpReward?: number;
+  startedAt?: string | number | Date;
+  completedAt?: string | number | Date;
+  reviewedAt?: string | number | Date;
+  agentName?: string;
+  agentClass?: string;
+  priority?: string;
+  completionSummary?: string;
+  revisionNotes?: string;
+};
+type QuestStartedCallback = (quest: QuestPayload) => void;
+type QuestCompleteCallback = (quest: QuestPayload) => void;
+type QuestAcceptedCallback = (quest: QuestPayload) => void;
+type QuestRevisionCallback = (payload: { quest: QuestPayload; note?: string }) => void;
 
 interface SpireConnectionOptions {
   url: string;
@@ -54,6 +75,10 @@ class SpireConnectionService {
   private onAgentSpawned: AgentSpawnedCallback | null = null;
   private onAgentKilled: AgentKilledCallback | null = null;
   private onError: ErrorCallback | null = null;
+  private onQuestStarted: QuestStartedCallback | null = null;
+  private onQuestComplete: QuestCompleteCallback | null = null;
+  private onQuestAccepted: QuestAcceptedCallback | null = null;
+  private onQuestRevision: QuestRevisionCallback | null = null;
 
   // Connect to daemon
   connect(options: SpireConnectionOptions): void {
@@ -103,6 +128,10 @@ class SpireConnectionService {
     onAgentSpawned?: AgentSpawnedCallback;
     onAgentKilled?: AgentKilledCallback;
     onError?: ErrorCallback;
+    onQuestStarted?: QuestStartedCallback;
+    onQuestComplete?: QuestCompleteCallback;
+    onQuestAccepted?: QuestAcceptedCallback;
+    onQuestRevision?: QuestRevisionCallback;
   }): void {
     this.onConnectionChange = callbacks.onConnectionChange ?? null;
     this.onAgentList = callbacks.onAgentList ?? null;
@@ -115,6 +144,10 @@ class SpireConnectionService {
     this.onAgentSpawned = callbacks.onAgentSpawned ?? null;
     this.onAgentKilled = callbacks.onAgentKilled ?? null;
     this.onError = callbacks.onError ?? null;
+    this.onQuestStarted = callbacks.onQuestStarted ?? null;
+    this.onQuestComplete = callbacks.onQuestComplete ?? null;
+    this.onQuestAccepted = callbacks.onQuestAccepted ?? null;
+    this.onQuestRevision = callbacks.onQuestRevision ?? null;
   }
 
   // Send messages
@@ -198,6 +231,10 @@ class SpireConnectionService {
       this.onAgentSpawned?.(agent);
     });
 
+    this.socket.on('agent_update', (payload: { agentId: string; updates: Partial<Agent> }) => {
+      this.onAgentUpdate?.(payload.agentId, payload.updates);
+    });
+
     this.socket.on('agent_killed', (data: { agentId: string }) => {
       this.onAgentKilled?.(data.agentId);
     });
@@ -220,6 +257,22 @@ class SpireConnectionService {
 
     this.socket.on('agent_question', (payload: AgentQuestionPayload) => {
       this.onAgentQuestion?.(payload);
+    });
+
+    this.socket.on('quest_started', (quest: QuestPayload) => {
+      this.onQuestStarted?.(quest);
+    });
+
+    this.socket.on('quest_complete', (quest: QuestPayload) => {
+      this.onQuestComplete?.(quest);
+    });
+
+    this.socket.on('quest_accepted', (quest: QuestPayload) => {
+      this.onQuestAccepted?.(quest);
+    });
+
+    this.socket.on('quest_revision', (payload: { quest: QuestPayload; note?: string }) => {
+      this.onQuestRevision?.(payload);
     });
 
     this.socket.on('error', (error: string) => {
@@ -278,6 +331,22 @@ class SpireConnectionService {
 
       case 'agent_question':
         this.onAgentQuestion?.(message.payload as AgentQuestionPayload);
+        break;
+
+      case 'quest_started':
+        this.onQuestStarted?.(message.payload as QuestPayload);
+        break;
+
+      case 'quest_complete':
+        this.onQuestComplete?.(message.payload as QuestPayload);
+        break;
+
+      case 'quest_accepted':
+        this.onQuestAccepted?.(message.payload as QuestPayload);
+        break;
+
+      case 'quest_revision':
+        this.onQuestRevision?.(message.payload as { quest: QuestPayload; note?: string });
         break;
 
       case 'error':

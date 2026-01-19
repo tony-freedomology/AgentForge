@@ -4,12 +4,13 @@ import { spireConnection } from '../services/spireConnection';
 import { notificationService } from '../services/notifications';
 import { soundService } from '../services/sound';
 import { storageService } from '../services/storage';
-import { useConnectionStore } from '../stores/connectionStore';
+import { useConnectionStore, createConnection } from '../stores/connectionStore';
 import { useAgentStore } from '../stores/agentStore';
 import { useChronicleStore } from '../stores/chronicleStore';
-import { ChronicleEntries } from '../shared/types/chronicle';
+import { useQuestStore } from '../stores/questStore';
 import { ConnectionStatus } from '../shared/types/connection';
-import { Agent, AgentStatus, AgentActivity, AgentThought } from '../shared/types/agent';
+import { Agent, AgentStatus, AgentActivity, AgentThought, AgentClass, xpForLevel, createAgent } from '../shared/types/agent';
+import { Quest, QuestArtifact, QuestPriority, QuestStatus } from '../shared/types/quest';
 
 export function useSpireConnection() {
   const appState = useRef(AppState.currentState);
@@ -21,7 +22,6 @@ export function useSpireConnection() {
     connectionStatus,
     setConnectionStatus,
     setCurrentConnection,
-    setMachineInfo,
     addRecentWorkspace,
   } = useConnectionStore();
 
@@ -37,11 +37,161 @@ export function useSpireConnection() {
     addAgentOutput,
     addAgentThought,
     setAgentQuestion,
-    grantXp,
   } = useAgentStore();
 
   // Chronicle store
   const { createEntry } = useChronicleStore();
+
+  // Quest store
+  const {
+    addQuest,
+    updateQuest,
+    completeQuest,
+    requestRevision,
+  } = useQuestStore();
+
+  const normalizeQuestStatus = useCallback((status?: string): QuestStatus => {
+    switch (status) {
+      case 'active':
+        return 'active';
+      case 'complete':
+        return 'complete';
+      case 'accepted':
+        return 'accepted';
+      case 'revision':
+      case 'revising':
+        return 'revising';
+      case 'failed':
+        return 'failed';
+      default:
+        return 'active';
+    }
+  }, []);
+
+  const normalizeQuestArtifacts = useCallback(
+    (questId: string, artifacts: unknown[] = []): QuestArtifact[] => {
+      return artifacts.map((artifact, index) => {
+        if (typeof artifact === 'string') {
+          return {
+            id: `${questId}-artifact-${index}`,
+            path: artifact,
+            changeType: 'modified',
+          };
+        }
+        if (artifact && typeof artifact === 'object') {
+          const typed = artifact as Partial<QuestArtifact> & { path?: string };
+          return {
+            id: typed.id || `${questId}-artifact-${index}`,
+            path: typed.path || `artifact-${index}`,
+            changeType: typed.changeType || 'modified',
+            linesChanged: typed.linesChanged,
+            preview: typed.preview,
+          };
+        }
+        return {
+          id: `${questId}-artifact-${index}`,
+          path: `artifact-${index}`,
+          changeType: 'modified',
+        };
+      });
+    },
+    []
+  );
+
+  const normalizeQuestPayload = useCallback(
+    (payload: {
+      id: string;
+      agentId: string;
+      title?: string;
+      description?: string;
+      status?: string;
+      artifacts?: unknown[];
+      xpReward?: number;
+      startedAt?: string | number | Date;
+      completedAt?: string | number | Date;
+      reviewedAt?: string | number | Date;
+      agentName?: string;
+      agentClass?: string;
+      priority?: string;
+      completionSummary?: string;
+      revisionNotes?: string;
+    }): Quest => {
+      const agent = useAgentStore.getState().getAgent(payload.agentId);
+      const agentName = payload.agentName || agent?.name || 'Unknown Agent';
+      const agentClass = (payload.agentClass as AgentClass) || agent?.class || 'mage';
+
+      return {
+        id: payload.id,
+        agentId: payload.agentId,
+        agentName,
+        agentClass,
+        title: payload.title || 'Quest',
+        description: payload.description || '',
+        status: normalizeQuestStatus(payload.status),
+        priority: (payload.priority as QuestPriority) || 'normal',
+        artifacts: normalizeQuestArtifacts(payload.id, payload.artifacts),
+        completionSummary: payload.completionSummary,
+        startedAt: payload.startedAt ? new Date(payload.startedAt) : new Date(),
+        completedAt: payload.completedAt ? new Date(payload.completedAt) : undefined,
+        reviewedAt: payload.reviewedAt ? new Date(payload.reviewedAt) : undefined,
+        xpReward: payload.xpReward ?? 0,
+        revisionNotes: payload.revisionNotes,
+      };
+    },
+    [normalizeQuestArtifacts, normalizeQuestStatus]
+  );
+
+  const normalizeAgentPayload = useCallback(
+    (payload: Partial<Agent> & {
+      id?: string;
+      name?: string;
+      class?: AgentClass;
+      status?: AgentStatus;
+      activity?: AgentActivity;
+      workingDirectory?: string;
+      gitBranch?: string;
+      currentThought?: string;
+      currentQuestion?: string;
+      lastActivityAt?: string | number | Date;
+      createdAt?: string | number | Date;
+    }): Agent => {
+      const agentName = payload.name || 'Unknown Agent';
+      const agentClass = payload.class || 'mage';
+      const base = createAgent(agentName, agentClass, payload.workingDirectory);
+      const level = payload.level ?? base.level;
+
+      return {
+        ...base,
+        ...payload,
+        id: payload.id || base.id,
+        class: agentClass,
+        provider: base.provider,
+        status: payload.status || base.status,
+        activity: payload.activity || base.activity,
+        branch: payload.branch || payload.gitBranch || base.branch,
+        lastThought: payload.lastThought || payload.currentThought || base.lastThought,
+        pendingQuestion: payload.pendingQuestion || payload.currentQuestion || base.pendingQuestion,
+        quickReplies: payload.quickReplies ?? base.quickReplies,
+        createdAt: payload.createdAt ? new Date(payload.createdAt) : base.createdAt,
+        lastActivity: payload.lastActivity
+          ? new Date(payload.lastActivity)
+          : payload.lastActivityAt
+            ? new Date(payload.lastActivityAt)
+            : base.lastActivity,
+        thoughts: payload.thoughts ?? base.thoughts,
+        outputBuffer: payload.outputBuffer ?? base.outputBuffer,
+        contextUsed: payload.contextUsed ?? base.contextUsed,
+        contextTotal: payload.contextTotal ?? base.contextTotal,
+        tokensUsed: payload.tokensUsed ?? base.tokensUsed,
+        xp: payload.xp ?? base.xp,
+        level,
+        xpToNextLevel: payload.xpToNextLevel ?? xpForLevel(level),
+        talentPoints: payload.talentPoints ?? base.talentPoints,
+        isFavorite: payload.isFavorite ?? base.isFavorite,
+      };
+    },
+    []
+  );
 
   // Handle connection status changes
   const handleConnectionChange = useCallback(
@@ -73,31 +223,33 @@ export function useSpireConnection() {
   // Handle agent list received
   const handleAgentList = useCallback(
     (agents: Agent[]) => {
-      setAgents(agents);
+      const normalized = agents.map((agent) => normalizeAgentPayload(agent));
+      setAgents(normalized);
     },
-    [setAgents]
+    [normalizeAgentPayload, setAgents]
   );
 
   // Handle agent spawned
   const handleAgentSpawned = useCallback(
     (agent: Agent) => {
-      addAgent(agent);
+      const normalized = normalizeAgentPayload(agent);
+      addAgent(normalized);
       soundService.playSound('agent', 'spawn');
 
       createEntry(
         'agent_spawned',
         `${agent.name} has arrived!`,
         {
-          agentId: agent.id,
-          agentName: agent.name,
-          agentClass: agent.class,
+          agentId: normalized.id,
+          agentName: normalized.name,
+          agentClass: normalized.class,
           description: 'A new agent joins the Spire',
           actionLabel: 'View',
-          actionRoute: `/agent/${agent.id}`,
+          actionRoute: `/agent/${normalized.id}`,
         }
       );
     },
-    [addAgent, createEntry]
+    [addAgent, createEntry, normalizeAgentPayload]
   );
 
   // Handle agent killed
@@ -225,6 +377,188 @@ export function useSpireConnection() {
     [setAgentQuestion, createEntry]
   );
 
+  // Handle agent updates (XP/level/etc)
+  const handleAgentUpdate = useCallback(
+    (agentId: string, updates: Partial<Agent>) => {
+      const previous = useAgentStore.getState().getAgent(agentId);
+      const nextLevel = updates.level ?? previous?.level;
+
+      const mergedUpdates: Partial<Agent> = {
+        ...updates,
+        xpToNextLevel: nextLevel ? xpForLevel(nextLevel) : previous?.xpToNextLevel,
+      };
+
+      if (updates.level && previous && updates.level > previous.level) {
+        const agent = useAgentStore.getState().getAgent(agentId);
+        if (agent) {
+          soundService.playSound('quest', 'levelUp');
+
+          createEntry(
+            'agent_level_up',
+            `${agent.name} reached Level ${updates.level}!`,
+            {
+              agentId: agent.id,
+              agentName: agent.name,
+              agentClass: agent.class,
+              description: '+1 Talent Point available',
+              actionLabel: 'Assign',
+              actionRoute: `/agent/${agent.id}/talents`,
+            }
+          );
+
+          notificationService.notifyLevelUp(agent, updates.level);
+        }
+      }
+
+      updateAgent(agentId, mergedUpdates);
+    },
+    [createEntry, updateAgent]
+  );
+
+  const handleQuestStarted = useCallback(
+    (payload: {
+      id: string;
+      agentId: string;
+      title?: string;
+      description?: string;
+      status?: string;
+      artifacts?: unknown[];
+      xpReward?: number;
+      startedAt?: string | number | Date;
+      agentName?: string;
+      agentClass?: string;
+      priority?: string;
+    }) => {
+      const quest = normalizeQuestPayload({ ...payload, status: 'active' });
+      const existing = useQuestStore.getState().getQuest(quest.id);
+
+      if (existing) {
+        updateQuest(quest.id, quest);
+      } else {
+        addQuest(quest);
+      }
+
+      soundService.playSound('quest', 'questStart');
+      createEntry('quest_started', `${quest.agentName} began a quest`, {
+        agentId: quest.agentId,
+        agentName: quest.agentName,
+        agentClass: quest.agentClass,
+        questId: quest.id,
+        description: `"${quest.title}"`,
+        actionLabel: 'View',
+        actionRoute: `/quest/${quest.id}`,
+      });
+    },
+    [addQuest, createEntry, normalizeQuestPayload, updateQuest]
+  );
+
+  const handleQuestComplete = useCallback(
+    (payload: {
+      id: string;
+      agentId: string;
+      title?: string;
+      description?: string;
+      status?: string;
+      artifacts?: unknown[];
+      xpReward?: number;
+      completedAt?: string | number | Date;
+      agentName?: string;
+      agentClass?: string;
+      priority?: string;
+      completionSummary?: string;
+    }) => {
+      const quest = normalizeQuestPayload({ ...payload, status: 'complete' });
+      const existing = useQuestStore.getState().getQuest(quest.id);
+      const summary = payload.completionSummary || payload.description || '';
+
+      if (!existing) {
+        addQuest({ ...quest, status: 'active', artifacts: [] });
+      }
+
+      completeQuest(quest.id, summary, quest.artifacts);
+
+      soundService.playSound('quest', 'questComplete');
+      createEntry(
+        'quest_complete',
+        `${quest.agentName} completed a quest!`,
+        {
+          agentId: quest.agentId,
+          agentName: quest.agentName,
+          agentClass: quest.agentClass,
+          questId: quest.id,
+          description: `"${quest.title}"`,
+          actionLabel: 'Review',
+          actionRoute: `/quest/${quest.id}`,
+        }
+      );
+
+      if (appState.current !== 'active') {
+        const agent = useAgentStore.getState().getAgent(quest.agentId);
+        if (agent) {
+          notificationService.notifyQuestComplete(agent, quest);
+        }
+      }
+    },
+    [addQuest, completeQuest, createEntry, normalizeQuestPayload]
+  );
+
+  const handleQuestAccepted = useCallback(
+    (payload: {
+      id: string;
+      agentId: string;
+      title?: string;
+      status?: string;
+      reviewedAt?: string | number | Date;
+      agentName?: string;
+      agentClass?: string;
+    }) => {
+      const quest = normalizeQuestPayload({ ...payload, status: 'accepted' });
+      const existing = useQuestStore.getState().getQuest(quest.id);
+
+      if (!existing) {
+        addQuest(quest);
+      } else {
+        updateQuest(quest.id, { status: 'accepted', reviewedAt: quest.reviewedAt || new Date() });
+      }
+
+      createEntry('quest_accepted', `${quest.agentName} quest accepted`, {
+        agentId: quest.agentId,
+        agentName: quest.agentName,
+        agentClass: quest.agentClass,
+        questId: quest.id,
+        description: `"${quest.title}"`,
+        actionLabel: 'View',
+        actionRoute: `/quest/${quest.id}`,
+      });
+    },
+    [addQuest, createEntry, normalizeQuestPayload, updateQuest]
+  );
+
+  const handleQuestRevision = useCallback(
+    (payload: { quest: { id: string; agentId: string; title?: string; status?: string; agentName?: string; agentClass?: string }; note?: string }) => {
+      const questPayload = payload.quest;
+      const quest = normalizeQuestPayload({ ...questPayload, status: 'revising' });
+      const existing = useQuestStore.getState().getQuest(quest.id);
+
+      if (!existing) {
+        addQuest({ ...quest, revisionNotes: payload.note });
+      } else {
+        requestRevision(quest.id, payload.note || 'Revision requested');
+      }
+
+      createEntry('quest_revision', `${quest.agentName} needs revisions`, {
+        agentId: quest.agentId,
+        agentName: quest.agentName,
+        agentClass: quest.agentClass,
+        questId: quest.id,
+        description: payload.note || `"${quest.title}"`,
+        actionLabel: 'Review',
+        actionRoute: `/quest/${quest.id}`,
+      });
+    },
+    [addQuest, createEntry, normalizeQuestPayload, requestRevision]
+  );
+
   // Handle errors
   const handleError = useCallback((error: string) => {
     console.error('Spire connection error:', error);
@@ -234,10 +568,16 @@ export function useSpireConnection() {
   const connect = useCallback(
     async (url: string, name: string) => {
       const token = await storageService.getConnectionToken();
+      const saved = useConnectionStore.getState().savedConnections;
+      const existing = saved.find((connection) => connection.url === url);
+      const connection = existing ? { ...existing, name } : createConnection(name, url);
+
+      setCurrentConnection({ ...connection, status: 'connecting' });
 
       spireConnection.setCallbacks({
         onConnectionChange: handleConnectionChange,
         onAgentList: handleAgentList,
+        onAgentUpdate: handleAgentUpdate,
         onAgentSpawned: handleAgentSpawned,
         onAgentKilled: handleAgentKilled,
         onAgentOutput: handleAgentOutput,
@@ -245,6 +585,10 @@ export function useSpireConnection() {
         onAgentStatus: handleAgentStatus,
         onAgentProgress: handleAgentProgress,
         onAgentQuestion: handleAgentQuestion,
+        onQuestStarted: handleQuestStarted,
+        onQuestComplete: handleQuestComplete,
+        onQuestAccepted: handleQuestAccepted,
+        onQuestRevision: handleQuestRevision,
         onError: handleError,
       });
 
@@ -259,6 +603,7 @@ export function useSpireConnection() {
     [
       handleConnectionChange,
       handleAgentList,
+      handleAgentUpdate,
       handleAgentSpawned,
       handleAgentKilled,
       handleAgentOutput,
@@ -266,7 +611,12 @@ export function useSpireConnection() {
       handleAgentStatus,
       handleAgentProgress,
       handleAgentQuestion,
+      handleQuestStarted,
+      handleQuestComplete,
+      handleQuestAccepted,
+      handleQuestRevision,
       handleError,
+      setCurrentConnection,
     ]
   );
 
