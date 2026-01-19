@@ -70,7 +70,7 @@ export function LevelUpCelebration({
   useEffect(() => {
     if (visible) {
       // Play level up sound
-      soundService.play('levelUp');
+      soundService.playSound('quest', 'levelUp');
 
       // Start animation sequence
       setShowContent(true);

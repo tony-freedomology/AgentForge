@@ -24,7 +24,7 @@ export function PartyDock({ agents, onAgentPress }: PartyDockProps) {
   const expandProgress = useSharedValue(0);
 
   const toggleExpand = () => {
-    soundService.play('tap');
+    soundService.playSound('ui', isExpanded ? 'collapse' : 'expand');
     setIsExpanded(!isExpanded);
     expandProgress.value = withSpring(isExpanded ? 0 : 1, { damping: 15 });
   };
