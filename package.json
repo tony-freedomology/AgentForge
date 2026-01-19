@@ -5,11 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "daemon": "npx tsx server/index.ts",
     "server": "npx tsx server/index.ts",
-    "start": "concurrently \"npm run server\" \"npm run dev\"",
+    "start": "concurrently \"npm run daemon\" \"npm run dev\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "mobile": "cd arcane-spire && npx expo start",
+    "mobile:ios": "cd arcane-spire && npx expo start --ios",
+    "mobile:android": "cd arcane-spire && npx expo start --android"
   },
   "dependencies": {
     "@pixi/react": "^8.0.5",
@@ -22,8 +26,10 @@
     "lucide-react": "^0.562.0",
     "node-pty": "^1.1.0",
     "pixi.js": "^8.15.0",
+    "qrcode": "^1.5.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.4.0",
     "three": "^0.182.0",
@@ -35,6 +41,7 @@
     "@eslint/js": "^9.39.1",
     "@tailwindcss/vite": "^4.1.18",
     "@types/node": "^24.10.1",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.182.0",
