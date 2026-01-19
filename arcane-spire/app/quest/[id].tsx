@@ -193,7 +193,7 @@ export default function QuestDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {isSubmitting && <LoadingOverlay />}
+      {isSubmitting && <LoadingOverlay visible />}
 
       {/* Header */}
       <View style={styles.header}>

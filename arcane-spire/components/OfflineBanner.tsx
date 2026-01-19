@@ -12,7 +12,8 @@ import Animated, {
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, FontSize } from '../constants/theme';
-import { useConnectionStore } from '../stores/connectionStore';
+import { useSpireConnection } from '../hooks/useSpireConnection';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 interface OfflineBannerProps {
   /** Style variant */
@@ -147,8 +148,7 @@ export function OfflineBanner({
  * ConnectionStatusBanner - Shows WebSocket connection status
  */
 export function ConnectionStatusBanner() {
-  const connectionStatus = useConnectionStore((state) => state.connectionStatus);
-  const reconnect = useConnectionStore((state) => state.reconnect);
+  const { connectionStatus, reconnect } = useSpireConnection();
 
   const isDisconnected = connectionStatus === 'disconnected';
   const isConnecting = connectionStatus === 'connecting';
@@ -200,33 +200,6 @@ export function ConnectionStatusBanner() {
 /**
  * useNetworkStatus - Hook to get current network status
  */
-export function useNetworkStatus() {
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [connectionType, setConnectionType] = useState<string | null>(null);
-
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
-      setIsConnected(state.isConnected);
-      setConnectionType(state.type);
-    });
-
-    // Initial fetch
-    NetInfo.fetch().then((state) => {
-      setIsConnected(state.isConnected);
-      setConnectionType(state.type);
-    });
-
-    return unsubscribe;
-  }, []);
-
-  return {
-    isConnected,
-    connectionType,
-    isWifi: connectionType === 'wifi',
-    isCellular: connectionType === 'cellular',
-  };
-}
-
 /**
  * OfflineWrapper - Wraps content and shows offline state
  */

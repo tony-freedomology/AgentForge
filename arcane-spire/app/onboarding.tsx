@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,7 @@ import Animated, {
   Extrapolation,
   FadeIn,
   FadeOut,
+  SharedValue,
 } from 'react-native-reanimated';
 import { Colors, Spacing, BorderRadius, FontSize } from '../constants/theme';
 import { usePrefsStore } from '../stores/prefsStore';
@@ -174,17 +175,21 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleViewableItemsChanged = useRef(
+  const handleViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0 && viewableItems[0].index !== null) {
         setCurrentIndex(viewableItems[0].index);
       }
-    }
-  ).current;
+    },
+    []
+  );
 
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 50,
-  }).current;
+  const viewabilityConfig = useMemo(
+    () => ({
+      itemVisiblePercentThreshold: 50,
+    }),
+    []
+  );
 
   const renderSlide = ({ item, index }: { item: OnboardingSlide; index: number }) => (
     <View style={styles.slide}>
@@ -270,42 +275,15 @@ export default function OnboardingScreen() {
 
       {/* Pagination dots */}
       <View style={styles.pagination}>
-        {ONBOARDING_SLIDES.map((slide, index) => {
-          const dotStyle = useAnimatedStyle(() => {
-            const inputRange = [
-              (index - 1) * SCREEN_WIDTH,
-              index * SCREEN_WIDTH,
-              (index + 1) * SCREEN_WIDTH,
-            ];
-
-            const width = interpolate(
-              scrollX.value,
-              inputRange,
-              [10, 28, 10],
-              Extrapolation.CLAMP
-            );
-
-            const opacity = interpolate(
-              scrollX.value,
-              inputRange,
-              [0.4, 1, 0.4],
-              Extrapolation.CLAMP
-            );
-
-            return {
-              width,
-              opacity,
-              backgroundColor: index === currentIndex ? slide.accentColor : Colors.stone.dark,
-            };
-          });
-
-          return (
-            <Animated.View
-              key={index}
-              style={[styles.dot, dotStyle]}
-            />
-          );
-        })}
+        {ONBOARDING_SLIDES.map((slide, index) => (
+          <PaginationDot
+            key={slide.id}
+            index={index}
+            scrollX={scrollX}
+            currentIndex={currentIndex}
+            accentColor={slide.accentColor || Colors.arcane.purple}
+          />
+        ))}
       </View>
 
       {/* Action button */}
@@ -321,6 +299,45 @@ export default function OnboardingScreen() {
       </View>
     </SafeAreaView>
   );
+}
+
+interface PaginationDotProps {
+  index: number;
+  scrollX: SharedValue<number>;
+  currentIndex: number;
+  accentColor: string;
+}
+
+function PaginationDot({ index, scrollX, currentIndex, accentColor }: PaginationDotProps) {
+  const dotStyle = useAnimatedStyle(() => {
+    const inputRange = [
+      (index - 1) * SCREEN_WIDTH,
+      index * SCREEN_WIDTH,
+      (index + 1) * SCREEN_WIDTH,
+    ];
+
+    const width = interpolate(
+      scrollX.value,
+      inputRange,
+      [10, 28, 10],
+      Extrapolation.CLAMP
+    );
+
+    const opacity = interpolate(
+      scrollX.value,
+      inputRange,
+      [0.4, 1, 0.4],
+      Extrapolation.CLAMP
+    );
+
+    return {
+      width,
+      opacity,
+      backgroundColor: index === currentIndex ? accentColor : Colors.stone.dark,
+    };
+  });
+
+  return <Animated.View style={[styles.dot, dotStyle]} />;
 }
 
 const styles = StyleSheet.create({

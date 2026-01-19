@@ -237,7 +237,7 @@ function QuestTab({ agent }: { agent: Agent }) {
     <ScrollView style={styles.tabScroll} contentContainerStyle={styles.tabScrollContent}>
       <FantasyCard variant="stone" style={styles.questCard}>
         <View style={styles.questHeader}>
-          <Ionicons name="scroll-outline" size={24} color={Colors.holy.gold} />
+          <Ionicons name="book-outline" size={24} color={Colors.holy.gold} />
           <Text style={styles.questTitle}>Current Quest</Text>
         </View>
         <Text style={styles.questTask}>{agent.currentTask}</Text>

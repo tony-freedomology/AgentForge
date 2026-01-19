@@ -67,6 +67,7 @@ export type WSMessageType =
   | 'quest_failed'
   | 'quest_accepted'
   | 'quest_revision'
+  | 'quest_review'
 
   // Error
   | 'error';

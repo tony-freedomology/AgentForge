@@ -16,15 +16,16 @@ export * from './chamber';
 export * from './agent';
 
 // Error Boundary
-export { ErrorBoundary, ScreenErrorBoundary, MinimalErrorFallback, withErrorBoundary } from './ErrorBoundary';
+export { ErrorBoundary, ScreenErrorBoundary, MinimalErrorFallback } from './ErrorBoundary';
+export { withErrorBoundary } from './withErrorBoundary';
 
 // Offline Banner
 export {
   OfflineBanner,
   ConnectionStatusBanner,
-  useNetworkStatus,
   OfflineWrapper,
 } from './OfflineBanner';
+export { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 // Connection Status
 export { ConnectionStatusBar, ConnectionStatusIndicator } from './ConnectionStatusBar';
@@ -33,4 +34,5 @@ export { ConnectionStatusBar, ConnectionStatusIndicator } from './ConnectionStat
 export { QRScanner, QRScannerButton } from './QRScanner';
 
 // Level Up Celebration
-export { LevelUpCelebration, useLevelUpCelebration } from './LevelUpCelebration';
+export { LevelUpCelebration } from './LevelUpCelebration';
+export { useLevelUpCelebration } from '../hooks/useLevelUpCelebration';

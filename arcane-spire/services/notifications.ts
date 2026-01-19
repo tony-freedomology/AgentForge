@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import { Agent, AgentStatus } from '../shared/types/agent';
+import { Agent } from '../shared/types/agent';
 import { Quest } from '../shared/types/quest';
 
 // Configure notification behavior
@@ -10,6 +10,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -98,12 +100,8 @@ class NotificationService {
 
   // Clean up listeners
   cleanup(): void {
-    if (this.notificationListener) {
-      Notifications.removeNotificationSubscription(this.notificationListener);
-    }
-    if (this.responseListener) {
-      Notifications.removeNotificationSubscription(this.responseListener);
-    }
+    this.notificationListener?.remove();
+    this.responseListener?.remove();
   }
 
   // Set callbacks

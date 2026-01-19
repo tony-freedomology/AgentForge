@@ -117,7 +117,7 @@ export function FloatingThought({
 // Thought history item
 interface ThoughtHistoryItemProps {
   content: string;
-  type: 'thinking' | 'action' | 'result';
+  type: 'thinking' | 'action' | 'result' | 'tool';
   timestamp?: Date;
 }
 
@@ -130,6 +130,8 @@ export function ThoughtHistoryItem({ content, type, timestamp }: ThoughtHistoryI
         return Icons.status.working;
       case 'result':
         return Icons.status.complete;
+      case 'tool':
+        return Icons.status.working;
     }
   };
 

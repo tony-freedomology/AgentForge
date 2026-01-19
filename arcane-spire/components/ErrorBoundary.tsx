@@ -191,22 +191,6 @@ export function MinimalErrorFallback({ error, onRetry }: MinimalErrorFallbackPro
   );
 }
 
-/**
- * withErrorBoundary HOC - Wraps a component with an error boundary
- */
-export function withErrorBoundary<P extends object>(
-  WrappedComponent: React.ComponentType<P>,
-  fallback?: ReactNode
-) {
-  return function WithErrorBoundary(props: P) {
-    return (
-      <ErrorBoundary fallback={fallback}>
-        <WrappedComponent {...props} />
-      </ErrorBoundary>
-    );
-  };
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

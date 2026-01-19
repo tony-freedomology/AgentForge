@@ -56,12 +56,6 @@ export function LevelUpCelebration({
   const textScale = useSharedValue(0);
   const agentScale = useSharedValue(0);
   const levelNumber = useSharedValue(newLevel - 1);
-  const particles = Array.from({ length: 12 }, (_, i) => ({
-    angle: useSharedValue(i * 30),
-    distance: useSharedValue(0),
-    opacity: useSharedValue(0),
-    rotation: useSharedValue(0),
-  }));
 
   const agentClass = agent.class as AgentClass;
   const agentColor = AgentColors[agentClass] || Colors.arcane.purple;
@@ -80,7 +74,7 @@ export function LevelUpCelebration({
 
       // Burst animation
       burstScale.value = withSequence(
-        withTiming(1.5, { duration: 400, easing: Easing.out(Easing.back) }),
+        withTiming(1.5, { duration: 400, easing: Easing.out(Easing.back(1)) }),
         withTiming(1, { duration: 200 })
       );
 
@@ -107,28 +101,6 @@ export function LevelUpCelebration({
         600,
         withTiming(newLevel, { duration: 500, easing: Easing.out(Easing.cubic) })
       );
-
-      // Particle animations
-      particles.forEach((particle, i) => {
-        particle.distance.value = withDelay(
-          100 + i * 50,
-          withSequence(
-            withTiming(150, { duration: 600, easing: Easing.out(Easing.cubic) }),
-            withTiming(200, { duration: 400 })
-          )
-        );
-        particle.opacity.value = withDelay(
-          100 + i * 50,
-          withSequence(
-            withTiming(1, { duration: 200 }),
-            withDelay(400, withTiming(0, { duration: 400 }))
-          )
-        );
-        particle.rotation.value = withDelay(
-          100 + i * 50,
-          withTiming(360, { duration: 1000 })
-        );
-      });
     } else {
       // Reset animations
       backgroundOpacity.value = 0;
@@ -136,11 +108,6 @@ export function LevelUpCelebration({
       textScale.value = 0;
       agentScale.value = 0;
       levelNumber.value = newLevel - 1;
-      particles.forEach((particle) => {
-        particle.distance.value = 0;
-        particle.opacity.value = 0;
-        particle.rotation.value = 0;
-      });
       setShowContent(false);
     }
   }, [visible, newLevel]);
@@ -170,6 +137,7 @@ export function LevelUpCelebration({
 
   const handleDismiss = () => {
     soundService.play('tap');
+    // eslint-disable-next-line react-hooks/immutability
     backgroundOpacity.value = withTiming(0, { duration: 200 }, () => {
       runOnJS(onDismiss)();
     });
@@ -188,14 +156,11 @@ export function LevelUpCelebration({
           </Animated.View>
 
           {/* Particles */}
-          {particles.map((particle, i) => (
+          {Array.from({ length: 12 }, (_, i) => (
             <AnimatedParticle
               key={i}
               index={i}
-              angle={particle.angle}
-              distance={particle.distance}
-              opacity={particle.opacity}
-              rotation={particle.rotation}
+              visible={visible}
               color={agentColor}
             />
           ))}
@@ -249,23 +214,49 @@ export function LevelUpCelebration({
 // Animated particle component
 interface AnimatedParticleProps {
   index: number;
-  angle: Animated.SharedValue<number>;
-  distance: Animated.SharedValue<number>;
-  opacity: Animated.SharedValue<number>;
-  rotation: Animated.SharedValue<number>;
+  visible: boolean;
   color: string;
 }
 
 function AnimatedParticle({
   index,
-  angle,
-  distance,
-  opacity,
-  rotation,
+  visible,
   color,
 }: AnimatedParticleProps) {
+  const distance = useSharedValue(0);
+  const opacity = useSharedValue(0);
+  const rotation = useSharedValue(0);
+  const angle = index * 30;
+
+  useEffect(() => {
+    if (visible) {
+      distance.value = withDelay(
+        100 + index * 50,
+        withSequence(
+          withTiming(150, { duration: 600, easing: Easing.out(Easing.cubic) }),
+          withTiming(200, { duration: 400 })
+        )
+      );
+      opacity.value = withDelay(
+        100 + index * 50,
+        withSequence(
+          withTiming(1, { duration: 200 }),
+          withDelay(400, withTiming(0, { duration: 400 }))
+        )
+      );
+      rotation.value = withDelay(
+        100 + index * 50,
+        withTiming(360, { duration: 1000 })
+      );
+    } else {
+      distance.value = 0;
+      opacity.value = 0;
+      rotation.value = 0;
+    }
+  }, [visible, index]);
+
   const style = useAnimatedStyle(() => {
-    const rad = (angle.value * Math.PI) / 180;
+    const rad = (angle * Math.PI) / 180;
     const x = Math.cos(rad) * distance.value;
     const y = Math.sin(rad) * distance.value;
 
@@ -287,7 +278,7 @@ function AnimatedParticle({
 
   return (
     <Animated.View style={style}>
-      <Text style={styles.particle}>{emoji}</Text>
+      <Text style={[styles.particle, { color }]}>{emoji}</Text>
     </Animated.View>
   );
 }
@@ -307,44 +298,6 @@ function StatGain({ label, value, icon }: StatGainProps) {
       <Text style={styles.statValue}>{value}</Text>
     </View>
   );
-}
-
-/**
- * useLevelUpCelebration - Hook to trigger level up celebration
- */
-export function useLevelUpCelebration() {
-  const [celebration, setCelebration] = useState<{
-    visible: boolean;
-    agent: Agent | null;
-    newLevel: number;
-  }>({
-    visible: false,
-    agent: null,
-    newLevel: 1,
-  });
-
-  const showCelebration = (agent: Agent, newLevel: number) => {
-    setCelebration({ visible: true, agent, newLevel });
-  };
-
-  const hideCelebration = () => {
-    setCelebration((prev) => ({ ...prev, visible: false }));
-  };
-
-  const CelebrationComponent = celebration.agent ? (
-    <LevelUpCelebration
-      agent={celebration.agent}
-      newLevel={celebration.newLevel}
-      visible={celebration.visible}
-      onDismiss={hideCelebration}
-    />
-  ) : null;
-
-  return {
-    showCelebration,
-    hideCelebration,
-    CelebrationComponent,
-  };
 }
 
 const styles = StyleSheet.create({

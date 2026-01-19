@@ -62,7 +62,7 @@ interface SpireConnectionOptions {
 class SpireConnectionService {
   private socket: Socket | null = null;
   private options: SpireConnectionOptions | null = null;
-  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private reconnectAttempts = 0;
 
   // Callbacks
@@ -324,10 +324,11 @@ class SpireConnectionService {
         this.onAgentKilled?.((message.payload as { agentId: string }).agentId);
         break;
 
-      case 'agent_update':
+      case 'agent_update': {
         const update = message.payload as { agentId: string; updates: Partial<Agent> };
         this.onAgentUpdate?.(update.agentId, update.updates);
         break;
+      }
 
       case 'agent_output':
         this.onAgentOutput?.(message.payload as AgentOutputPayload);

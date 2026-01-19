@@ -13,7 +13,7 @@ const IDLE_TIMEOUT = 5 * 60 * 1000;
 const CHECK_INTERVAL = 30 * 1000;
 
 export function useAgentSync() {
-  const checkInterval = useRef<NodeJS.Timeout | null>(null);
+  const checkInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const notifiedIdleAgents = useRef<Set<string>>(new Set());
 
   const { agents, getAgentList, updateAgent, grantXp } = useAgentStore();

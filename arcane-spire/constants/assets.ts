@@ -73,7 +73,7 @@ export const AgentSprites = {
   },
 } as const;
 
-export type AgentClass = keyof typeof AgentSprites;
+export type SpriteAgentClass = keyof typeof AgentSprites;
 export type AgentSpriteState = keyof typeof AgentSprites.mage;
 
 // ============================================================================
@@ -420,7 +420,7 @@ export const Branding = {
  * Get the sprite for an agent class and state
  */
 export function getAgentSprite(
-  agentClass: AgentClass,
+  agentClass: SpriteAgentClass,
   state: AgentSpriteState
 ): any {
   return AgentSprites[agentClass]?.[state] || AgentSprites.mage.idle;
@@ -429,7 +429,7 @@ export function getAgentSprite(
 /**
  * Get the chamber background for an agent class
  */
-export function getChamberBackground(agentClass: AgentClass): any {
+export function getChamberBackground(agentClass: SpriteAgentClass): any {
   return Chambers[agentClass] || Chambers.mage;
 }
 
