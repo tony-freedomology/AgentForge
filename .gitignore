@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Expo managed/native output
+ios/
+android/
+arcane-spire/ios/
+arcane-spire/android/
+arcane-spire/expo-env.d.ts
