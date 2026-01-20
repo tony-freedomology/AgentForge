@@ -96,7 +96,7 @@ export default function ConnectScreen() {
 
     // Build the WebSocket URL from Tailscale hostname
     const hostname = tailscaleHostname.trim().toLowerCase();
-    const url = `ws://${hostname}:3001`;
+    const url = `http://${hostname}:3001`;
     const name = `${hostname} (Tailscale)`;
 
     setConnectionUrl(url);
@@ -152,7 +152,9 @@ export default function ConnectScreen() {
     // If it's a Tailscale URL pattern
     if (data.includes('.ts.net') || data.match(/^[a-z0-9-]+$/i)) {
       // It's likely a Tailscale hostname
-      url = data.startsWith('ws://') ? data : `ws://${data}:3001`;
+      url = data.startsWith('http://') || data.startsWith('https://')
+        ? data
+        : `http://${data}:3001`;
       name = 'Tailscale Forge';
     }
 

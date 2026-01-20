@@ -14,7 +14,7 @@ import { OfflineBanner, ConnectionStatusBanner } from '../components/OfflineBann
 import '../global.css';
 
 // Prevent splash screen from auto-hiding
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
 /**
  * Root layout for the Arcane Spire app
@@ -26,7 +26,7 @@ SplashScreen.preventAutoHideAsync();
  * - Service initialization
  */
 export default function RootLayout() {
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(__DEV__);
 
   // Initialize notifications
   useNotifications();
@@ -35,6 +35,27 @@ export default function RootLayout() {
   const hasCompletedOnboarding = usePrefsStore((state) => state.hasCompletedOnboarding);
 
   useEffect(() => {
+    console.log('RootLayout mounted', {
+      hasCompletedOnboarding,
+      isReady,
+      isDev: __DEV__,
+    });
+  }, [hasCompletedOnboarding, isReady]);
+
+  useEffect(() => {
+    let isMounted = true;
+    let didTimeout = false;
+
+    const timeoutId = setTimeout(() => {
+      if (!isMounted) return;
+      didTimeout = true;
+      console.warn('Splash timeout exceeded, forcing app ready');
+      setIsReady(true);
+      SplashScreen.hideAsync().catch((error) => {
+        console.warn('Failed to hide splash after timeout:', error);
+      });
+    }, 4000);
+
     // Initialize services
     const initialize = async () => {
       try {
@@ -42,27 +63,37 @@ export default function RootLayout() {
         await soundService.initialize();
 
         // Mark as ready
+        if (!isMounted) return;
         setIsReady(true);
-
-        // Hide splash screen
-        await SplashScreen.hideAsync();
       } catch (error) {
         console.error('Initialization error:', error);
         // Still show the app even if initialization fails
+        if (!isMounted) return;
         setIsReady(true);
-        await SplashScreen.hideAsync();
+      } finally {
+        if (!isMounted) return;
+        if (!didTimeout) {
+          clearTimeout(timeoutId);
+        }
+        try {
+          await SplashScreen.hideAsync();
+        } catch (error) {
+          console.warn('Failed to hide splash during init:', error);
+        }
       }
     };
 
     initialize();
 
     return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
       soundService.cleanup();
     };
   }, []);
 
-  // Don't render until ready
-  if (!isReady) {
+  // Don't render until ready (skip blocking in dev for easier testing)
+  if (!isReady && !__DEV__) {
     return null;
   }
 

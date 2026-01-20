@@ -661,9 +661,13 @@ export function useSpireConnection() {
   const connect = useCallback(
     async (url: string, name: string) => {
       const token = await storageService.getConnectionToken();
+      const normalizedUrl = url
+        .trim()
+        .replace(/^ws:\/\//i, 'http://')
+        .replace(/^wss:\/\//i, 'https://');
       const saved = useConnectionStore.getState().savedConnections;
-      const existing = saved.find((connection) => connection.url === url);
-      const connection = existing ? { ...existing, name } : createConnection(name, url);
+      const existing = saved.find((connection) => connection.url === normalizedUrl);
+      const connection = existing ? { ...existing, name } : createConnection(name, normalizedUrl);
 
       setCurrentConnection({ ...connection, status: 'connecting' });
 
@@ -688,12 +692,12 @@ export function useSpireConnection() {
       });
 
       spireConnection.connect({
-        url,
+        url: normalizedUrl,
         token: token || undefined,
       });
 
       // Save as last connection
-      await storageService.setLastConnection(url, name);
+      await storageService.setLastConnection(normalizedUrl, name);
     },
     [
       handleConnectionChange,
