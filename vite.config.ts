@@ -7,7 +7,8 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 3000,
-    open: true,
+    host: true,
+    open: false,
   },
   build: {
     target: 'esnext',
